@@ -1,36 +1,91 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Library — Meus livros</title>
-</head>
-<body>
-    <h1>Dark Library</h1>
+{% extends "base.html" %}
 
-    <p>
-        <a href="{{ url_for('novo') }}">+ Novo livro</a>
-    </p>
+{% block titulo %}Dark Library — Meus livros{% endblock %}
 
-    <hr>
+{% block conteudo %}
 
-    {% if livros %}
-        <p>{{ livros|length }} livro(s) cadastrado(s).</p>
+    <form method="GET" action="{{ url_for('home') }}" class="form-filtros">
 
-        <ul>
-            {% for livro in livros %}
-                <li>
-                    <strong>{{ livro.titulo }}</strong>
-                    — {{ livro.autor }}
-                    {% if livro.estante %} | Estante: {{ livro.estante }}{% endif %}
-                    {% if livro.cor_lombada %} | Cor: {{ livro.cor_lombada }}{% endif %}
-                    {% if livro.lido %} | ✅ Lido{% else %} | ⏳ Não lido{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="campo">
+            <label for="q">Buscar por título ou autor</label>
+            <input type="text" id="q" name="q" value="{{ busca }}" placeholder="Ex.: machado">
+        </div>
+
+        <div class="campo-linha">
+            <div class="campo">
+                <label for="estante">Estante</label>
+                <select id="estante" name="estante">
+                    <option value="">Todas</option>
+                    {% for e in estantes %}
+                        <option value="{{ e }}" {% if e == filtro_estante %}selected{% endif %}>{{ e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="cor">Cor da lombada</label>
+                <select id="cor" name="cor">
+                    <option value="">Todas</option>
+                    {% for c in cores %}
+                        <option value="{{ c }}" {% if c == filtro_cor %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="" {% if not filtro_status %}selected{% endif %}>Todos</option>
+                    <option value="lido" {% if filtro_status == 'lido' %}selected{% endif %}>Lidos</option>
+                    <option value="nao_lido" {% if filtro_status == 'nao_lido' %}selected{% endif %}>Não lidos</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="acoes-filtros">
+            <button type="submit">Filtrar</button>
+            <a href="{{ url_for('home') }}" class="link-limpar">Limpar filtros</a>
+        </div>
+
+    </form>
+
+    {% if grupos %}
+        <p class="contador">{{ total }} livro(s) encontrado(s).</p>
+
+        {% for estante, livros, gradiente in grupos %}
+            <h2 class="titulo-estante" style="--gradiente-estante: {{ gradiente }};">
+                <span class="titulo-estante-texto">
+                    {% if estante %}
+                        Estante {{ estante }}
+                    {% else %}
+                        Sem estante
+                    {% endif %}
+                </span>
+            </h2>
+
+            <ul class="lista-livros">
+                {% for livro in livros %}
+                    <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
+                        <div class="card-titulo">{{ livro.titulo }}</div>
+                        <div class="card-autor">{{ livro.autor }}</div>
+                        <div class="card-meta">
+                            {% if livro.cor_lombada %}
+                                <span class="card-meta-item">{{ livro.cor_lombada }}</span>
+                            {% endif %}
+                            {% if livro.lido %}
+                                <span class="card-meta-item card-meta-lido">✅ Lido</span>
+                            {% else %}
+                                <span class="card-meta-item card-meta-nao-lido">⏳ Não lido</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+
     {% else %}
-        <p>Nenhum livro cadastrado ainda.</p>
-        <p>Clique em "+ Novo livro" para começar.</p>
+        <p class="vazio">Nenhum livro encontrado com esses critérios.</p>
+        <p class="vazio"><a href="{{ url_for('home') }}">Limpar filtros</a></p>
     {% endif %}
-</body>
-</html>
+
+{% endblock %}

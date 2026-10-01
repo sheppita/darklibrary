@@ -1,0 +1,564 @@
+/* ═══════════════════════════════════════════════════════════
+   Dark Library — Folha de estilo principal
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   1. Tokens de design (variáveis)
+   ───────────────────────────────────────────── */
+
+:root {
+    /* Cores principais */
+    --cor-fundo:        #f7f5f0;
+    --cor-superficie:   #ffffff;
+    --cor-texto:        #1a1a1a;
+    --cor-texto-suave:  #6b6b6b;
+    --cor-borda:        #e5e1d8;
+
+    /* Cabeçalho e ações */
+    --cor-cabecalho:    #000000;
+    --cor-cabecalho-texto: #ffffff;
+
+    /* Ações */
+    --cor-botao:        #000000;
+    --cor-botao-texto:  #ffffff;
+    --cor-perigo:       #c62828;
+
+    /* Cores da lombada (para usar em JS/CSS mais tarde) */
+    --lombada-branco:   #f0ede6;
+    --lombada-verde:    #4a7c59;
+    --lombada-azul:     #3d5a80;
+    --lombada-rosa:     #d88ba6;
+    --lombada-marrom:   #7a5c3e;
+    --lombada-vermelho: #b33a3a;
+    --lombada-laranja:  #d97736;
+    --lombada-amarelo:  #e0b73c;
+    --lombada-cinza:    #9a9a9a;
+    --lombada-preto:    #2a2a2a;
+    --lombada-multi:    #e8dfc9; /* bege, como combinado */
+
+    /* Tipografia */
+    --fonte-titulo: 'Lora', Georgia, serif;
+    --fonte-corpo:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Espaçamentos */
+    --esp-1: 4px;
+    --esp-2: 8px;
+    --esp-3: 12px;
+    --esp-4: 16px;
+    --esp-5: 24px;
+    --esp-6: 32px;
+    --esp-7: 48px;
+
+    /* Outros */
+    --raio: 8px;
+    --sombra-suave: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --altura-cabecalho: 56px;
+}
+
+/* ─────────────────────────────────────────────
+   2. Reset básico
+   ───────────────────────────────────────────── */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--fonte-corpo);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--cor-texto);
+    background-color: var(--cor-fundo);
+    -webkit-font-smoothing: antialiased;
+    padding-top: var(--altura-cabecalho); /* espaço para o cabeçalho fixo */
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 var(--esp-4) 0;
+    color: var(--cor-texto);
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.25rem; }
+
+p { margin: 0 0 var(--esp-4) 0; }
+
+a {
+    color: var(--cor-texto);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+img { max-width: 100%; display: block; }
+
+ul { list-style: none; padding: 0; margin: 0; }
+
+button {
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: var(--raio);
+    padding: var(--esp-2) var(--esp-4);
+    background-color: var(--cor-botao);
+    color: var(--cor-botao-texto);
+    transition: opacity 0.15s ease;
+}
+
+button:hover { opacity: 0.85; }
+
+input, select, textarea {
+    font-family: inherit;
+    font-size: 16px; /* 16px evita zoom automático no iOS */
+    color: var(--cor-texto);
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-2) var(--esp-3);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--cor-texto);
+    outline-offset: 1px;
+}
+
+/* ─────────────────────────────────────────────
+   3. Cabeçalho fixo
+   ───────────────────────────────────────────── */
+
+.cabecalho {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--altura-cabecalho);
+    background-color: var(--cor-cabecalho);
+    color: var(--cor-cabecalho-texto);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+}
+
+.cabecalho-conteudo {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--esp-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--esp-4);
+}
+
+.logo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--cor-cabecalho-texto);
+    text-decoration: none;
+}
+
+.logo:hover { text-decoration: none; opacity: 0.9; }
+
+.menu {
+    display: flex;
+    gap: var(--esp-5);
+}
+
+.menu a {
+    color: var(--cor-cabecalho-texto);
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+.menu a:hover {
+    opacity: 1;
+    text-decoration: none;
+}
+
+/* ─────────────────────────────────────────────
+   4. Conteúdo principal
+   ───────────────────────────────────────────── */
+
+.conteudo {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--esp-5) var(--esp-4);
+}
+
+/* ─────────────────────────────────────────────
+   5. Rodapé
+   ───────────────────────────────────────────── */
+
+.rodape {
+    text-align: center;
+    padding: var(--esp-6) var(--esp-4);
+    color: var(--cor-texto-suave);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--cor-borda);
+    margin-top: var(--esp-7);
+}
+
+/* ─────────────────────────────────────────────
+   6. Formulário de filtros (base)
+   ───────────────────────────────────────────── */
+
+.form-filtros {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-4);
+    margin-bottom: var(--esp-6);
+}
+
+.form-filtros label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cor-texto-suave);
+    display: inline-block;
+    margin-bottom: var(--esp-1);
+}
+
+.form-filtros select {
+    margin-right: var(--esp-3);
+}
+
+.form-filtros button {
+    margin-right: var(--esp-2);
+}
+
+/* ─────────────────────────────────────────────
+   7. Cabeçalho de estante
+   ───────────────────────────────────────────── */
+
+.titulo-estante {
+    --gradiente-estante: var(--cor-borda);
+
+    margin-top: var(--esp-6);
+    margin-bottom: var(--esp-3);
+    padding: var(--esp-3) var(--esp-3);
+    border-radius: var(--raio);
+    background-image: var(--gradiente-estante);
+    font-size: 1rem;
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    color: var(--cor-texto);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.titulo-estante-texto {
+    background-color: rgba(255, 255, 255, 0.92);
+    color: var(--cor-texto);
+    padding: var(--esp-1) var(--esp-3);
+    border-radius: var(--raio);
+    font-size: 1rem;
+}
+
+/* ─────────────────────────────────────────────
+   8. Grid de cards de livros
+   ───────────────────────────────────────────── */
+
+.lista-livros {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-5);
+}
+
+@media (min-width: 640px) {
+    .lista-livros {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 960px) {
+    .lista-livros {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ─────────────────────────────────────────────
+   9. Card de livro (versão base — refinar na 5.5)
+   ───────────────────────────────────────────── */
+
+.card-livro {
+    --cor-lombada: var(--cor-borda); /* fallback se a cor não vier do app */
+
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-left: 8px solid var(--cor-lombada);
+    border-radius: var(--raio);
+    padding: var(--esp-4);
+    box-shadow: var(--sombra-suave);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+    min-height: 110px;
+}
+
+.card-livro:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--cor-texto);
+}
+
+.card-autor {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+.card-meta {
+    margin-top: auto; /* empurra o meta para o final do card */
+    padding-top: var(--esp-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-2);
+    font-size: 0.8rem;
+}
+
+.card-meta-item {
+    background-color: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px; /* pílula */
+    padding: 2px var(--esp-2);
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
+}
+
+.card-meta-lido {
+    color: #2e7d32;
+    border-color: #c8e6c9;
+    background-color: #e8f5e9;
+}
+
+.card-meta-nao-lido {
+    color: #8a6d00;
+    border-color: #ffe082;
+    background-color: #fff8e1;
+}
+
+
+/* ─────────────────────────────────────────────
+   10. Formulário de cadastro (base)
+   ───────────────────────────────────────────── */
+
+.form-cadastro {
+    max-width: 600px;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+}
+
+.form-cadastro label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: var(--esp-1);
+}
+/* ─────────────────────────────────────────────
+   11. Página de formulário (cabeçalho + cadastro)
+   ───────────────────────────────────────────── */
+
+.pagina-cabecalho {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-5);
+    padding-bottom: var(--esp-3);
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.pagina-cabecalho h1 {
+    margin: 0;
+}
+
+.link-voltar {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
+}
+
+.link-voltar:hover {
+    color: var(--cor-texto);
+    text-decoration: none;
+}
+
+.form-cadastro {
+    max-width: 640px;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+    box-shadow: var(--sombra-suave);
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-1);
+    margin-bottom: var(--esp-4);
+}
+
+.campo label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--cor-texto);
+}
+
+.campo input,
+.campo select {
+    width: 100%;
+    padding: var(--esp-2) var(--esp-3);
+}
+
+.campo-linha {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+    margin-bottom: 0; /* os .campo internos já têm margin */
+}
+
+@media (min-width: 640px) {
+    .campo-linha {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.obrigatorio {
+    color: var(--cor-perigo);
+    font-weight: 600;
+}
+
+.campo-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-2);
+    margin: var(--esp-5) 0;
+}
+
+.campo-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cor-texto);
+    cursor: pointer;
+}
+
+.campo-checkbox label {
+    font-size: 0.95rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.acoes-form {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-4);
+    padding-top: var(--esp-4);
+    border-top: 1px solid var(--cor-borda);
+}
+
+.link-cancelar {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+.link-cancelar:hover {
+    color: var(--cor-texto);
+    text-decoration: none;
+}
+/* ─────────────────────────────────────────────
+   12. Formulário de filtros (na home)
+   ───────────────────────────────────────────── */
+
+.form-filtros {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+    margin-bottom: var(--esp-5);
+    box-shadow: var(--sombra-suave);
+}
+
+.form-filtros .campo {
+    margin-bottom: var(--esp-4);
+}
+
+.form-filtros .campo-linha {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+    margin-bottom: 0;
+}
+
+@media (min-width: 640px) {
+    .form-filtros .campo-linha {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.form-filtros label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cor-texto-suave);
+    display: block;
+    margin-bottom: var(--esp-1);
+}
+
+.form-filtros input,
+.form-filtros select {
+    width: 100%;
+}
+
+.acoes-filtros {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-4);
+    margin-top: var(--esp-4);
+    padding-top: var(--esp-4);
+    border-top: 1px solid var(--cor-borda);
+}
+
+.link-limpar {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+.link-limpar:hover {
+    color: var(--cor-texto);
+    text-decoration: none;
+}
+
+.contador {
+    font-size: 0.95rem;
+    color: var(--cor-texto-suave);
+    margin-bottom: var(--esp-4);
+}
+
+.vazio {
+    color: var(--cor-texto-suave);
+    text-align: center;
+    padding: var(--esp-6) 0;
+}

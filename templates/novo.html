@@ -1,72 +1,63 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Library — Novo livro</title>
-</head>
-<body>
-    <h1>Novo livro</h1>
+{% extends "base.html" %}
 
-    <p>
-        <a href="{{ url_for('home') }}">← Voltar para a lista</a>
-    </p>
+{% block titulo %}Dark Library — Novo livro{% endblock %}
 
-    <hr>
+{% block conteudo %}
 
-    <form method="POST">
-        <p>
-            <label for="titulo">Título *</label><br>
-            <input type="text" id="titulo" name="titulo" required maxlength="200" style="width: 100%;">
-        </p>
+    <div class="pagina-cabecalho">
+        <h1>Novo livro</h1>
+        <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+    </div>
 
-        <p>
-            <label for="autor">Autor *</label><br>
-            <input type="text" id="autor" name="autor" required maxlength="150" style="width: 100%;">
-        </p>
+    <form method="POST" class="form-cadastro">
 
-        <p>
-            <label for="nacionalidade">Nacionalidade do autor</label><br>
-            <input type="text" id="nacionalidade" name="nacionalidade" maxlength="80" style="width: 100%;">
-        </p>
+        <div class="campo">
+            <label for="titulo">Título <span class="obrigatorio">*</span></label>
+            <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus>
+        </div>
 
-        <p>
-            <label for="cor_lombada">Cor da lombada</label><br>
-            <select id="cor_lombada" name="cor_lombada" style="width: 100%;">
+        <div class="campo">
+            <label for="autor">Autor <span class="obrigatorio">*</span></label>
+            <input type="text" id="autor" name="autor" required maxlength="150">
+        </div>
+
+        <div class="campo-linha">
+            <div class="campo">
+                <label for="nacionalidade">Nacionalidade</label>
+                <input type="text" id="nacionalidade" name="nacionalidade" maxlength="80" placeholder="Ex.: Brasileira">
+            </div>
+
+            <div class="campo">
+                <label for="estante">Estante</label>
+                <input type="text" id="estante" name="estante" maxlength="20" placeholder="Ex.: A1, B10">
+            </div>
+        </div>
+
+        <div class="campo">
+            <label for="cor_lombada">Cor da lombada</label>
+            <select id="cor_lombada" name="cor_lombada">
                 <option value="">— Selecione —</option>
-                <option value="Branco">Branco</option>
-                <option value="Verde">Verde</option>
-                <option value="Azul">Azul</option>
-                <option value="Rosa">Rosa</option>
-                <option value="Marrom">Marrom</option>
-                <option value="Vermelho">Vermelho</option>
-                <option value="Laranja">Laranja</option>
-                <option value="Amarelo">Amarelo</option>
-                <option value="Cinza">Cinza</option>
-                <option value="Preto">Preto</option>
-                <option value="Multi">Multi</option>
+                {% for cor in cores %}
+                    <option value="{{ cor }}">{{ cor }}</option>
+                {% endfor %}
             </select>
-        </p>
+        </div>
 
-        <p>
-            <label for="estante">Estante</label><br>
-            <input type="text" id="estante" name="estante" maxlength="20" placeholder="Ex.: A1, B10, G7" style="width: 100%;">
-        </p>
+        <div class="campo">
+            <label for="isbn">ISBN (opcional)</label>
+            <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric" placeholder="Ex.: 9788535914849">
+        </div>
 
-        <p>
-            <label for="isbn">ISBN (opcional)</label><br>
-            <input type="text" id="isbn" name="isbn" maxlength="20" style="width: 100%;">
-        </p>
-
-        <p>
+        <div class="campo-checkbox">
             <input type="checkbox" id="lido" name="lido">
             <label for="lido">Já li este livro</label>
-        </p>
+        </div>
 
-        <p>
+        <div class="acoes-form">
             <button type="submit">Salvar</button>
-            <a href="{{ url_for('home') }}">Cancelar</a>
-        </p>
+            <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+        </div>
+
     </form>
-</body>
-</html>
+
+{% endblock %}

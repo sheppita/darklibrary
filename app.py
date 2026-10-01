@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
@@ -10,10 +11,6 @@ app = Flask(__name__)
 
 database_url = os.environ.get("DATABASE_URL", "")
 
-# O SQLAlchemy precisa saber QUAL driver usar.
-# O Neon entrega a URL no formato "postgresql://".
-# Nós usamos o driver psycopg (v3), então precisamos
-# escrever "postgresql+psycopg://" na URL.
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
 elif database_url.startswith("postgresql://"):
@@ -21,7 +18,6 @@ elif database_url.startswith("postgresql://"):
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
@@ -31,7 +27,31 @@ db = SQLAlchemy(app)
 
 
 # ─────────────────────────────────────────────
-# Modelo: define a tabela "livro" no banco
+# Constantes
+# ─────────────────────────────────────────────
+
+CORES_ORDEM = [
+    "Branco", "Verde", "Azul", "Rosa", "Marrom",
+    "Vermelho", "Laranja", "Amarelo", "Cinza", "Preto", "Multi",
+]
+CORES_INDICE = {cor: i for i, cor in enumerate(CORES_ORDEM)}
+
+# Cores da lombada em hexadecimal (usado pelo CSS dos cards).
+CORES_HEX = {
+    "Branco":   "#f0ede6",
+    "Verde":    "#4a7c59",
+    "Azul":     "#3d5a80",
+    "Rosa":     "#d88ba6",
+    "Marrom":   "#7a5c3e",
+    "Vermelho": "#b33a3a",
+    "Laranja":  "#d97736",
+    "Amarelo":  "#e0b73c",
+    "Cinza":    "#9a9a9a",
+    "Preto":    "#2a2a2a",
+    "Multi":    "#e8dfc9",
+}
+# ─────────────────────────────────────────────
+# Modelo
 # ─────────────────────────────────────────────
 
 class Livro(db.Model):
@@ -49,25 +69,131 @@ class Livro(db.Model):
 
 
 # ─────────────────────────────────────────────
+# Chave de ordenação (estante → cor → título)
+# ─────────────────────────────────────────────
+
+def chave_ordenacao(livro):
+    estante = (livro.estante or "").strip().upper()
+    if not estante:
+        grupo_estante = (1, "", 0)
+    else:
+        m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
+        if m:
+            grupo_estante = (0, m.group(1), int(m.group(2)))
+        else:
+            grupo_estante = (1, estante, 0)
+
+    cor = (livro.cor_lombada or "").strip()
+    ordem_cor = CORES_INDICE.get(cor, CORES_INDICE["Multi"])
+
+    titulo = (livro.titulo or "").lower()
+
+    return (grupo_estante, ordem_cor, titulo)
+
+
+# ─────────────────────────────────────────────
 # Rotas
 # ─────────────────────────────────────────────
 
 @app.route("/")
 def home():
-    """Página inicial: lista todos os livros, mais recentes primeiro."""
-    livros = Livro.query.order_by(Livro.id.desc()).all()
-    return render_template("lista.html", livros=livros)
+    # Lê todos os parâmetros da URL (todos opcionais).
+    busca = request.args.get("q", "").strip()
+    filtro_estante = request.args.get("estante", "").strip().upper()
+    filtro_cor = request.args.get("cor", "").strip()
+    filtro_status = request.args.get("status", "").strip()  # "lido", "nao_lido" ou ""
+
+    query = Livro.query
+
+    # Filtro de busca por texto (título OU autor)
+    if busca:
+        termo = f"%{busca}%"
+        query = query.filter(
+            db.or_(
+                Livro.titulo.ilike(termo),
+                Livro.autor.ilike(termo),
+            )
+        )
+
+    # Filtro por estante
+    if filtro_estante:
+        query = query.filter(Livro.estante == filtro_estante)
+
+    # Filtro por cor
+    if filtro_cor:
+        query = query.filter(Livro.cor_lombada == filtro_cor)
+
+    # Filtro por status
+    if filtro_status == "lido":
+        query = query.filter(Livro.lido.is_(True))
+    elif filtro_status == "nao_lido":
+        query = query.filter(Livro.lido.is_(False))
+
+    livros = query.all()
+    livros.sort(key=chave_ordenacao)
+
+    # Agrupa por estante
+    grupos = []
+    estante_atual = "__inicio__"
+    for livro in livros:
+        if livro.estante != estante_atual:
+            grupos.append((livro.estante, []))
+            estante_atual = livro.estante
+        grupos[-1][1].append(livro)
+
+    # Pré-calcula o hex da cor da lombada de cada livro
+    for livro in livros:
+        cor = (livro.cor_lombada or "").strip()
+        livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
+
+    # Para cada grupo, monta o degradê CSS das cores dos livros.
+    grupos_com_gradiente = []
+    for estante, livros_do_grupo in grupos:
+        cores = [livro.cor_hex for livro in livros_do_grupo]
+
+        if len(cores) == 1:
+            gradiente = cores[0]
+        else:
+            passo = 100 / len(cores)
+            stops = []
+            for i, cor in enumerate(cores):
+                inicio = i * passo
+                fim = (i + 1) * passo
+                stops.append(f"{cor} {inicio:.2f}% {fim:.2f}%")
+            gradiente = f"linear-gradient(to right, {', '.join(stops)})"
+
+        grupos_com_gradiente.append((estante, livros_do_grupo, gradiente))
+
+    # Lista de estantes disponíveis no banco
+    estantes_disponiveis = sorted(
+        [e for (e,) in db.session.query(Livro.estante).distinct().all() if e],
+        key=lambda x: chave_ordenacao_estante_simples(x),
+    )
+
+    return render_template(
+        "lista.html",
+        grupos=grupos_com_gradiente,
+        total=len(livros),
+        busca=busca,
+        filtro_estante=filtro_estante,
+        filtro_cor=filtro_cor,
+        filtro_status=filtro_status,
+        estantes=estantes_disponiveis,
+        cores=CORES_ORDEM,
+    )
+
+def chave_ordenacao_estante_simples(estante):
+    """Usada só para ordenar a lista de estantes do dropdown."""
+    estante = (estante or "").strip().upper()
+    m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
+    if m:
+        return (0, m.group(1), int(m.group(2)))
+    return (1, estante, 0)
 
 
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
-    """Página de cadastro de livro."""
     if request.method == "POST":
-        # request.form.get("nome") devolve o valor enviado pelo formulário.
-        # Usamos .get() (em vez de ["nome"]) para evitar erro se o campo
-        # não vier; nesse caso, devolve None.
-        # O "or None" transforma string vazia ("") em None,
-        # para não guardar "" no banco.
         livro = Livro(
             titulo=request.form.get("titulo", "").strip(),
             autor=request.form.get("autor", "").strip(),
@@ -81,11 +207,11 @@ def novo():
         db.session.commit()
         return redirect(url_for("home"))
 
-    return render_template("novo.html")
+    return render_template("novo.html", cores=CORES_ORDEM)
 
 
 # ─────────────────────────────────────────────
-# Criação automática da tabela (na primeira execução)
+# Criação automática da tabela
 # ─────────────────────────────────────────────
 
 with app.app_context():
@@ -93,5 +219,5 @@ with app.app_context():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
     
