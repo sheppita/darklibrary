@@ -14,7 +14,8 @@ database_url = os.environ.get("DATABASE_URL", "")
 # Aqui, por garantia, normalizamos.
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
-elif database_url.startswith("postgresql://"):
+elif database_url.startswith("postgresql://"):      
+    database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
