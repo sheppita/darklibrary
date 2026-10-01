@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — Estatísticas{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>Estatísticas</h1>
+    </div>
+
+    {# ─────────────────── Cards de resumo ─────────────────── #}
+    <div class="stats-resumo">
+        <div class="stat-card">
+            <div class="stat-numero">{{ total }}</div>
+            <div class="stat-rotulo">Livro(s) no total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-numero">{{ total_lidos }}</div>
+            <div class="stat-rotulo">Lido(s)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-numero">{{ total_nao_lidos }}</div>
+            <div class="stat-rotulo">Não lido(s)</div>
+        </div>
+    </div>
+
+    {# ─────────────────── Barra de progresso ─────────────────── #}
+    {% if total > 0 %}
+        <div class="stats-barra-wrap">
+            <div class="stats-barra">
+                <div class="stats-barra-preenchida" style="width: {{ pct_lidos }}%;"></div>
+            </div>
+            <div class="stats-barra-legenda">
+                {{ pct_lidos }}% lido &middot; {{ 100 - pct_lidos }}% por ler
+            </div>
+        </div>
+    {% endif %}
+
+    {# ─────────────────── Grid de informações ─────────────────── #}
+    <div class="stats-grid">
+
+        {# Por estante #}
+        {% if por_estante %}
+        <div class="stats-bloco">
+            <h2 class="stats-bloco-titulo">Por estante</h2>
+            <ul class="stats-lista">
+                {% for estante, n in por_estante %}
+                    <li>
+                        <span>{{ estante or "Sem estante" }}</span>
+                        <span class="stats-n">{{ n }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Top autores #}
+        {% if top_autores %}
+        <div class="stats-bloco">
+            <h2 class="stats-bloco-titulo">Top autores</h2>
+            <ul class="stats-lista">
+                {% for autor, n in top_autores %}
+                    <li>
+                        <span>{{ autor }}</span>
+                        <span class="stats-n">{{ n }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Por nacionalidade #}
+        {% if por_nacionalidade %}
+        <div class="stats-bloco">
+            <h2 class="stats-bloco-titulo">Por nacionalidade</h2>
+            <ul class="stats-lista">
+                {% for nac, n in por_nacionalidade %}
+                    <li>
+                        <span>{{ nac or "(sem nacionalidade)" }}</span>
+                        <span class="stats-n">{{ n }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Por cor #}
+        <div class="stats-bloco">
+            <h2 class="stats-bloco-titulo">Por cor de lombada</h2>
+            <ul class="stats-lista">
+                {% for cor, n in por_cor %}
+                    <li>
+                        <span class="stats-cor-wrap">
+                            <span class="stats-cor" style="background-color: {{ cores_hex[cor] }};"></span>
+                            {{ cor }}
+                        </span>
+                        <span class="stats-n">{{ n }}</span>
+                    </li>
+                {% endfor %}
+                {% if sem_cor %}
+                    <li>
+                        <span class="stats-cor-wrap">
+                            <span class="stats-cor" style="background-color: transparent; border: 1px dashed #bbb;"></span>
+                            Sem cor
+                        </span>
+                        <span class="stats-n">{{ sem_cor }}</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+
+    </div>
+
+{% endblock %}

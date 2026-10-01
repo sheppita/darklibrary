@@ -36,7 +36,6 @@ CORES_ORDEM = [
 ]
 CORES_INDICE = {cor: i for i, cor in enumerate(CORES_ORDEM)}
 
-# Cores da lombada em hexadecimal (usado pelo CSS dos cards).
 CORES_HEX = {
     "Branco":   "#f0ede6",
     "Verde":    "#4a7c59",
@@ -50,6 +49,8 @@ CORES_HEX = {
     "Preto":    "#2a2a2a",
     "Multi":    "#e8dfc9",
 }
+
+
 # ─────────────────────────────────────────────
 # Modelo
 # ─────────────────────────────────────────────
@@ -69,7 +70,7 @@ class Livro(db.Model):
 
 
 # ─────────────────────────────────────────────
-# Chave de ordenação (estante → cor → título)
+# Funções auxiliares de ordenação
 # ─────────────────────────────────────────────
 
 def chave_ordenacao(livro):
@@ -91,21 +92,28 @@ def chave_ordenacao(livro):
     return (grupo_estante, ordem_cor, titulo)
 
 
+def chave_ordenacao_estante_simples(estante):
+    """Usada só para ordenar a lista de estantes (dropdown e estatísticas)."""
+    estante = (estante or "").strip().upper()
+    m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
+    if m:
+        return (0, m.group(1), int(m.group(2)))
+    return (1, estante, 0)
+
+
 # ─────────────────────────────────────────────
 # Rotas
 # ─────────────────────────────────────────────
 
 @app.route("/")
 def home():
-    # Lê todos os parâmetros da URL (todos opcionais).
     busca = request.args.get("q", "").strip()
     filtro_estante = request.args.get("estante", "").strip().upper()
     filtro_cor = request.args.get("cor", "").strip()
-    filtro_status = request.args.get("status", "").strip()  # "lido", "nao_lido" ou ""
+    filtro_status = request.args.get("status", "").strip()
 
     query = Livro.query
 
-    # Filtro de busca por texto (título OU autor)
     if busca:
         termo = f"%{busca}%"
         query = query.filter(
@@ -115,15 +123,12 @@ def home():
             )
         )
 
-    # Filtro por estante
     if filtro_estante:
         query = query.filter(Livro.estante == filtro_estante)
 
-    # Filtro por cor
     if filtro_cor:
         query = query.filter(Livro.cor_lombada == filtro_cor)
 
-    # Filtro por status
     if filtro_status == "lido":
         query = query.filter(Livro.lido.is_(True))
     elif filtro_status == "nao_lido":
@@ -132,7 +137,12 @@ def home():
     livros = query.all()
     livros.sort(key=chave_ordenacao)
 
-    # Agrupa por estante
+    # Pré-calcula o hex da cor da lombada de cada livro.
+    for livro in livros:
+        cor = (livro.cor_lombada or "").strip()
+        livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
+
+    # Agrupa por estante.
     grupos = []
     estante_atual = "__inicio__"
     for livro in livros:
@@ -141,12 +151,7 @@ def home():
             estante_atual = livro.estante
         grupos[-1][1].append(livro)
 
-    # Pré-calcula o hex da cor da lombada de cada livro
-    for livro in livros:
-        cor = (livro.cor_lombada or "").strip()
-        livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
-
-    # Para cada grupo, monta o degradê CSS das cores dos livros.
+    # Monta o degradê CSS para cada grupo.
     grupos_com_gradiente = []
     for estante, livros_do_grupo in grupos:
         cores = [livro.cor_hex for livro in livros_do_grupo]
@@ -164,10 +169,10 @@ def home():
 
         grupos_com_gradiente.append((estante, livros_do_grupo, gradiente))
 
-    # Lista de estantes disponíveis no banco
+    # Estantes disponíveis no banco (para o dropdown).
     estantes_disponiveis = sorted(
         [e for (e,) in db.session.query(Livro.estante).distinct().all() if e],
-        key=lambda x: chave_ordenacao_estante_simples(x),
+        key=chave_ordenacao_estante_simples,
     )
 
     return render_template(
@@ -181,14 +186,6 @@ def home():
         estantes=estantes_disponiveis,
         cores=CORES_ORDEM,
     )
-
-def chave_ordenacao_estante_simples(estante):
-    """Usada só para ordenar a lista de estantes do dropdown."""
-    estante = (estante or "").strip().upper()
-    m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
-    if m:
-        return (0, m.group(1), int(m.group(2)))
-    return (1, estante, 0)
 
 
 @app.route("/novo", methods=["GET", "POST"])
@@ -210,6 +207,72 @@ def novo():
     return render_template("novo.html", cores=CORES_ORDEM)
 
 
+@app.route("/estatisticas")
+def estatisticas():
+    # ── Totais gerais ──
+    total = Livro.query.count()
+    total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
+    total_nao_lidos = total - total_lidos
+
+    if total > 0:
+        pct_lidos = round(total_lidos / total * 100)
+    else:
+        pct_lidos = 0
+
+    # ── Por estante ──
+    por_estante_raw = (
+        db.session.query(Livro.estante, db.func.count(Livro.id))
+        .group_by(Livro.estante)
+        .all()
+    )
+    por_estante = sorted(
+        [(e, n) for (e, n) in por_estante_raw if e],
+        key=lambda par: chave_ordenacao_estante_simples(par[0]),
+    )
+    sem_estante = sum(n for (e, n) in por_estante_raw if not e)
+    if sem_estante > 0:
+        por_estante.append((None, sem_estante))
+
+    # ── Top autores ──
+    top_autores = (
+        db.session.query(Livro.autor, db.func.count(Livro.id))
+        .group_by(Livro.autor)
+        .order_by(db.func.count(Livro.id).desc(), Livro.autor.asc())
+        .all()
+    )
+
+    # ── Por nacionalidade ──
+    por_nacionalidade = (
+        db.session.query(Livro.nacionalidade, db.func.count(Livro.id))
+        .group_by(Livro.nacionalidade)
+        .order_by(db.func.count(Livro.id).desc())
+        .all()
+    )
+
+    # ── Por cor ──
+    por_cor_raw = dict(
+        db.session.query(Livro.cor_lombada, db.func.count(Livro.id))
+        .group_by(Livro.cor_lombada)
+        .all()
+    )
+    por_cor = [(cor, por_cor_raw.get(cor, 0)) for cor in CORES_ORDEM]
+    sem_cor = por_cor_raw.get(None, 0)
+
+    return render_template(
+        "estatisticas.html",
+        total=total,
+        total_lidos=total_lidos,
+        total_nao_lidos=total_nao_lidos,
+        pct_lidos=pct_lidos,
+        por_estante=por_estante,
+        top_autores=top_autores,
+        por_nacionalidade=por_nacionalidade,
+        por_cor=por_cor,
+        sem_cor=sem_cor,
+        cores_hex=CORES_HEX,
+    )
+
+
 # ─────────────────────────────────────────────
 # Criação automática da tabela
 # ─────────────────────────────────────────────
@@ -220,4 +283,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
-    
