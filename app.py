@@ -137,12 +137,10 @@ def home():
     livros = query.all()
     livros.sort(key=chave_ordenacao)
 
-    # Pré-calcula o hex da cor da lombada de cada livro.
     for livro in livros:
         cor = (livro.cor_lombada or "").strip()
         livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
 
-    # Agrupa por estante.
     grupos = []
     estante_atual = "__inicio__"
     for livro in livros:
@@ -151,7 +149,6 @@ def home():
             estante_atual = livro.estante
         grupos[-1][1].append(livro)
 
-    # Monta o degradê CSS para cada grupo.
     grupos_com_gradiente = []
     for estante, livros_do_grupo in grupos:
         cores = [livro.cor_hex for livro in livros_do_grupo]
@@ -169,7 +166,6 @@ def home():
 
         grupos_com_gradiente.append((estante, livros_do_grupo, gradiente))
 
-    # Estantes disponíveis no banco (para o dropdown).
     estantes_disponiveis = sorted(
         [e for (e,) in db.session.query(Livro.estante).distinct().all() if e],
         key=chave_ordenacao_estante_simples,
@@ -207,9 +203,40 @@ def novo():
     return render_template("novo.html", cores=CORES_ORDEM)
 
 
+@app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
+def editar(livro_id):
+    # Busca o livro pelo id; se não existir, devolve 404.
+    livro = db.get_or_404(Livro, livro_id)
+
+    if request.method == "POST":
+        livro.titulo = request.form.get("titulo", "").strip()
+        livro.autor = request.form.get("autor", "").strip()
+        livro.nacionalidade = request.form.get("nacionalidade", "").strip() or None
+        livro.cor_lombada = request.form.get("cor_lombada", "").strip() or None
+        livro.estante = request.form.get("estante", "").strip().upper() or None
+        livro.isbn = request.form.get("isbn", "").strip() or None
+        livro.lido = ("lido" in request.form)
+
+        db.session.commit()
+        return redirect(url_for("home"))
+
+    return render_template("editar.html", livro=livro, cores=CORES_ORDEM)
+
+
+@app.route("/excluir/<int:livro_id>", methods=["GET", "POST"])
+def excluir(livro_id):
+    livro = db.get_or_404(Livro, livro_id)
+
+    if request.method == "POST":
+        db.session.delete(livro)
+        db.session.commit()
+        return redirect(url_for("home"))
+
+    return render_template("excluir.html", livro=livro)
+
+
 @app.route("/estatisticas")
 def estatisticas():
-    # ── Totais gerais ──
     total = Livro.query.count()
     total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
     total_nao_lidos = total - total_lidos
@@ -219,7 +246,6 @@ def estatisticas():
     else:
         pct_lidos = 0
 
-    # ── Por estante ──
     por_estante_raw = (
         db.session.query(Livro.estante, db.func.count(Livro.id))
         .group_by(Livro.estante)
@@ -233,7 +259,6 @@ def estatisticas():
     if sem_estante > 0:
         por_estante.append((None, sem_estante))
 
-    # ── Top autores ──
     top_autores = (
         db.session.query(Livro.autor, db.func.count(Livro.id))
         .group_by(Livro.autor)
@@ -241,7 +266,6 @@ def estatisticas():
         .all()
     )
 
-    # ── Por nacionalidade ──
     por_nacionalidade = (
         db.session.query(Livro.nacionalidade, db.func.count(Livro.id))
         .group_by(Livro.nacionalidade)
@@ -249,7 +273,6 @@ def estatisticas():
         .all()
     )
 
-    # ── Por cor ──
     por_cor_raw = dict(
         db.session.query(Livro.cor_lombada, db.func.count(Livro.id))
         .group_by(Livro.cor_lombada)
@@ -283,3 +306,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
+    

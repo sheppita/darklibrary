@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — Excluir livro{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>Excluir livro</h1>
+        <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+    </div>
+
+    <div class="excluir-caixa">
+
+        <p class="excluir-aviso">
+            Tem certeza que quer excluir este livro? Esta ação não pode ser desfeita.
+        </p>
+
+        <div class="excluir-info">
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Título:</span>
+                <span class="excluir-valor">{{ livro.titulo }}</span>
+            </div>
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Autor:</span>
+                <span class="excluir-valor">{{ livro.autor }}</span>
+            </div>
+            {% if livro.estante %}
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Estante:</span>
+                <span class="excluir-valor">{{ livro.estante }}</span>
+            </div>
+            {% endif %}
+            {% if livro.cor_lombada %}
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Cor:</span>
+                <span class="excluir-valor">{{ livro.cor_lombada }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" class="excluir-acoes">
+            <button type="submit" class="botao-perigo">Sim, excluir</button>
+            <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+        </form>
+
+    </div>
+
+{% endblock %}

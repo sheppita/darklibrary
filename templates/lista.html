@@ -64,7 +64,7 @@
             </h2>
 
             <ul class="lista-livros">
-                {% for livro in livros %}
+                    {% for livro in livros %}
                     <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
                         <div class="card-titulo">{{ livro.titulo }}</div>
                         <div class="card-autor">{{ livro.autor }}</div>
@@ -77,9 +77,13 @@
                             {% else %}
                                 <span class="card-meta-item card-meta-nao-lido">⏳ Não lido</span>
                             {% endif %}
+                            <span class="card-acoes">
+                                <a href="{{ url_for('editar', livro_id=livro.id) }}" class="card-acao" title="Editar">✎</a>
+                                <a href="{{ url_for('excluir', livro_id=livro.id) }}" class="card-acao card-acao-perigo" title="Excluir">🗑</a>
+                            </span>
                         </div>
                     </li>
-                {% endfor %}
+                 {% endfor %}
             </ul>
         {% endfor %}
 
