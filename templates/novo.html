@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Library — Novo livro</title>
+</head>
+<body>
+    <h1>Novo livro</h1>
+
+    <p>
+        <a href="{{ url_for('home') }}">← Voltar para a lista</a>
+    </p>
+
+    <hr>
+
+    <form method="POST">
+        <p>
+            <label for="titulo">Título *</label><br>
+            <input type="text" id="titulo" name="titulo" required maxlength="200" style="width: 100%;">
+        </p>
+
+        <p>
+            <label for="autor">Autor *</label><br>
+            <input type="text" id="autor" name="autor" required maxlength="150" style="width: 100%;">
+        </p>
+
+        <p>
+            <label for="nacionalidade">Nacionalidade do autor</label><br>
+            <input type="text" id="nacionalidade" name="nacionalidade" maxlength="80" style="width: 100%;">
+        </p>
+
+        <p>
+            <label for="cor_lombada">Cor da lombada</label><br>
+            <select id="cor_lombada" name="cor_lombada" style="width: 100%;">
+                <option value="">— Selecione —</option>
+                <option value="Branco">Branco</option>
+                <option value="Verde">Verde</option>
+                <option value="Azul">Azul</option>
+                <option value="Rosa">Rosa</option>
+                <option value="Marrom">Marrom</option>
+                <option value="Vermelho">Vermelho</option>
+                <option value="Laranja">Laranja</option>
+                <option value="Amarelo">Amarelo</option>
+                <option value="Cinza">Cinza</option>
+                <option value="Preto">Preto</option>
+                <option value="Multi">Multi</option>
+            </select>
+        </p>
+
+        <p>
+            <label for="estante">Estante</label><br>
+            <input type="text" id="estante" name="estante" maxlength="20" placeholder="Ex.: A1, B10, G7" style="width: 100%;">
+        </p>
+
+        <p>
+            <label for="isbn">ISBN (opcional)</label><br>
+            <input type="text" id="isbn" name="isbn" maxlength="20" style="width: 100%;">
+        </p>
+
+        <p>
+            <input type="checkbox" id="lido" name="lido">
+            <label for="lido">Já li este livro</label>
+        </p>
+
+        <p>
+            <button type="submit">Salvar</button>
+            <a href="{{ url_for('home') }}">Cancelar</a>
+        </p>
+    </form>
+</body>
+</html>
