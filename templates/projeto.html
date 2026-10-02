@@ -49,33 +49,32 @@
         <div class="lista-itens">
             {% for item in itens %}
                 <div class="card-item card-item-{{ item.status }}">
-                    <div class="card-item-cabecalho">
-                        <div class="card-item-titulo">{{ item.titulo }}</div>
-                        <div class="card-item-acoes">
-                            <div class="card-item-status card-item-status-{{ item.status }}">
-                                {{ status_rotulo[item.status] }}
-                            </div>
-                            <a class="card-item-acao"
-                               href="{{ url_for('item_editar', projeto_id=projeto.id, item_id=item.id) }}"
-                               title="Editar">✎</a>
-                            <a class="card-item-acao card-item-acao-perigo"
-                               href="{{ url_for('item_excluir', projeto_id=projeto.id, item_id=item.id) }}"
-                               title="Excluir">🗑</a>
-                        </div>
-                    </div>
 
-                    <div class="card-item-autor">{{ item.autor }}</div>
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">{{ item.titulo }}</div>
+                        <div class="card-item-autor">{{ item.autor }}</div>
+                    </div>
 
                     <div class="card-item-meta">
                         {% if item.pais %}<span>{{ item.pais }}</span>{% endif %}
                         {% if item.ano %}<span>{{ item.ano }}</span>{% endif %}
-                        {% if item.isbn %}<span>ISBN {{ item.isbn }}</span>{% endif %}
-                        {% if item.livro_id %}<span class="card-item-vinculo">✓ vinculado à estante</span>{% endif %}
+                        {% if item.isbn %}<span class="card-item-isbn">ISBN {{ item.isbn }}</span>{% endif %}
                     </div>
 
-                    {% if item.observacoes %}
-                        <div class="card-item-obs">{{ item.observacoes }}</div>
-                    {% endif %}
+                    <div class="card-item-acoes">
+                        <div class="card-item-status card-item-status-{{ item.status }}">
+                            {{ status_rotulo[item.status] }}
+                        </div>
+                        <a class="card-item-acao"
+                           href="{{ url_for('item_editar', projeto_id=projeto.id, item_id=item.id) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('item_excluir', projeto_id=projeto.id, item_id=item.id) }}"
+                           title="Excluir">🗑</a>
+                    </div>
+
                 </div>
             {% endfor %}
         </div>

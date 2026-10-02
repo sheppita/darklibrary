@@ -1097,61 +1097,106 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   22. Itens de projeto — cards
+   22. Itens de projeto — lista compacta
    ───────────────────────────────────────────── */
 
 .lista-itens {
     display: flex;
     flex-direction: column;
-    gap: var(--esp-3);
-}
-
-.card-item {
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-left: 6px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-4);
-    box-shadow: var(--sombra-suave);
-    display: flex;
-    flex-direction: column;
     gap: var(--esp-2);
 }
 
-/* Cor da tarja lateral varia conforme o status */
-
-.card-item-li {
-    border-left-color: #4a7c59;
-}
-
-.card-item-tenho_nao_li {
-    border-left-color: #3d5a80;
-}
-
-.card-item-nao_tenho {
-    border-left-color: #b8b0a0;
-}
-
-.card-item-cabecalho {
+.card-item {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
     gap: var(--esp-3);
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-2) var(--esp-3) var(--esp-2) 0;
+    box-shadow: var(--sombra-suave);
+    min-height: 56px;
+}
+
+/* Tarja de cor à esquerda, cor conforme o status */
+.card-item-tarja {
+    flex: 0 0 6px;
+    align-self: stretch;
+    border-radius: var(--raio) 0 0 var(--raio);
+    background-color: var(--cor-borda);
+}
+
+.card-item-li .card-item-tarja {
+    background-color: #4a7c59;
+}
+
+.card-item-tenho_nao_li .card-item-tarja {
+    background-color: #3d5a80;
+}
+
+.card-item-nao_tenho .card-item-tarja {
+    background-color: #b8b0a0;
+}
+
+/* Bloco título + autor, ocupa o espaço flexível */
+.card-item-principal {
+    flex: 1 1 auto;
+    min-width: 0; /* permite o título truncar com ellipsis */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--esp-2) 0;
 }
 
 .card-item-titulo {
     font-family: var(--fonte-titulo);
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 600;
     line-height: 1.25;
+    color: var(--cor-texto);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.card-item-status {
+.card-item-autor {
+    font-size: 0.82rem;
+    color: var(--cor-texto-suave);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Meta: país · ano · ISBN */
+.card-item-meta {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--esp-2);
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
+}
+
+.card-item-isbn {
     font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+/* Ações: status + editar + excluir, à direita */
+.card-item-acoes {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-1);
+}
+
+/* Badge de status */
+.card-item-status {
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    padding: 2px var(--esp-3);
+    padding: 2px var(--esp-2);
     border-radius: 999px;
     white-space: nowrap;
     background-color: var(--cor-fundo);
@@ -1173,67 +1218,18 @@ input:focus, select:focus, textarea:focus {
     color: #7a7568;
 }
 
-.card-item-autor {
-    font-size: 0.9rem;
-    color: var(--cor-texto-suave);
-}
-
-.card-item-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--esp-3);
-    font-size: 0.8rem;
-    color: var(--cor-texto-suave);
-}
-
-.card-item-vinculo {
-    color: #2e7d32;
-    font-weight: 500;
-}
-
-.card-item-obs {
-    font-size: 0.85rem;
-    color: var(--cor-texto-suave);
-    font-style: italic;
-    border-top: 1px dashed var(--cor-borda);
-    padding-top: var(--esp-2);
-    margin-top: var(--esp-1);
-}
-/* ─────────────────────────────────────────────
-   23. Etapa 3 — ações no cabeçalho e no card de item
-   ───────────────────────────────────────────── */
-
-.pagina-cabecalho-acoes {
-    display: flex;
-    align-items: center;
-    gap: var(--esp-3);
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.botao-pequeno {
-    font-size: 0.85rem;
-    padding: var(--esp-1) var(--esp-3);
-}
-
-.card-item-acoes {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--esp-1);
-    flex-shrink: 0;
-}
-
+/* Botão pequeno ✎/🗑 (mesmo estilo dos card-acao de livro) */
 .card-item-acao {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: var(--raio);
     background-color: var(--cor-fundo);
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto-suave);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     text-decoration: none;
     transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
@@ -1251,6 +1247,23 @@ input:focus, select:focus, textarea:focus {
     color: #ffffff;
 }
 
+/* ─────────────────────────────────────────────
+   23. Ações no cabeçalho e mensagens de formulário
+   ───────────────────────────────────────────── */
+
+.pagina-cabecalho-acoes {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-3);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.botao-pequeno {
+    font-size: 0.85rem;
+    padding: var(--esp-1) var(--esp-3);
+}
+
 .mensagem-erro-form {
     background-color: #fdecea;
     color: #721c24;
@@ -1261,15 +1274,31 @@ input:focus, select:focus, textarea:focus {
     font-size: 0.95rem;
 }
 
-/* Em telas pequenas, empilha o cabeçalho do card de item
-   para os botões não competirem com o título. */
-@media (max-width: 480px) {
-    .card-item-cabecalho {
-        flex-direction: column;
-        align-items: stretch;
+/* ─────────────────────────────────────────────
+   24. Responsivo — lista compacta no celular
+   ───────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+    .card-item {
+        flex-wrap: wrap;
+        padding: var(--esp-2) var(--esp-3) var(--esp-2) 0;
+        align-items: flex-start;
+    }
+
+    .card-item-principal {
+        flex: 1 1 calc(100% - 30px);
+        /* ocupa o resto da linha depois da tarja */
+        padding: var(--esp-2) var(--esp-2) var(--esp-1) 0;
+    }
+
+    .card-item-meta {
+        flex: 1 1 auto;
+        padding-left: var(--esp-2);
+        padding-bottom: var(--esp-1);
     }
 
     .card-item-acoes {
-        justify-content: flex-end;
+        flex: 0 0 auto;
+        padding-right: 0;
     }
 }
