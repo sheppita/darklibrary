@@ -1,7 +1,8 @@
 import os
 import re
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
+import requests
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -101,22 +102,11 @@ def chave_ordenacao_estante_simples(estante):
     return (1, estante, 0)
 
 
-# ─────────────────────────────────────────────
-# Funções auxiliares do backup
-# ─────────────────────────────────────────────
-
 def sql_escape(valor):
-    """
-    Recebe um valor Python e devolve o texto SQL correspondente.
-    - None vira NULL
-    - True/False viram TRUE/FALSE
-    - Strings vão entre aspas simples, com aspas escapadas
-    """
     if valor is None:
         return "NULL"
     if isinstance(valor, bool):
         return "TRUE" if valor else "FALSE"
-    # escapa aspas simples: ' vira ''
     texto = str(valor).replace("'", "''")
     return f"'{texto}'"
 
@@ -317,7 +307,6 @@ def estatisticas():
 
 @app.route("/backup")
 def backup():
-    """Gera um arquivo .sql com todos os livros para download."""
     livros = Livro.query.order_by(Livro.id).all()
 
     agora = datetime.now()
@@ -356,7 +345,6 @@ def backup():
                 f"VALUES ({valores});"
             )
 
-    # O "join" junta todas as linhas com quebra de linha.
     conteudo = "\n".join(linhas)
 
     nome_arquivo = f"darklibrary-backup-{data_arquivo}.sql"
@@ -368,6 +356,49 @@ def backup():
             "Content-Disposition": f'attachment; filename="{nome_arquivo}"',
         },
     )
+
+
+@app.route("/api/buscar_isbn/<isbn>")
+def buscar_isbn(isbn):
+    """Consulta a Open Library pelo ISBN e devolve JSON com os dados do livro."""
+    # Limpa o ISBN: só dígitos e X (para ISBN-10). Aceita com ou sem hífens.
+    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
+
+    if not isbn_limpo:
+        return jsonify({"erro": "ISBN vazio"}), 400
+
+    url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
+
+    try:
+        resposta = requests.get(url, timeout=8)
+        resposta.raise_for_status()
+        dados = resposta.json()
+    except requests.RequestException as e:
+        return jsonify({"erro": f"Falha na consulta: {e}"}), 502
+
+    chave = f"ISBN:{isbn_limpo}"
+    if chave not in dados:
+        return jsonify({"erro": "ISBN não encontrado na Open Library"}), 404
+
+    info = dados[chave]
+
+    titulo = info.get("title", "")
+    autores = info.get("authors", [])
+    autor = autores[0]["name"] if autores else ""
+
+    capa = ""
+    if "cover" in info and "medium" in info["cover"]:
+        capa = info["cover"]["medium"]
+
+    ano = info.get("publish_date", "")
+
+    return jsonify({
+        "isbn": isbn_limpo,
+        "titulo": titulo,
+        "autor": autor,
+        "ano": ano,
+        "capa": capa,
+    })
 
 
 # ─────────────────────────────────────────────

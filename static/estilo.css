@@ -810,3 +810,62 @@ input:focus, select:focus, textarea:focus {
     background-color: #a01f1f;
     opacity: 1;
 }
+/* ─────────────────────────────────────────────
+   16. Campo com botão (ISBN lookup)
+   ───────────────────────────────────────────── */
+
+.campo-com-botao {
+    display: flex;
+    gap: var(--esp-2);
+    align-items: stretch;
+}
+
+.campo-com-botao input {
+    flex: 1;
+    min-width: 0; /* importante para flex não estourar */
+}
+
+.botao-secundario {
+    background-color: transparent;
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    white-space: nowrap;
+    padding: var(--esp-2) var(--esp-3);
+}
+
+.botao-secundario:hover {
+    background-color: var(--cor-texto);
+    color: #ffffff;
+    border-color: var(--cor-texto);
+    opacity: 1;
+}
+
+.botao-secundario:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.mensagem-isbn {
+    margin-top: var(--esp-2);
+    padding: var(--esp-2) var(--esp-3);
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+}
+
+.mensagem-isbn-sucesso {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.mensagem-isbn-aviso {
+    background-color: #fff8e1;
+    color: #8a6d00;
+    border: 1px solid #ffe082;
+}
+
+.mensagem-isbn-erro {
+    background-color: #fdecea;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}

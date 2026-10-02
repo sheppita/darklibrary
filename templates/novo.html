@@ -12,6 +12,15 @@
     <form method="POST" class="form-cadastro">
 
         <div class="campo">
+            <label for="isbn">ISBN</label>
+            <div class="campo-com-botao">
+                <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric" placeholder="Ex.: 9788535914849">
+                <button type="button" id="btn-buscar-isbn" class="botao-secundario">Buscar ISBN</button>
+            </div>
+            <div id="mensagem-isbn" class="mensagem-isbn" hidden></div>
+        </div>
+
+        <div class="campo">
             <label for="titulo">Título <span class="obrigatorio">*</span></label>
             <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus>
         </div>
@@ -43,11 +52,6 @@
             </select>
         </div>
 
-        <div class="campo">
-            <label for="isbn">ISBN (opcional)</label>
-            <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric" placeholder="Ex.: 9788535914849">
-        </div>
-
         <div class="campo-checkbox">
             <input type="checkbox" id="lido" name="lido">
             <label for="lido">Já li este livro</label>
@@ -59,5 +63,73 @@
         </div>
 
     </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const botao = document.getElementById("btn-buscar-isbn");
+            const inputIsbn = document.getElementById("isbn");
+            const inputTitulo = document.getElementById("titulo");
+            const inputAutor = document.getElementById("autor");
+            const mensagem = document.getElementById("mensagem-isbn");
+
+            function mostrarMensagem(texto, tipo) {
+                mensagem.textContent = texto;
+                mensagem.className = "mensagem-isbn mensagem-isbn-" + tipo;
+                mensagem.hidden = false;
+            }
+
+            botao.addEventListener("click", async function () {
+                const isbn = inputIsbn.value.trim();
+
+                if (!isbn) {
+                    mostrarMensagem("Digite um ISBN primeiro.", "erro");
+                    return;
+                }
+
+                // Estado "carregando"
+                botao.disabled = true;
+                botao.textContent = "Buscando...";
+                mensagem.hidden = true;
+
+                try {
+                    const resposta = await fetch("/api/buscar_isbn/" + encodeURIComponent(isbn));
+                    const dados = await resposta.json();
+
+                    if (!resposta.ok) {
+                        mostrarMensagem(dados.erro || "Livro não encontrado.", "erro");
+                        return;
+                    }
+
+                    // Preenche os campos só se estiverem vazios.
+                    let camposPreenchidos = [];
+                    if (!inputTitulo.value.trim() && dados.titulo) {
+                        inputTitulo.value = dados.titulo;
+                        camposPreenchidos.push("título");
+                    }
+                    if (!inputAutor.value.trim() && dados.autor) {
+                        inputAutor.value = dados.autor;
+                        camposPreenchidos.push("autor");
+                    }
+
+                    if (camposPreenchidos.length === 0) {
+                        mostrarMensagem(
+                            "Livro encontrado, mas os campos já estavam preenchidos.",
+                            "aviso"
+                        );
+                    } else {
+                        mostrarMensagem(
+                            "Encontrado! " + camposPreenchidos.join(" e ") + " preenchido(s).",
+                            "sucesso"
+                        );
+                    }
+                } catch (erro) {
+                    mostrarMensagem("Erro de conexão. Tente de novo.", "erro");
+                } finally {
+                    botao.disabled = false;
+                    botao.textContent = "Buscar ISBN";
+                }
+            });
+        });
+    </script>
 
 {% endblock %}
