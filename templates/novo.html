@@ -315,7 +315,7 @@
                         contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                         // Tenta decodificar a imagem do canvas.
-                        try {
+                                                try {
                             const resultado = await leitorZXing.decodeFromImageElement(canvas);
                             if (resultado) {
                                 const textoLido = resultado.getText();
@@ -324,9 +324,14 @@
                                 inputIsbn.value = textoLido;
                                 buscarIsbn();
                             }
-                        } catch (e) {
-                            // "NotFoundException" é normal — significa que
-                            // não achou código neste frame. Ignoramos.
+                                                } catch (e) {
+                            // Mostra o erro na tela (para debug no iPhone).
+                            const nomeErro = e && e.name ? e.name : "?";
+                            const msgErro = e && e.message ? e.message : "";
+                            mostrarMensagemScanner(
+                                "Debug: " + nomeErro + " — " + msgErro,
+                                "aviso"
+                            );
                         }
                     }, 400);
 
