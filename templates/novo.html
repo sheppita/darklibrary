@@ -257,7 +257,7 @@
                 }
 
                 try {
-                    
+
                     // Pede a câmera TRASEIRA.
                     streamCamera = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: { ideal: "environment" } },
@@ -268,7 +268,19 @@
                     await video.play();
 
                     // Configura o ZXing para ler códigos de barras 1D.
-                    leitorZXing = new ZXing.BrowserMultiFormatReader();
+                    // Cria hints específicos para códigos de barras de produtos (ISBN/EAN).
+                        const hints = new Map();
+                        const formatos = [
+                            ZXing.BarcodeFormat.EAN_13,
+                            ZXing.BarcodeFormat.EAN_8,
+                            ZXing.BarcodeFormat.UPC_A,
+                            ZXing.BarcodeFormat.UPC_E,
+                            ZXing.BarcodeFormat.CODE_128,
+                        ];
+                        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formatos);
+                        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+                        leitorZXing = new ZXing.BrowserMultiFormatReader(hints);
 
                     mostrarMensagemScanner("Procurando código de barras... aponte a câmera.", "aviso");
 
