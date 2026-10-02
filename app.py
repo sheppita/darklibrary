@@ -1,6 +1,7 @@
 import os
 import re
-from flask import Flask, render_template, request, redirect, url_for
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -93,12 +94,31 @@ def chave_ordenacao(livro):
 
 
 def chave_ordenacao_estante_simples(estante):
-    """Usada só para ordenar a lista de estantes (dropdown e estatísticas)."""
     estante = (estante or "").strip().upper()
     m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
     if m:
         return (0, m.group(1), int(m.group(2)))
     return (1, estante, 0)
+
+
+# ─────────────────────────────────────────────
+# Funções auxiliares do backup
+# ─────────────────────────────────────────────
+
+def sql_escape(valor):
+    """
+    Recebe um valor Python e devolve o texto SQL correspondente.
+    - None vira NULL
+    - True/False viram TRUE/FALSE
+    - Strings vão entre aspas simples, com aspas escapadas
+    """
+    if valor is None:
+        return "NULL"
+    if isinstance(valor, bool):
+        return "TRUE" if valor else "FALSE"
+    # escapa aspas simples: ' vira ''
+    texto = str(valor).replace("'", "''")
+    return f"'{texto}'"
 
 
 # ─────────────────────────────────────────────
@@ -205,7 +225,6 @@ def novo():
 
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
 def editar(livro_id):
-    # Busca o livro pelo id; se não existir, devolve 404.
     livro = db.get_or_404(Livro, livro_id)
 
     if request.method == "POST":
@@ -293,6 +312,61 @@ def estatisticas():
         por_cor=por_cor,
         sem_cor=sem_cor,
         cores_hex=CORES_HEX,
+    )
+
+
+@app.route("/backup")
+def backup():
+    """Gera um arquivo .sql com todos os livros para download."""
+    livros = Livro.query.order_by(Livro.id).all()
+
+    agora = datetime.now()
+    data_iso = agora.strftime("%Y-%m-%d %H:%M:%S")
+    data_arquivo = agora.strftime("%Y%m%d-%H%M")
+
+    linhas = []
+    linhas.append("-- Dark Library — Backup")
+    linhas.append(f"-- Gerado em: {data_iso}")
+    linhas.append(f"-- Total de livros: {len(livros)}")
+    linhas.append("")
+    linhas.append("-- Restauração:")
+    linhas.append("-- 1. Abra o SQL Editor do Neon")
+    linhas.append("-- 2. Cole este arquivo e execute")
+    linhas.append("-- (atenção: os comandos abaixo APAGAM os dados atuais)")
+    linhas.append("")
+    linhas.append("DELETE FROM livro;")
+    linhas.append("")
+
+    if not livros:
+        linhas.append("-- Nenhum livro cadastrado.")
+    else:
+        for livro in livros:
+            valores = ", ".join([
+                str(livro.id),
+                sql_escape(livro.titulo),
+                sql_escape(livro.autor),
+                sql_escape(livro.nacionalidade),
+                sql_escape(livro.cor_lombada),
+                sql_escape(livro.estante),
+                sql_escape(livro.isbn),
+                sql_escape(livro.lido),
+            ])
+            linhas.append(
+                "INSERT INTO livro (id, titulo, autor, nacionalidade, cor_lombada, estante, isbn, lido) "
+                f"VALUES ({valores});"
+            )
+
+    # O "join" junta todas as linhas com quebra de linha.
+    conteudo = "\n".join(linhas)
+
+    nome_arquivo = f"darklibrary-backup-{data_arquivo}.sql"
+
+    return Response(
+        conteudo,
+        mimetype="application/sql",
+        headers={
+            "Content-Disposition": f'attachment; filename="{nome_arquivo}"',
+        },
     )
 
 

@@ -14,11 +14,12 @@
     <header class="cabecalho">
         <div class="cabecalho-conteudo">
             <a href="{{ url_for('home') }}" class="logo">Dark Library</a>
-           <nav class="menu">
-                 <a href="{{ url_for('home') }}">Início</a>
-                 <a href="{{ url_for('novo') }}">+ Novo</a>
-                  <a href="{{ url_for('estatisticas') }}">Estatísticas</a>
-            </nav>
+                 <nav class="menu">
+                      <a href="{{ url_for('home') }}">Início</a>
+                      <a href="{{ url_for('novo') }}">+ Novo</a>
+                      <a href="{{ url_for('estatisticas') }}">Estatísticas</a>
+                     <a href="{{ url_for('backup') }}" class="link-backup">Baixar backup</a>
+                </nav>
         </div>
     </header>
 
