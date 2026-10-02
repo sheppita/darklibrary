@@ -950,3 +950,89 @@ input:focus, select:focus, textarea:focus {
 .preview-capa img:not([src]) {
     display: none;
 }
+/* ─────────────────────────────────────────────
+   19. Scanner (overlay da câmera)
+   ───────────────────────────────────────────── */
+
+.scanner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--esp-4);
+}
+
+/* Esconde mesmo com display: flex definido. */
+.scanner-overlay[hidden] {
+    display: none;
+}
+
+.scanner-conteudo {
+    background-color: var(--cor-superficie);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.scanner-conteudo h2 {
+    margin: 0 0 var(--esp-2) 0;
+    font-size: 1.15rem;
+}
+
+.scanner-dica {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin: 0 0 var(--esp-4) 0;
+}
+
+.scanner-video-wrap {
+    background-color: #000000;
+    border-radius: var(--raio);
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    margin-bottom: var(--esp-4);
+}
+
+.scanner-video-wrap video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.scanner-mensagem {
+    background-color: #fff8e1;
+    color: #8a6d00;
+    border: 1px solid #ffe082;
+    border-radius: var(--raio);
+    padding: var(--esp-2) var(--esp-3);
+    margin-bottom: var(--esp-4);
+    font-size: 0.9rem;
+}
+
+.scanner-acoes {
+    display: flex;
+    justify-content: center;
+    gap: var(--esp-3);
+}
+/* Variações de cor da mensagem do scanner */
+.scanner-mensagem-erro {
+    background-color: #fdecea;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.scanner-mensagem-sucesso {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-color: #c8e6c9;
+}

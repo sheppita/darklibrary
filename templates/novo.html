@@ -16,6 +16,7 @@
             <div class="campo-com-botao">
                 <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric" placeholder="Ex.: 9788535914849">
                 <button type="button" id="btn-buscar-isbn" class="botao-secundario">Buscar ISBN</button>
+                <button type="button" id="btn-escanear" class="botao-secundario">📷 Escanear</button>
             </div>
             <div id="mensagem-isbn" class="mensagem-isbn" hidden></div>
         </div>
@@ -73,8 +74,28 @@
 
     </form>
 
-    <script>
+    {# ─────────── Overlay do scanner (escondido por padrão) ─────────── #}
+    <div id="scanner-overlay" class="scanner-overlay" hidden>
+        <div class="scanner-conteudo">
+            <h2>Escaneie o código de barras</h2>
+            <p class="scanner-dica">Aponte a câmera para o código de barras do livro (na contracapa).</p>
+
+            <div class="scanner-video-wrap">
+                <video id="scanner-video" autoplay playsinline muted></video>
+            </div>
+
+            <div id="scanner-mensagem" class="scanner-mensagem" hidden></div>
+
+            <div class="scanner-acoes">
+                <button type="button" id="btn-cancelar-scan" class="botao-secundario">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    {# ─────────── Biblioteca ZXing (via CDN) ─────────── #}
+       <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // ═══════════ Parte 1: buscar ISBN ═══════════
             const botao = document.getElementById("btn-buscar-isbn");
             const inputIsbn = document.getElementById("isbn");
             const inputTitulo = document.getElementById("titulo");
@@ -93,6 +114,7 @@
             function mostrarPreview(url) {
                 if (!url) {
                     previewCapa.hidden = true;
+                    previewCapaImg.removeAttribute("src");
                     return;
                 }
                 previewCapaImg.src = url;
@@ -101,14 +123,14 @@
 
             previewCapaImg.addEventListener("error", function () {
                 previewCapa.hidden = true;
+                previewCapaImg.removeAttribute("src");
             });
 
-            // Atualiza o preview conforme o campo de URL é editado.
             inputCapa.addEventListener("input", function () {
                 mostrarPreview(inputCapa.value.trim());
             });
 
-            botao.addEventListener("click", async function () {
+            async function buscarIsbn() {
                 const isbn = inputIsbn.value.trim();
 
                 if (!isbn) {
@@ -139,7 +161,6 @@
                         camposPreenchidos.push("autor");
                     }
 
-                    // Preenche a capa automaticamente se ainda não tiver URL.
                     if (dados.capa && !inputCapa.value.trim()) {
                         inputCapa.value = dados.capa;
                         mostrarPreview(dados.capa);
@@ -162,6 +183,113 @@
                     botao.disabled = false;
                     botao.textContent = "Buscar ISBN";
                 }
+            }
+
+            botao.addEventListener("click", buscarIsbn);
+
+            // ═══════════ Parte 2: scanner de código de barras ═══════════
+            const botaoEscanear = document.getElementById("btn-escanear");
+            const overlay = document.getElementById("scanner-overlay");
+            const botaoCancelar = document.getElementById("btn-cancelar-scan");
+            const mensagemScanner = document.getElementById("scanner-mensagem");
+            const video = document.getElementById("scanner-video");
+
+            let leitorZXing = null;
+            let streamCamera = null;
+
+            function mostrarMensagemScanner(texto, tipo) {
+                mensagemScanner.textContent = texto;
+                let cor = "aviso";
+                if (tipo === "erro") cor = "erro";
+                if (tipo === "sucesso") cor = "sucesso";
+                mensagemScanner.className = "scanner-mensagem scanner-mensagem-" + cor;
+                mensagemScanner.hidden = false;
+            }
+
+            async function pararTudo() {
+                // Para o leitor do ZXing, se estiver ativo.
+                if (leitorZXing) {
+                    try {
+                        leitorZXing.reset();
+                    } catch (e) {
+                        // ignora
+                    }
+                    leitorZXing = null;
+                }
+                // Para o stream da câmera.
+                if (streamCamera) {
+                    streamCamera.getTracks().forEach(function (t) { t.stop(); });
+                    streamCamera = null;
+                }
+                // Limpa o vídeo.
+                if (video) {
+                    video.srcObject = null;
+                }
+                // Fecha o overlay.
+                overlay.hidden = true;
+                mensagemScanner.hidden = true;
+            }
+
+            async function iniciarScanner() {
+                overlay.hidden = false;
+                mensagemScanner.hidden = true;
+
+                // Confere se o navegador tem suporte
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    mostrarMensagemScanner(
+                        "Seu navegador não suporta acesso à câmera. " +
+                        "Certifique-se de estar usando HTTPS (no Render) e um navegador atualizado.",
+                        "erro"
+                    );
+                    return;
+                }
+
+                try {
+                    // Pede a câmera TRASEIRA.
+                    streamCamera = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: "environment" } },
+                        audio: false
+                    });
+
+                    video.srcObject = streamCamera;
+                    await video.play();
+
+                    // Configura o ZXing para ler códigos de barras 1D.
+                    leitorZXing = new ZXing.BrowserMultiFormatReader();
+
+                    mostrarMensagemScanner("Procurando código de barras... aponte a câmera.", "aviso");
+
+                    // Começa a decodificar continuamente do elemento <video>.
+                    leitorZXing.decodeFromVideoElement(video, function (resultado, erro) {
+                        if (resultado) {
+                            const textoLido = resultado.getText();
+                            // Limpa tudo.
+                            pararTudo();
+                            // Preenche o campo ISBN com o que foi lido.
+                            inputIsbn.value = textoLido;
+                            // Chama a busca automática.
+                            buscarIsbn();
+                        }
+                        // Se erro, ignoramos — é normal durante a leitura contínua.
+                    });
+                } catch (erro) {
+                    console.error(erro);
+                    let msg = "Não foi possível acessar a câmera.";
+                    if (erro && erro.name === "NotAllowedError") {
+                        msg = "Permissão de câmera negada. Autorize o acesso nas configurações do navegador.";
+                    } else if (erro && erro.name === "NotFoundError") {
+                        msg = "Nenhuma câmera encontrada neste dispositivo.";
+                    } else if (erro && erro.message) {
+                        msg += " (" + erro.message + ")";
+                    }
+                    mostrarMensagemScanner(msg, "erro");
+                }
+            }
+
+            botaoEscanear.addEventListener("click", iniciarScanner);
+
+            botaoCancelar.addEventListener("click", function () {
+                pararTudo();
             });
         });
     </script>
