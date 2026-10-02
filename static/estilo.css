@@ -284,35 +284,97 @@ input:focus, select:focus, textarea:focus {
     }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 900px) {
     .lista-livros {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
+@media (min-width: 1200px) {
+    .lista-livros {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1500px) {
+    .lista-livros {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
 /* ─────────────────────────────────────────────
-   9. Card de livro (versão base — refinar na 5.5)
+   9. Card de livro (com ou sem capa)
    ───────────────────────────────────────────── */
 
 .card-livro {
-    --cor-lombada: var(--cor-borda); /* fallback se a cor não vier do app */
+    --cor-lombada: var(--cor-borda);
 
     background-color: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
     border-left: 8px solid var(--cor-lombada);
     border-radius: var(--raio);
-    padding: var(--esp-4);
     box-shadow: var(--sombra-suave);
     transition: transform 0.12s ease, box-shadow 0.12s ease;
     display: flex;
     flex-direction: column;
-    gap: var(--esp-2);
-    min-height: 110px;
+    overflow: hidden;
+    padding: 0;
+    /* Camada interna sutil que reforça a tarja mesmo quando a cor é clara */
+    position: relative;
+}
+
+.card-livro::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 8px;
+    background-image: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.12) 0%,
+        rgba(0, 0, 0, 0.02) 40%,
+        rgba(0, 0, 0, 0) 100%
+    );
+    pointer-events: none;
 }
 
 .card-livro:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Bloco da capa */
+.card-capa {
+    background-color: #ece8de;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 240px;
+    padding: var(--esp-3);
+    border-bottom: 1px solid var(--cor-borda);
+    overflow: hidden;
+}
+
+.card-capa img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-radius: 3px;
+    object-fit: contain;
+}
+
+/* Conteúdo textual */
+.card-conteudo {
+    padding: var(--esp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+    flex: 1;
+    min-height: 110px;
 }
 
 .card-titulo {
@@ -329,35 +391,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .card-meta {
-    margin-top: auto; /* empurra o meta para o final do card */
+    margin-top: auto;
     padding-top: var(--esp-2);
     display: flex;
     flex-wrap: wrap;
     gap: var(--esp-2);
     font-size: 0.8rem;
 }
-
-.card-meta-item {
-    background-color: var(--cor-fundo);
-    border: 1px solid var(--cor-borda);
-    border-radius: 999px; /* pílula */
-    padding: 2px var(--esp-2);
-    color: var(--cor-texto-suave);
-    white-space: nowrap;
-}
-
-.card-meta-lido {
-    color: #2e7d32;
-    border-color: #c8e6c9;
-    background-color: #e8f5e9;
-}
-
-.card-meta-nao-lido {
-    color: #8a6d00;
-    border-color: #ffe082;
-    background-color: #fff8e1;
-}
-
 
 /* ─────────────────────────────────────────────
    10. Formulário de cadastro (base)
@@ -882,6 +922,17 @@ input:focus, select:focus, textarea:focus {
     display: inline-block;
 }
 
+/* Quando o atributo `hidden` está presente, esconde mesmo que display esteja definido. */
+.preview-capa[hidden] {
+    display: none;
+}
+
+/* Se o <img> está sem src ou com src vazio, esconde ele (evita ícone quebrado). */
+.preview-capa img:not([src]),
+.preview-capa img[src=""] {
+    display: none;
+}
+
 .preview-capa img {
     max-width: 120px;
     max-height: 180px;
@@ -891,44 +942,11 @@ input:focus, select:focus, textarea:focus {
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-/* ─────────────────────────────────────────────
-   18. Card com capa
-   ───────────────────────────────────────────── */
 
-.card-livro-com-capa {
-    padding: 0; /* o padding vai para o .card-conteudo */
-    overflow: hidden; /* garante que a imagem não saia dos cantos arredondados */
+.preview-capa[hidden] {
+    display: none !important;
 }
-
-.card-capa {
-    background-color: #ece8de; /* fundo neutro atrás da capa */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: var(--esp-4) 0;
-    border-bottom: 1px solid var(--cor-borda);
-    min-height: 180px;
+.preview-capa img[src=""],
+.preview-capa img:not([src]) {
+    display: none;
 }
-
-.card-capa img {
-    max-width: 70%;
-    max-height: 220px;
-    width: auto;
-    height: auto;
-    display: block;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    border-radius: 3px;
-    object-fit: contain;
-}
-
-.card-conteudo {
-    padding: var(--esp-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--esp-2);
-    flex: 1;
-}
-
-/* O .card-meta tem margin-top:auto para empurrar para o final.
-   Isso já está definido no CSS existente. */
-   

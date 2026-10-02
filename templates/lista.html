@@ -65,7 +65,7 @@
 
             <ul class="lista-livros">
                                     {% for livro in livros %}
-                    <li class="card-livro {% if livro.capa_final %}card-livro-com-capa{% endif %}" style="--cor-lombada: {{ livro.cor_hex }};">
+                    <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
 
                         {% if livro.capa_final %}
                             <div class="card-capa">
