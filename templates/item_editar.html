@@ -40,6 +40,13 @@
                    value="{{ item.autor }}">
         </div>
 
+        <div class="campo">
+            <label for="subtitulo">Subtítulo (opcional)</label>
+            <input type="text" id="subtitulo" name="subtitulo" maxlength="200"
+                   value="{{ item.subtitulo or '' }}"
+                   placeholder="Ex.: laureado Nobel 1901">
+        </div>
+
         <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>

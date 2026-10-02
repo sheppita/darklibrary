@@ -1302,3 +1302,121 @@ input:focus, select:focus, textarea:focus {
         padding-right: 0;
     }
 }
+/* ─────────────────────────────────────────────
+   25. Etapa 4 — importação em massa
+   ───────────────────────────────────────────── */
+
+.card-item-subtitulo {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+    font-style: italic;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Formulário de importação */
+.form-importar {
+    max-width: 800px;
+}
+
+.form-importar textarea {
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    resize: vertical;
+    min-height: 220px;
+}
+
+.aviso-importar {
+    background-color: #fff8e1;
+    color: #8a6d00;
+    border: 1px solid #ffe082;
+    border-radius: var(--raio);
+    padding: var(--esp-3) var(--esp-4);
+    font-size: 0.9rem;
+    margin-bottom: var(--esp-4);
+}
+
+.botao-perigo-verde {
+    background-color: #2e7d32;
+    color: #ffffff;
+}
+
+.botao-perigo-verde:hover {
+    background-color: #1f5a23;
+    opacity: 1;
+}
+
+.texto-erro {
+    color: #b33a3a;
+    font-weight: 600;
+}
+
+/* Tabela de pré-visualização */
+.tabela-importar-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background-color: var(--cor-superficie);
+    box-shadow: var(--sombra-suave);
+}
+
+.tabela-importar {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.tabela-importar thead th {
+    text-align: left;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--cor-texto-suave);
+    padding: var(--esp-2) var(--esp-3);
+    border-bottom: 1px solid var(--cor-borda);
+    background-color: var(--cor-fundo);
+    white-space: nowrap;
+}
+
+.tabela-importar tbody td {
+    padding: var(--esp-2) var(--esp-3);
+    border-bottom: 1px solid var(--cor-borda);
+    vertical-align: top;
+}
+
+.tabela-importar tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela-importar .linha-erro {
+    background-color: #fdecea;
+}
+
+.celula-original {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    color: var(--cor-texto-suave);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.celula-erro {
+    color: #721c24;
+    font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .celula-original {
+        max-width: 160px;
+    }
+
+    .tabela-importar {
+        font-size: 0.82rem;
+    }
+}

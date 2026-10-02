@@ -81,11 +81,6 @@ class Livro(db.Model):
 
 
 class Projeto(db.Model):
-    """
-    Um projeto de leitura pessoal (Nobel, Lendo o Mundo, Cânone, etc.).
-    Não se relaciona automaticamente com a tabela livro — o vínculo
-    mora nos itens, não no projeto.
-    """
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False, unique=True)
     descricao = db.Column(db.Text)
@@ -106,10 +101,6 @@ class Projeto(db.Model):
 
 
 class ItemProjeto(db.Model):
-    """
-    Uma linha de um projeto: "o projeto X pede a obra Y".
-    Pode ou não estar vinculado a um livro físico da estante (livro_id).
-    """
     id = db.Column(db.Integer, primary_key=True)
     projeto_id = db.Column(
         db.Integer,
@@ -120,6 +111,7 @@ class ItemProjeto(db.Model):
 
     titulo = db.Column(db.String(200), nullable=False)
     autor = db.Column(db.String(150), nullable=False)
+    subtitulo = db.Column(db.String(200))
     pais = db.Column(db.String(80), index=True)
     ano = db.Column(db.Integer)
     isbn = db.Column(db.String(20))
@@ -189,12 +181,6 @@ def chave_ordenacao_estante_simples(estante):
 
 
 def chave_ordenacao_item(item):
-    """
-    Ordenação de itens dentro de um projeto:
-      - se 'ordem' está preenchida, ela manda;
-      - senão, ordena por título (case-insensitive).
-    Itens sem ordem vão depois dos que têm ordem.
-    """
     if item.ordem is not None:
         return (0, item.ordem, (item.titulo or "").lower())
     return (1, 0, (item.titulo or "").lower())
@@ -210,10 +196,6 @@ def sql_escape(valor):
 
 
 def limpar_texto(s):
-    """
-    Remove espaços das pontas. Se sobrar string vazia, devolve None.
-    Usado nos formulários para tratar campos opcionais.
-    """
     if s is None:
         return None
     s = s.strip()
@@ -221,14 +203,79 @@ def limpar_texto(s):
 
 
 def normalizar_isbn(isbn):
-    """
-    Extrai só dígitos (e X/x final) do ISBN. Devolve string ou None.
-    Centraliza uma lógica que estava repetida em outros lugares.
-    """
     if not isbn:
         return None
     limpo = re.sub(r"[^0-9Xx]", "", isbn)
     return limpo or None
+
+
+def primeiro_pais(pais):
+    """
+    Se o campo 'pais' contém ' e ' (com espaços), devolve só a parte
+    antes do ' e '. Ex.: 'Alemanha e Suíça' -> 'Alemanha'.
+    Usado na importação em massa do Nobel (decisão P2 = ii).
+    """
+    if not pais:
+        return pais
+    if " e " in pais:
+        return pais.split(" e ", 1)[0].strip()
+    return pais.strip()
+
+
+def parse_linha_nobel(linha):
+    """
+    Faz o parse de uma linha no formato:
+        Autor, AAAA, País
+
+    Devolve:
+        {'ok': True, 'autor': ..., 'ano': ..., 'pais': ..., 'subtitulo': ...}
+        ou
+        {'ok': False, 'erro': 'motivo'}
+    """
+    if linha is None:
+        return {"ok": False, "erro": "linha vazia"}
+
+    linha = linha.strip()
+    if not linha:
+        return {"ok": False, "erro": "linha vazia"}
+
+    partes = [p.strip() for p in linha.split(",")]
+
+    if len(partes) < 2:
+        return {"ok": False, "erro": "esperado pelo menos 'Autor, AAAA'"}
+
+    autor = partes[0]
+    if not autor:
+        return {"ok": False, "erro": "autor vazio"}
+
+    ano_str = partes[1]
+    if not ano_str:
+        return {"ok": False, "erro": "ano vazio"}
+    try:
+        ano = int(ano_str)
+    except ValueError:
+        return {"ok": False, "erro": f"ano inválido: '{ano_str}'"}
+    if ano < 1 or ano > 9999:
+        return {"ok": False, "erro": f"ano fora de faixa: {ano}"}
+
+    pais = None
+    if len(partes) >= 3:
+        pais_bruto = ", ".join(partes[2:]).strip()
+        if pais_bruto:
+            pais = primeiro_pais(pais_bruto)
+
+    if pais:
+        subtitulo = f"{autor} — {pais}, {ano}"
+    else:
+        subtitulo = f"{autor} — {ano}"
+
+    return {
+        "ok": True,
+        "autor": autor,
+        "ano": ano,
+        "pais": pais,
+        "subtitulo": subtitulo,
+    }
 
 
 def url_capa_open_library(isbn):
@@ -639,11 +686,6 @@ def projeto_detalhe(projeto_id):
 
 
 def _extrair_campos_item_do_form():
-    """
-    Lê os campos do formulário de item e devolve um dict já tratado.
-    Usado tanto por item_novo quanto por item_editar para evitar
-    duplicação de lógica.
-    """
     status = request.form.get("status", "").strip()
     if status not in STATUS_ITEM:
         status = "nao_tenho"
@@ -659,13 +701,13 @@ def _extrair_campos_item_do_form():
     isbn = limpar_texto(request.form.get("isbn"))
     capa_url = limpar_texto(request.form.get("capa_url"))
 
-    # Se veio ISBN mas não veio capa, tenta a Open Library.
     if not capa_url and isbn:
         capa_url = url_capa_open_library(isbn)
 
     return {
         "titulo": (request.form.get("titulo", "") or "").strip(),
         "autor": (request.form.get("autor", "") or "").strip(),
+        "subtitulo": limpar_texto(request.form.get("subtitulo")),
         "pais": limpar_texto(request.form.get("pais")),
         "ano": ano,
         "isbn": isbn,
@@ -696,6 +738,7 @@ def item_novo(projeto_id):
             projeto_id=projeto.id,
             titulo=dados["titulo"],
             autor=dados["autor"],
+            subtitulo=dados["subtitulo"],
             pais=dados["pais"],
             ano=dados["ano"],
             isbn=dados["isbn"],
@@ -740,6 +783,7 @@ def item_editar(projeto_id, item_id):
 
         item.titulo = dados["titulo"]
         item.autor = dados["autor"]
+        item.subtitulo = dados["subtitulo"]
         item.pais = dados["pais"]
         item.ano = dados["ano"]
         item.isbn = dados["isbn"]
@@ -782,6 +826,113 @@ def item_excluir(projeto_id, item_id):
 
 
 # ─────────────────────────────────────────────
+# Rotas — importação em massa
+# ─────────────────────────────────────────────
+
+@app.route("/projetos/<int:projeto_id>/importar", methods=["GET", "POST"])
+def projeto_importar(projeto_id):
+    """
+    Importa itens em massa a partir de texto colado.
+
+    Formato esperado (uma linha por item):
+        Autor, AAAA, País
+
+    Fluxo:
+      - GET:  mostra a textarea vazia.
+      - POST acao=previsualizar: faz o parse, mostra tabela. Nada é criado.
+      - POST acao=importar: faz o parse de novo; se tudo ok, cria os itens.
+    """
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    if request.method == "POST":
+        acao = request.form.get("acao", "").strip()
+        texto = request.form.get("texto", "")
+
+        linhas = texto.splitlines()
+
+        resultados = []
+        linhas_validas = []
+        linhas_com_erro = []
+
+        for i, linha in enumerate(linhas, start=1):
+            if not linha.strip():
+                continue
+
+            r = parse_linha_nobel(linha)
+            r["numero"] = i
+            r["linha_original"] = linha
+
+            if r["ok"]:
+                linhas_validas.append(r)
+            else:
+                linhas_com_erro.append(r)
+
+            resultados.append(r)
+
+        if acao == "previsualizar":
+            return render_template(
+                "importar.html",
+                projeto=projeto,
+                texto=texto,
+                resultados=resultados,
+                total_ok=len(linhas_validas),
+                total_erro=len(linhas_com_erro),
+                importado=False,
+            )
+
+        if acao == "importar":
+            if linhas_com_erro:
+                return render_template(
+                    "importar.html",
+                    projeto=projeto,
+                    texto=texto,
+                    resultados=resultados,
+                    total_ok=len(linhas_validas),
+                    total_erro=len(linhas_com_erro),
+                    importado=False,
+                    erro_importacao="Há linhas com erro. Corrija antes de importar.",
+                )
+
+            if not linhas_validas:
+                return render_template(
+                    "importar.html",
+                    projeto=projeto,
+                    texto=texto,
+                    resultados=resultados,
+                    total_ok=0,
+                    total_erro=0,
+                    importado=False,
+                    erro_importacao="Nada para importar (nenhuma linha válida).",
+                )
+
+            for r in linhas_validas:
+                item = ItemProjeto(
+                    projeto_id=projeto.id,
+                    titulo="A definir",
+                    autor=r["autor"],
+                    subtitulo=r["subtitulo"],
+                    pais=r["pais"],
+                    ano=r["ano"],
+                    status="nao_tenho",
+                )
+                db.session.add(item)
+
+            db.session.commit()
+
+            return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
+
+    return render_template(
+        "importar.html",
+        projeto=projeto,
+        texto="",
+        resultados=None,
+        total_ok=0,
+        total_erro=0,
+        importado=False,
+    )
+
+
+# ─────────────────────────────────────────────
 # ROTA TEMPORÁRIA — seed de teste
 # ─────────────────────────────────────────────
 
@@ -789,9 +940,6 @@ def item_excluir(projeto_id, item_id):
 def projetos_seed_teste():
     """
     ⚠️ ROTA TEMPORÁRIA — apagar na Etapa 7 ⚠️
-
-    Cria um projeto fictício "Nobel de Literatura (teste)" com 4 itens,
-    para validar o layout. Se o projeto já existe, apenas redireciona.
     """
     nome = "Nobel de Literatura (teste)"
     existente = Projeto.query.filter_by(nome=nome).first()
@@ -808,38 +956,18 @@ def projetos_seed_teste():
     db.session.flush()
 
     itens_seed = [
-        {
-            "titulo": "Irmãos Karamázov",
-            "autor": "Fiódor Dostoiévski",
-            "pais": "Rússia",
-            "ano": 1880,
-            "status": "li",
-            "observacoes": "Item de exemplo (lido).",
-        },
-        {
-            "titulo": "Cem Anos de Solidão",
-            "autor": "Gabriel García Márquez",
-            "pais": "Colômbia",
-            "ano": 1967,
-            "status": "li",
-            "observacoes": "Item de exemplo (lido).",
-        },
-        {
-            "titulo": "A Casa dos Espíritos",
-            "autor": "Isabel Allende",
-            "pais": "Chile",
-            "ano": 1982,
-            "status": "tenho_nao_li",
-            "observacoes": "Item de exemplo (tenho, não li).",
-        },
-        {
-            "titulo": "O Homem Sem Qualidades",
-            "autor": "Robert Musil",
-            "pais": "Áustria",
-            "ano": 1943,
-            "status": "nao_tenho",
-            "observacoes": "Item de exemplo (não tenho).",
-        },
+        {"titulo": "Irmãos Karamázov", "autor": "Fiódor Dostoiévski",
+         "pais": "Rússia", "ano": 1880, "status": "li",
+         "observacoes": "Item de exemplo (lido)."},
+        {"titulo": "Cem Anos de Solidão", "autor": "Gabriel García Márquez",
+         "pais": "Colômbia", "ano": 1967, "status": "li",
+         "observacoes": "Item de exemplo (lido)."},
+        {"titulo": "A Casa dos Espíritos", "autor": "Isabel Allende",
+         "pais": "Chile", "ano": 1982, "status": "tenho_nao_li",
+         "observacoes": "Item de exemplo (tenho, não li)."},
+        {"titulo": "O Homem Sem Qualidades", "autor": "Robert Musil",
+         "pais": "Áustria", "ano": 1943, "status": "nao_tenho",
+         "observacoes": "Item de exemplo (não tenho)."},
     ]
 
     for i, dados in enumerate(itens_seed, start=1):

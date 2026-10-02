@@ -8,6 +8,7 @@
         <h1>{{ projeto.nome }}</h1>
         <div class="pagina-cabecalho-acoes">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">+ Adicionar item</a>
+            <a href="{{ url_for('projeto_importar', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">Importar em massa</a>
             <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
         </div>
     </div>
@@ -54,6 +55,9 @@
 
                     <div class="card-item-principal">
                         <div class="card-item-titulo">{{ item.titulo }}</div>
+                        {% if item.subtitulo %}
+                            <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
+                        {% endif %}
                         <div class="card-item-autor">{{ item.autor }}</div>
                     </div>
 
@@ -86,6 +90,10 @@
         <p class="vazio" style="margin-top: 0;">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="link-voltar">
                 Adicionar o primeiro item →
+            </a>
+            &nbsp;·&nbsp;
+            <a href="{{ url_for('projeto_importar', projeto_id=projeto.id) }}" class="link-voltar">
+                Importar em massa →
             </a>
         </p>
 
