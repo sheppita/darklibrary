@@ -80,9 +80,10 @@
             <h2>Escaneie o código de barras</h2>
             <p class="scanner-dica">Aponte a câmera para o código de barras do livro (na contracapa).</p>
 
-            <div class="scanner-video-wrap">
+        <div class="scanner-video-wrap">
                 <video id="scanner-video" autoplay playsinline muted></video>
-            </div>
+         </div>
+        <canvas id="scanner-canvas" style="display: none;"></canvas>
 
             <div id="scanner-mensagem" class="scanner-mensagem" hidden></div>
 
@@ -208,7 +209,12 @@
                 mensagemScanner.hidden = false;
             }
 
-            async function pararTudo() {
+                        async function pararTudo() {
+                // Para o intervalo de leitura do canvas, se estiver ativo.
+                if (window.__scannerIntervalo) {
+                    clearInterval(window.__scannerIntervalo);
+                    window.__scannerIntervalo = null;
+                }
                 // Para o leitor do ZXing, se estiver ativo.
                 if (leitorZXing) {
                     try {
@@ -236,7 +242,6 @@
                 overlay.hidden = false;
                 mensagemScanner.hidden = true;
 
-                // Confere se o navegador tem suporte
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     mostrarMensagemScanner(
                         "Seu navegador não suporta acesso à câmera. " +
@@ -246,7 +251,6 @@
                     return;
                 }
 
-                // Confere se a ZXing carregou.
                 if (typeof ZXing === "undefined") {
                     mostrarMensagemScanner(
                         "A biblioteca de leitura (ZXing) não carregou. " +
@@ -257,46 +261,78 @@
                 }
 
                 try {
-
-                    // Pede a câmera TRASEIRA.
+                    // Pede a câmera TRASEIRA, com resolução decente.
                     streamCamera = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { ideal: "environment" } },
+                        video: {
+                            facingMode: { ideal: "environment" },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
                         audio: false
                     });
 
                     video.srcObject = streamCamera;
                     await video.play();
 
-                    // Configura o ZXing para ler códigos de barras 1D.
-                    // Cria hints específicos para códigos de barras de produtos (ISBN/EAN).
-                        const hints = new Map();
-                        const formatos = [
-                            ZXing.BarcodeFormat.EAN_13,
-                            ZXing.BarcodeFormat.EAN_8,
-                            ZXing.BarcodeFormat.UPC_A,
-                            ZXing.BarcodeFormat.UPC_E,
-                            ZXing.BarcodeFormat.CODE_128,
-                        ];
-                        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formatos);
-                        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                    // Cria leitor com hints para código de barras de produto.
+                    const hints = new Map();
+                    const formatos = [
+                        ZXing.BarcodeFormat.EAN_13,
+                        ZXing.BarcodeFormat.EAN_8,
+                        ZXing.BarcodeFormat.UPC_A,
+                        ZXing.BarcodeFormat.UPC_E,
+                        ZXing.BarcodeFormat.CODE_128,
+                    ];
+                    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formatos);
+                    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
 
-                        leitorZXing = new ZXing.BrowserMultiFormatReader(hints);
+                    leitorZXing = new ZXing.BrowserMultiFormatReader(hints);
 
                     mostrarMensagemScanner("Procurando código de barras... aponte a câmera.", "aviso");
 
-                    // Começa a decodificar continuamente do elemento <video>.
-                    leitorZXing.decodeFromVideoElement(video, function (resultado, erro) {
-                        if (resultado) {
-                            const textoLido = resultado.getText();
-                            // Limpa tudo.
-                            pararTudo();
-                            // Preenche o campo ISBN com o que foi lido.
-                            inputIsbn.value = textoLido;
-                            // Chama a busca automática.
-                            buscarIsbn();
+                    // Canvas escondido para "fotografar" frames.
+                    const canvas = document.getElementById("scanner-canvas");
+                    const contexto = canvas.getContext("2d", { willReadFrequently: true });
+
+                    // Loop: a cada 400ms, captura um frame e tenta decodificar.
+                    const intervalo = setInterval(async function () {
+                        // Se o vídeo ainda não tem dimensão pronta, pula.
+                        if (!video.videoWidth || !video.videoHeight) {
+                            return;
                         }
-                        // Se erro, ignoramos — é normal durante a leitura contínua.
-                    });
+
+                        // Se o stream foi cancelado, para o loop.
+                        if (!streamCamera) {
+                            clearInterval(intervalo);
+                            return;
+                        }
+
+                        // Ajusta o canvas ao tamanho do vídeo.
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+
+                        // Desenha o frame atual no canvas.
+                        contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        // Tenta decodificar a imagem do canvas.
+                        try {
+                            const resultado = await leitorZXing.decodeFromImageElement(canvas);
+                            if (resultado) {
+                                const textoLido = resultado.getText();
+                                clearInterval(intervalo);
+                                pararTudo();
+                                inputIsbn.value = textoLido;
+                                buscarIsbn();
+                            }
+                        } catch (e) {
+                            // "NotFoundException" é normal — significa que
+                            // não achou código neste frame. Ignoramos.
+                        }
+                    }, 400);
+
+                    // Guarda o intervalo para poder parar depois.
+                    window.__scannerIntervalo = intervalo;
+
                 } catch (erro) {
                     console.error(erro);
                     let msg = "Não foi possível acessar a câmera.";
