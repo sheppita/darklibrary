@@ -21,6 +21,15 @@
         </div>
 
         <div class="campo">
+            <label for="capa_url">URL da capa (opcional)</label>
+            <input type="text" id="capa_url" name="capa_url" maxlength="500"
+                   placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem">
+            <div id="preview-capa" class="preview-capa" hidden>
+                <img id="preview-capa-img" src="" alt="Prévia da capa">
+            </div>
+        </div>
+
+        <div class="campo">
             <label for="titulo">Título <span class="obrigatorio">*</span></label>
             <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus>
         </div>
@@ -70,13 +79,34 @@
             const inputIsbn = document.getElementById("isbn");
             const inputTitulo = document.getElementById("titulo");
             const inputAutor = document.getElementById("autor");
+            const inputCapa = document.getElementById("capa_url");
             const mensagem = document.getElementById("mensagem-isbn");
+            const previewCapa = document.getElementById("preview-capa");
+            const previewCapaImg = document.getElementById("preview-capa-img");
 
             function mostrarMensagem(texto, tipo) {
                 mensagem.textContent = texto;
                 mensagem.className = "mensagem-isbn mensagem-isbn-" + tipo;
                 mensagem.hidden = false;
             }
+
+            function mostrarPreview(url) {
+                if (!url) {
+                    previewCapa.hidden = true;
+                    return;
+                }
+                previewCapaImg.src = url;
+                previewCapa.hidden = false;
+            }
+
+            previewCapaImg.addEventListener("error", function () {
+                previewCapa.hidden = true;
+            });
+
+            // Atualiza o preview conforme o campo de URL é editado.
+            inputCapa.addEventListener("input", function () {
+                mostrarPreview(inputCapa.value.trim());
+            });
 
             botao.addEventListener("click", async function () {
                 const isbn = inputIsbn.value.trim();
@@ -86,7 +116,6 @@
                     return;
                 }
 
-                // Estado "carregando"
                 botao.disabled = true;
                 botao.textContent = "Buscando...";
                 mensagem.hidden = true;
@@ -100,7 +129,6 @@
                         return;
                     }
 
-                    // Preenche os campos só se estiverem vazios.
                     let camposPreenchidos = [];
                     if (!inputTitulo.value.trim() && dados.titulo) {
                         inputTitulo.value = dados.titulo;
@@ -111,6 +139,12 @@
                         camposPreenchidos.push("autor");
                     }
 
+                    // Preenche a capa automaticamente se ainda não tiver URL.
+                    if (dados.capa && !inputCapa.value.trim()) {
+                        inputCapa.value = dados.capa;
+                        mostrarPreview(dados.capa);
+                    }
+
                     if (camposPreenchidos.length === 0) {
                         mostrarMensagem(
                             "Livro encontrado, mas os campos já estavam preenchidos.",
@@ -118,7 +152,7 @@
                         );
                     } else {
                         mostrarMensagem(
-                            "Encontrado! " + camposPreenchidos.join(" e ") + " preenchido(s).",
+                            "Encontrado (" + dados.fonte + ")! " + camposPreenchidos.join(" e ") + " preenchido(s).",
                             "sucesso"
                         );
                     }

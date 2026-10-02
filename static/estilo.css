@@ -869,3 +869,66 @@ input:focus, select:focus, textarea:focus {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+/* ─────────────────────────────────────────────
+   17. Preview da capa no formulário
+   ───────────────────────────────────────────── */
+
+.preview-capa {
+    margin-top: var(--esp-3);
+    padding: var(--esp-3);
+    background-color: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    display: inline-block;
+}
+
+.preview-capa img {
+    max-width: 120px;
+    max-height: 180px;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+/* ─────────────────────────────────────────────
+   18. Card com capa
+   ───────────────────────────────────────────── */
+
+.card-livro-com-capa {
+    padding: 0; /* o padding vai para o .card-conteudo */
+    overflow: hidden; /* garante que a imagem não saia dos cantos arredondados */
+}
+
+.card-capa {
+    background-color: #ece8de; /* fundo neutro atrás da capa */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--esp-4) 0;
+    border-bottom: 1px solid var(--cor-borda);
+    min-height: 180px;
+}
+
+.card-capa img {
+    max-width: 70%;
+    max-height: 220px;
+    width: auto;
+    height: auto;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-radius: 3px;
+    object-fit: contain;
+}
+
+.card-conteudo {
+    padding: var(--esp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+    flex: 1;
+}
+
+/* O .card-meta tem margin-top:auto para empurrar para o final.
+   Isso já está definido no CSS existente. */
+   

@@ -66,13 +66,14 @@ class Livro(db.Model):
     estante = db.Column(db.String(20))
     isbn = db.Column(db.String(20))
     lido = db.Column(db.Boolean, default=False)
+    capa_url = db.Column(db.String(500))
 
     def __repr__(self):
         return f"<Livro {self.titulo}>"
 
 
 # ─────────────────────────────────────────────
-# Funções auxiliares de ordenação
+# Funções auxiliares
 # ─────────────────────────────────────────────
 
 def chave_ordenacao(livro):
@@ -109,6 +110,78 @@ def sql_escape(valor):
         return "TRUE" if valor else "FALSE"
     texto = str(valor).replace("'", "''")
     return f"'{texto}'"
+
+
+def url_capa_open_library(isbn):
+    if not isbn:
+        return None
+    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
+    if not isbn_limpo:
+        return None
+    return f"https://covers.openlibrary.org/b/isbn/{isbn_limpo}-L.jpg?default=false"
+
+
+def buscar_google_books(isbn_limpo):
+    """
+    Consulta o Google Books pelo ISBN.
+    Devolve um dict com titulo, autor, capa — ou None se não achou.
+    """
+    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_limpo}"
+    try:
+        r = requests.get(url, timeout=8)
+        r.raise_for_status()
+        dados = r.json()
+    except requests.RequestException:
+        return None
+
+    items = dados.get("items", [])
+    if not items:
+        return None
+
+    info = items[0].get("volumeInfo", {})
+    titulo = info.get("title", "")
+    autores = info.get("authors", [])
+    autor = autores[0] if autores else ""
+
+    # A capa vem com http:// e &zoom=1. Ajustamos:
+    capa = ""
+    links = info.get("imageLinks", {})
+    if links:
+        capa = links.get("thumbnail") or links.get("smallThumbnail") or ""
+        if capa:
+            capa = capa.replace("http://", "https://", 1)
+            capa = re.sub(r"&zoom=\d+", "", capa)
+
+    return {"titulo": titulo, "autor": autor, "capa": capa}
+
+
+def buscar_open_library(isbn_limpo):
+    """
+    Consulta a Open Library pelo ISBN.
+    Devolve um dict com titulo, autor, capa — ou None se não achou.
+    """
+    url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
+    try:
+        r = requests.get(url, timeout=8)
+        r.raise_for_status()
+        dados = r.json()
+    except requests.RequestException:
+        return None
+
+    chave = f"ISBN:{isbn_limpo}"
+    if chave not in dados:
+        return None
+
+    info = dados[chave]
+    titulo = info.get("title", "")
+    autores = info.get("authors", [])
+    autor = autores[0]["name"] if autores else ""
+
+    capa = ""
+    if "cover" in info and "medium" in info["cover"]:
+        capa = info["cover"]["medium"]
+
+    return {"titulo": titulo, "autor": autor, "capa": capa}
 
 
 # ─────────────────────────────────────────────
@@ -150,6 +223,11 @@ def home():
     for livro in livros:
         cor = (livro.cor_lombada or "").strip()
         livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
+
+        if livro.capa_url:
+            livro.capa_final = livro.capa_url
+        else:
+            livro.capa_final = url_capa_open_library(livro.isbn)
 
     grupos = []
     estante_atual = "__inicio__"
@@ -197,14 +275,18 @@ def home():
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
     if request.method == "POST":
+        isbn = request.form.get("isbn", "").strip() or None
+        capa_form = request.form.get("capa_url", "").strip() or None
+
         livro = Livro(
             titulo=request.form.get("titulo", "").strip(),
             autor=request.form.get("autor", "").strip(),
             nacionalidade=request.form.get("nacionalidade", "").strip() or None,
             cor_lombada=request.form.get("cor_lombada", "").strip() or None,
             estante=request.form.get("estante", "").strip().upper() or None,
-            isbn=request.form.get("isbn", "").strip() or None,
+            isbn=isbn,
             lido=("lido" in request.form),
+            capa_url=capa_form or url_capa_open_library(isbn),
         )
         db.session.add(livro)
         db.session.commit()
@@ -218,13 +300,17 @@ def editar(livro_id):
     livro = db.get_or_404(Livro, livro_id)
 
     if request.method == "POST":
+        isbn = request.form.get("isbn", "").strip() or None
+        capa_form = request.form.get("capa_url", "").strip() or None
+
         livro.titulo = request.form.get("titulo", "").strip()
         livro.autor = request.form.get("autor", "").strip()
         livro.nacionalidade = request.form.get("nacionalidade", "").strip() or None
         livro.cor_lombada = request.form.get("cor_lombada", "").strip() or None
         livro.estante = request.form.get("estante", "").strip().upper() or None
-        livro.isbn = request.form.get("isbn", "").strip() or None
+        livro.isbn = isbn
         livro.lido = ("lido" in request.form)
+        livro.capa_url = capa_form or url_capa_open_library(isbn)
 
         db.session.commit()
         return redirect(url_for("home"))
@@ -339,9 +425,10 @@ def backup():
                 sql_escape(livro.estante),
                 sql_escape(livro.isbn),
                 sql_escape(livro.lido),
+                sql_escape(livro.capa_url),
             ])
             linhas.append(
-                "INSERT INTO livro (id, titulo, autor, nacionalidade, cor_lombada, estante, isbn, lido) "
+                "INSERT INTO livro (id, titulo, autor, nacionalidade, cor_lombada, estante, isbn, lido, capa_url) "
                 f"VALUES ({valores});"
             )
 
@@ -360,44 +447,40 @@ def backup():
 
 @app.route("/api/buscar_isbn/<isbn>")
 def buscar_isbn(isbn):
-    """Consulta a Open Library pelo ISBN e devolve JSON com os dados do livro."""
-    # Limpa o ISBN: só dígitos e X (para ISBN-10). Aceita com ou sem hífens.
     isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
 
     if not isbn_limpo:
         return jsonify({"erro": "ISBN vazio"}), 400
 
-    url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
+    # 1ª tentativa: Google Books
+    resultado = buscar_google_books(isbn_limpo)
+    fonte = "Google Books"
 
-    try:
-        resposta = requests.get(url, timeout=8)
-        resposta.raise_for_status()
-        dados = resposta.json()
-    except requests.RequestException as e:
-        return jsonify({"erro": f"Falha na consulta: {e}"}), 502
+    # 2ª tentativa: Open Library
+    if not resultado:
+        resultado = buscar_open_library(isbn_limpo)
+        fonte = "Open Library"
 
-    chave = f"ISBN:{isbn_limpo}"
-    if chave not in dados:
-        return jsonify({"erro": "ISBN não encontrado na Open Library"}), 404
+    if not resultado:
+        return jsonify({"erro": "ISBN não encontrado no Google Books nem na Open Library"}), 404
 
-    info = dados[chave]
+    titulo = resultado.get("titulo", "")
+    autor = resultado.get("autor", "")
+    capa = resultado.get("capa", "")
 
-    titulo = info.get("title", "")
-    autores = info.get("authors", [])
-    autor = autores[0]["name"] if autores else ""
-
-    capa = ""
-    if "cover" in info and "medium" in info["cover"]:
-        capa = info["cover"]["medium"]
-
-    ano = info.get("publish_date", "")
+    # Se Google Books achou o livro mas sem capa, tenta Open Library só pela capa.
+    if not capa:
+        capa_ol = url_capa_open_library(isbn_limpo)
+        # Não temos como saber se existe sem fazer HEAD. Vamos devolver a URL
+        # da Open Library; se não existir, o onerror do <img> esconde.
+        capa = capa_ol
 
     return jsonify({
         "isbn": isbn_limpo,
         "titulo": titulo,
         "autor": autor,
-        "ano": ano,
         "capa": capa,
+        "fonte": fonte,
     })
 
 

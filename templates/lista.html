@@ -64,26 +64,39 @@
             </h2>
 
             <ul class="lista-livros">
-                    {% for livro in livros %}
-                    <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
-                        <div class="card-titulo">{{ livro.titulo }}</div>
-                        <div class="card-autor">{{ livro.autor }}</div>
-                        <div class="card-meta">
-                            {% if livro.cor_lombada %}
-                                <span class="card-meta-item">{{ livro.cor_lombada }}</span>
-                            {% endif %}
-                            {% if livro.lido %}
-                                <span class="card-meta-item card-meta-lido">✅ Lido</span>
-                            {% else %}
-                                <span class="card-meta-item card-meta-nao-lido">⏳ Não lido</span>
-                            {% endif %}
-                            <span class="card-acoes">
-                                <a href="{{ url_for('editar', livro_id=livro.id) }}" class="card-acao" title="Editar">✎</a>
-                                <a href="{{ url_for('excluir', livro_id=livro.id) }}" class="card-acao card-acao-perigo" title="Excluir">🗑</a>
-                            </span>
+                                    {% for livro in livros %}
+                    <li class="card-livro {% if livro.capa_final %}card-livro-com-capa{% endif %}" style="--cor-lombada: {{ livro.cor_hex }};">
+
+                        {% if livro.capa_final %}
+                            <div class="card-capa">
+                                <img src="{{ livro.capa_final }}"
+                                     alt="Capa de {{ livro.titulo }}"
+                                     loading="lazy"
+                                     onerror="this.parentElement.style.display='none';">
+                            </div>
+                        {% endif %}
+
+                        <div class="card-conteudo">
+                            <div class="card-titulo">{{ livro.titulo }}</div>
+                            <div class="card-autor">{{ livro.autor }}</div>
+                            <div class="card-meta">
+                                {% if livro.cor_lombada %}
+                                    <span class="card-meta-item">{{ livro.cor_lombada }}</span>
+                                {% endif %}
+                                {% if livro.lido %}
+                                    <span class="card-meta-item card-meta-lido">✅ Lido</span>
+                                {% else %}
+                                    <span class="card-meta-item card-meta-nao-lido">⏳ Não lido</span>
+                                {% endif %}
+                                <span class="card-acoes">
+                                    <a href="{{ url_for('editar', livro_id=livro.id) }}" class="card-acao" title="Editar">✎</a>
+                                    <a href="{{ url_for('excluir', livro_id=livro.id) }}" class="card-acao card-acao-perigo" title="Excluir">🗑</a>
+                                </span>
+                            </div>
                         </div>
+
                     </li>
-                 {% endfor %}
+                {% endfor %}
             </ul>
         {% endfor %}
 
