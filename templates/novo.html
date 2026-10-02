@@ -321,15 +321,11 @@
                                 inputIsbn.value = textoLido;
                                 buscarIsbn();
                             }
-                        } catch (e) {
-                            // NotFoundException é normal (nada no frame).
-                            // Outros erros mostramos na tela por debug.
-                            if (e && e.name && e.name !== "NotFoundException") {
-                                mostrarMensagemScanner(
-                                    "Debug: " + e.name + " — " + (e.message || ""),
-                                    "aviso"
-                                );
-                            }
+                                                } catch (e) {
+                            // NotFoundException = nada no frame, é normal.
+                            // Outros erros, ignoramos também — não queremos poluir a tela.
+                            // (Se um dia der problema, descomente a linha abaixo.)
+                            // console.log("ZXing erro:", e && e.name, e && e.message);
                         }
                     }, 400);
 
