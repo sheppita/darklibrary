@@ -52,9 +52,13 @@ CORES_HEX = {
     "Multi":    "#e8dfc9",
 }
 
+# Valores possíveis de status em item_projeto.
+# Ficam aqui (e não espalhados pelo código) para reuso e consistência.
+STATUS_ITEM = ["nao_tenho", "tenho_nao_li", "li"]
+
 
 # ─────────────────────────────────────────────
-# Modelo
+# Modelos
 # ─────────────────────────────────────────────
 
 class Livro(db.Model):
@@ -70,6 +74,95 @@ class Livro(db.Model):
 
     def __repr__(self):
         return f"<Livro {self.titulo}>"
+
+
+class Projeto(db.Model):
+    """
+    Um projeto de leitura pessoal (Nobel, Lendo o Mundo, Cânone, etc.).
+    Não se relaciona automaticamente com a tabela livro — o vínculo
+    mora nos itens, não no projeto.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120), nullable=False, unique=True)
+    descricao = db.Column(db.Text)
+    tipo = db.Column(db.String(40))  # 'nobel', 'mundo', 'canone', ...
+    ativo = db.Column(db.Boolean, default=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Conveniência Python: projeto.itens -> lista de ItemProjeto.
+    # O delete em cascata é cuidado pelo banco (ondelete="CASCADE" no FK);
+    # passive_deletes=True evita o SQLAlchemy tentar apagar um por um.
+    itens = db.relationship(
+        "ItemProjeto",
+        back_populates="projeto",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="ItemProjeto.ordem, ItemProjeto.titulo",
+    )
+
+    def __repr__(self):
+        return f"<Projeto {self.nome}>"
+
+
+class ItemProjeto(db.Model):
+    """
+    Uma linha de um projeto: "o projeto X pede a obra Y".
+    Pode ou não estar vinculado a um livro físico da estante (livro_id).
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    projeto_id = db.Column(
+        db.Integer,
+        db.ForeignKey("projeto.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Dados do recomendado — todos opcionais exceto título e autor.
+    titulo = db.Column(db.String(200), nullable=False)
+    autor = db.Column(db.String(150), nullable=False)
+    pais = db.Column(db.String(80), index=True)
+    ano = db.Column(db.Integer)
+    isbn = db.Column(db.String(20))
+    capa_url = db.Column(db.String(500))
+    observacoes = db.Column(db.Text)
+
+    # Estado no projeto. Trava em três valores via CheckConstraint.
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default="nao_tenho",
+        index=True,
+    )
+
+    # Vínculo opcional com o livro físico. NULL = item só existe no projeto.
+    # ON DELETE SET NULL: se o livro for apagado, o item perde o vínculo
+    # mas continua existindo (a dona pode ter lido e não ter mais o físico).
+    livro_id = db.Column(
+        db.Integer,
+        db.ForeignKey("livro.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    ordem = db.Column(db.Integer)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # relationship com o projeto (par do Projeto.itens)
+    projeto = db.relationship("Projeto", back_populates="itens")
+
+    # relationship com o livro (sem back_populates, porque não precisamos
+    # navegar de livro -> itens agora; se precisarmos depois, é só adicionar).
+    livro = db.relationship("Livro")
+
+    __table_args__ = (
+        db.CheckConstraint(
+            "status IN ('nao_tenho','tenho_nao_li','li')",
+            name="status_valido",
+        ),
+    )
+
+    def __repr__(self):
+        return f"<ItemProjeto {self.titulo} ({self.status})>"
 
 
 # ─────────────────────────────────────────────
