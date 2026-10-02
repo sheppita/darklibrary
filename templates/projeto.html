@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — {{ projeto.nome }}{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>{{ projeto.nome }}</h1>
+        <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
+    </div>
+
+    {% if projeto.descricao %}
+        <p class="projeto-descricao">{{ projeto.descricao }}</p>
+    {% endif %}
+
+    {% if total > 0 %}
+        <div class="stats-barra-wrap">
+            <div class="stats-barra">
+                <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
+            </div>
+            <div class="stats-barra-legenda">
+                {{ lidos }} de {{ total }} lidos · {{ pct }}%
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="projeto-resumo">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lidos</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
+            <span class="projeto-resumo-rotulo">Tenho, não li</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
+            <span class="projeto-resumo-rotulo">Não tenho</span>
+        </div>
+    </div>
+
+    {% if itens %}
+
+        <h2 class="projeto-secao-titulo">Itens do projeto</h2>
+
+        <div class="lista-itens">
+            {% for item in itens %}
+                <div class="card-item card-item-{{ item.status }}">
+                    <div class="card-item-cabecalho">
+                        <div class="card-item-titulo">{{ item.titulo }}</div>
+                        <div class="card-item-status card-item-status-{{ item.status }}">
+                            {{ status_rotulo[item.status] }}
+                        </div>
+                    </div>
+
+                    <div class="card-item-autor">{{ item.autor }}</div>
+
+                    <div class="card-item-meta">
+                        {% if item.pais %}<span>{{ item.pais }}</span>{% endif %}
+                        {% if item.ano %}<span>{{ item.ano }}</span>{% endif %}
+                        {% if item.isbn %}<span>ISBN {{ item.isbn }}</span>{% endif %}
+                        {% if item.livro_id %}<span class="card-item-vinculo">✓ vinculado à estante</span>{% endif %}
+                    </div>
+
+                    {% if item.observacoes %}
+                        <div class="card-item-obs">{{ item.observacoes }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Este projeto ainda não tem itens.</p>
+
+    {% endif %}
+
+{% endblock %}

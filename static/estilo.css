@@ -201,34 +201,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   6. Formulário de filtros (base)
-   ───────────────────────────────────────────── */
-
-.form-filtros {
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-4);
-    margin-bottom: var(--esp-6);
-}
-
-.form-filtros label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--cor-texto-suave);
-    display: inline-block;
-    margin-bottom: var(--esp-1);
-}
-
-.form-filtros select {
-    margin-right: var(--esp-3);
-}
-
-.form-filtros button {
-    margin-right: var(--esp-2);
-}
-
-/* ─────────────────────────────────────────────
    7. Cabeçalho de estante
    ───────────────────────────────────────────── */
 
@@ -389,24 +361,6 @@ input:focus, select:focus, textarea:focus {
     font-size: 0.8rem;
 }
 
-/* ─────────────────────────────────────────────
-   10. Formulário de cadastro (base)
-   ───────────────────────────────────────────── */
-
-.form-cadastro {
-    max-width: 600px;
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-5);
-}
-
-.form-cadastro label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: inline-block;
-    margin-bottom: var(--esp-1);
-}
 /* ─────────────────────────────────────────────
    11. Página de formulário (cabeçalho + cadastro)
    ───────────────────────────────────────────── */
@@ -933,13 +887,6 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.preview-capa[hidden] {
-    display: none !important;
-}
-.preview-capa img[src=""],
-.preview-capa img:not([src]) {
-    display: none;
-}
 /* ─────────────────────────────────────────────
    19. Scanner (overlay da câmera)
    ───────────────────────────────────────────── */
@@ -1025,4 +972,230 @@ input:focus, select:focus, textarea:focus {
     background-color: #e8f5e9;
     color: #2e7d32;
     border-color: #c8e6c9;
+}
+/* ─────────────────────────────────────────────
+   20. Meus Projetos — lista
+   ───────────────────────────────────────────── */
+
+.lista-projetos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+}
+
+@media (min-width: 640px) {
+    .lista-projetos {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.card-projeto {
+    display: block;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+    box-shadow: var(--sombra-suave);
+    color: var(--cor-texto);
+    text-decoration: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.card-projeto:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-projeto-cabecalho {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-2);
+}
+
+.card-projeto-nome {
+    font-family: var(--fonte-titulo);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-projeto-tipo {
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.card-projeto-descricao {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+    margin: 0 0 var(--esp-4) 0;
+}
+
+.card-projeto-progresso {
+    margin-top: var(--esp-3);
+}
+
+.card-projeto-legenda {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-top: var(--esp-2);
+}
+
+/* ─────────────────────────────────────────────
+   21. Meus Projetos — página de um projeto
+   ───────────────────────────────────────────── */
+
+.projeto-descricao {
+    color: var(--cor-texto-suave);
+    margin-bottom: var(--esp-5);
+}
+
+.projeto-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-6);
+}
+
+.projeto-resumo-item {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-4);
+    text-align: center;
+    box-shadow: var(--sombra-suave);
+}
+
+.projeto-resumo-numero {
+    display: block;
+    font-family: var(--fonte-titulo);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: var(--esp-1);
+}
+
+.projeto-resumo-rotulo {
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.projeto-secao-titulo {
+    font-size: 1.1rem;
+    margin: var(--esp-5) 0 var(--esp-3) 0;
+    padding-bottom: var(--esp-2);
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+/* ─────────────────────────────────────────────
+   22. Itens de projeto — cards
+   ───────────────────────────────────────────── */
+
+.lista-itens {
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-3);
+}
+
+.card-item {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-left: 6px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-4);
+    box-shadow: var(--sombra-suave);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+}
+
+/* Cor da tarja lateral varia conforme o status */
+
+.card-item-li {
+    border-left-color: #4a7c59;
+}
+
+.card-item-tenho_nao_li {
+    border-left-color: #3d5a80;
+}
+
+.card-item-nao_tenho {
+    border-left-color: #b8b0a0;
+}
+
+.card-item-cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--esp-3);
+}
+
+.card-item-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.card-item-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px var(--esp-3);
+    border-radius: 999px;
+    white-space: nowrap;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-suave);
+}
+
+.card-item-status-li {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.card-item-status-tenho_nao_li {
+    background-color: #e3f0fa;
+    color: #2a5b8a;
+}
+
+.card-item-status-nao_tenho {
+    background-color: #efece4;
+    color: #7a7568;
+}
+
+.card-item-autor {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+.card-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-3);
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+}
+
+.card-item-vinculo {
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.card-item-obs {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    font-style: italic;
+    border-top: 1px dashed var(--cor-borda);
+    padding-top: var(--esp-2);
+    margin-top: var(--esp-1);
 }

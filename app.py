@@ -53,8 +53,14 @@ CORES_HEX = {
 }
 
 # Valores possíveis de status em item_projeto.
-# Ficam aqui (e não espalhados pelo código) para reuso e consistência.
 STATUS_ITEM = ["nao_tenho", "tenho_nao_li", "li"]
+
+# Rótulos humanos para os status (usados nos templates).
+STATUS_ROTULO = {
+    "nao_tenho":   "Não tenho",
+    "tenho_nao_li": "Tenho, não li",
+    "li":          "Li",
+}
 
 
 # ─────────────────────────────────────────────
@@ -89,9 +95,6 @@ class Projeto(db.Model):
     ativo = db.Column(db.Boolean, default=True)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Conveniência Python: projeto.itens -> lista de ItemProjeto.
-    # O delete em cascata é cuidado pelo banco (ondelete="CASCADE" no FK);
-    # passive_deletes=True evita o SQLAlchemy tentar apagar um por um.
     itens = db.relationship(
         "ItemProjeto",
         back_populates="projeto",
@@ -117,7 +120,6 @@ class ItemProjeto(db.Model):
         index=True,
     )
 
-    # Dados do recomendado — todos opcionais exceto título e autor.
     titulo = db.Column(db.String(200), nullable=False)
     autor = db.Column(db.String(150), nullable=False)
     pais = db.Column(db.String(80), index=True)
@@ -126,7 +128,6 @@ class ItemProjeto(db.Model):
     capa_url = db.Column(db.String(500))
     observacoes = db.Column(db.Text)
 
-    # Estado no projeto. Trava em três valores via CheckConstraint.
     status = db.Column(
         db.String(20),
         nullable=False,
@@ -134,9 +135,6 @@ class ItemProjeto(db.Model):
         index=True,
     )
 
-    # Vínculo opcional com o livro físico. NULL = item só existe no projeto.
-    # ON DELETE SET NULL: se o livro for apagado, o item perde o vínculo
-    # mas continua existindo (a dona pode ter lido e não ter mais o físico).
     livro_id = db.Column(
         db.Integer,
         db.ForeignKey("livro.id", ondelete="SET NULL"),
@@ -147,11 +145,7 @@ class ItemProjeto(db.Model):
     ordem = db.Column(db.Integer)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # relationship com o projeto (par do Projeto.itens)
     projeto = db.relationship("Projeto", back_populates="itens")
-
-    # relationship com o livro (sem back_populates, porque não precisamos
-    # navegar de livro -> itens agora; se precisarmos depois, é só adicionar).
     livro = db.relationship("Livro")
 
     __table_args__ = (
@@ -196,6 +190,18 @@ def chave_ordenacao_estante_simples(estante):
     return (1, estante, 0)
 
 
+def chave_ordenacao_item(item):
+    """
+    Ordenação de itens dentro de um projeto:
+      - se 'ordem' está preenchida, ela manda (útil para listas sequenciais);
+      - senão, ordena por título (case-insensitive).
+    Itens sem ordem vão depois dos que têm ordem.
+    """
+    if item.ordem is not None:
+        return (0, item.ordem, (item.titulo or "").lower())
+    return (1, 0, (item.titulo or "").lower())
+
+
 def sql_escape(valor):
     if valor is None:
         return "NULL"
@@ -236,7 +242,6 @@ def buscar_google_books(isbn_limpo):
     autores = info.get("authors", [])
     autor = autores[0] if autores else ""
 
-    # A capa vem com http:// e &zoom=1. Ajustamos:
     capa = ""
     links = info.get("imageLinks", {})
     if links:
@@ -278,7 +283,7 @@ def buscar_open_library(isbn_limpo):
 
 
 # ─────────────────────────────────────────────
-# Rotas
+# Rotas — livros
 # ─────────────────────────────────────────────
 
 @app.route("/")
@@ -545,11 +550,9 @@ def buscar_isbn(isbn):
     if not isbn_limpo:
         return jsonify({"erro": "ISBN vazio"}), 400
 
-    # 1ª tentativa: Google Books
     resultado = buscar_google_books(isbn_limpo)
     fonte = "Google Books"
 
-    # 2ª tentativa: Open Library
     if not resultado:
         resultado = buscar_open_library(isbn_limpo)
         fonte = "Open Library"
@@ -561,11 +564,8 @@ def buscar_isbn(isbn):
     autor = resultado.get("autor", "")
     capa = resultado.get("capa", "")
 
-    # Se Google Books achou o livro mas sem capa, tenta Open Library só pela capa.
     if not capa:
         capa_ol = url_capa_open_library(isbn_limpo)
-        # Não temos como saber se existe sem fazer HEAD. Vamos devolver a URL
-        # da Open Library; se não existir, o onerror do <img> esconde.
         capa = capa_ol
 
     return jsonify({
@@ -578,7 +578,144 @@ def buscar_isbn(isbn):
 
 
 # ─────────────────────────────────────────────
-# Criação automática da tabela
+# Rotas — projetos
+# ─────────────────────────────────────────────
+
+@app.route("/projetos")
+def projetos():
+    """
+    Lista todos os projetos ativos, com contagem de itens e lidos.
+    """
+    lista = Projeto.query.filter(Projeto.ativo.is_(True)).order_by(Projeto.nome).all()
+
+    projetos_com_contagem = []
+    for p in lista:
+        total = len(p.itens)
+        lidos = sum(1 for it in p.itens if it.status == "li")
+        pct = round(lidos / total * 100) if total > 0 else 0
+        projetos_com_contagem.append({
+            "projeto": p,
+            "total": total,
+            "lidos": lidos,
+            "pct": pct,
+        })
+
+    return render_template("projetos.html", projetos=projetos_com_contagem)
+
+
+@app.route("/projetos/<int:projeto_id>")
+def projeto_detalhe(projeto_id):
+    """
+    Página de um projeto: cabeçalho, progresso, lista de itens.
+    """
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    itens = sorted(projeto.itens, key=chave_ordenacao_item)
+
+    total = len(itens)
+    lidos = sum(1 for it in itens if it.status == "li")
+    tenho_nao_li = sum(1 for it in itens if it.status == "tenho_nao_li")
+    nao_tenho = sum(1 for it in itens if it.status == "nao_tenho")
+
+    pct = round(lidos / total * 100) if total > 0 else 0
+
+    return render_template(
+        "projeto.html",
+        projeto=projeto,
+        itens=itens,
+        total=total,
+        lidos=lidos,
+        tenho_nao_li=tenho_nao_li,
+        nao_tenho=nao_tenho,
+        pct=pct,
+        status_rotulo=STATUS_ROTULO,
+    )
+
+
+# ─────────────────────────────────────────────
+# ROTA TEMPORÁRIA — seed de teste
+# ─────────────────────────────────────────────
+
+@app.route("/projetos/_seed_teste")
+def projetos_seed_teste():
+    """
+    ⚠️ ROTA TEMPORÁRIA — apagar na Etapa 3 ⚠️
+
+    Cria um projeto fictício "Nobel de Literatura (teste)" com 4 itens,
+    para validar o layout das páginas /projetos e /projetos/<id>.
+
+    Se o projeto já existe, não faz nada (só redireciona).
+    Para apagar depois: no Neon, DELETE FROM projeto WHERE nome LIKE '%(teste)';
+    """
+    nome = "Nobel de Literatura (teste)"
+    existente = Projeto.query.filter_by(nome=nome).first()
+    if existente:
+        return redirect(url_for("projeto_detalhe", projeto_id=existente.id))
+
+    p = Projeto(
+        nome=nome,
+        descricao="Projeto fictício para validar o visual. Apagar depois.",
+        tipo="nobel",
+        ativo=True,
+    )
+    db.session.add(p)
+    db.session.flush()  # garante p.id
+
+    itens_seed = [
+        {
+            "titulo": "Irmãos Karamázov",
+            "autor": "Fiódor Dostoiévski",
+            "pais": "Rússia",
+            "ano": 1880,
+            "status": "li",
+            "observacoes": "Item de exemplo (lido).",
+        },
+        {
+            "titulo": "Cem Anos de Solidão",
+            "autor": "Gabriel García Márquez",
+            "pais": "Colômbia",
+            "ano": 1967,
+            "status": "li",
+            "observacoes": "Item de exemplo (lido).",
+        },
+        {
+            "titulo": "A Casa dos Espíritos",
+            "autor": "Isabel Allende",
+            "pais": "Chile",
+            "ano": 1982,
+            "status": "tenho_nao_li",
+            "observacoes": "Item de exemplo (tenho, não li).",
+        },
+        {
+            "titulo": "O Homem Sem Qualidades",
+            "autor": "Robert Musil",
+            "pais": "Áustria",
+            "ano": 1943,
+            "status": "nao_tenho",
+            "observacoes": "Item de exemplo (não tenho).",
+        },
+    ]
+
+    for i, dados in enumerate(itens_seed, start=1):
+        it = ItemProjeto(
+            projeto_id=p.id,
+            titulo=dados["titulo"],
+            autor=dados["autor"],
+            pais=dados["pais"],
+            ano=dados["ano"],
+            status=dados["status"],
+            observacoes=dados["observacoes"],
+            ordem=i,
+        )
+        db.session.add(it)
+
+    db.session.commit()
+
+    return redirect(url_for("projeto_detalhe", projeto_id=p.id))
+
+
+# ─────────────────────────────────────────────
+# Criação automática das tabelas
 # ─────────────────────────────────────────────
 
 with app.app_context():
