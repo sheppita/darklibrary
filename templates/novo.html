@@ -92,8 +92,10 @@
         </div>
     </div>
 
-    {# ─────────── Biblioteca ZXing (via CDN) ─────────── #}
-       <script>
+       {# ─────────── Biblioteca ZXing (via CDN) ─────────── #}
+              <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+
+             <script>
         document.addEventListener("DOMContentLoaded", function () {
             // ═══════════ Parte 1: buscar ISBN ═══════════
             const botao = document.getElementById("btn-buscar-isbn");
@@ -230,7 +232,7 @@
                 mensagemScanner.hidden = true;
             }
 
-            async function iniciarScanner() {
+                        async function iniciarScanner() {
                 overlay.hidden = false;
                 mensagemScanner.hidden = true;
 
@@ -244,7 +246,18 @@
                     return;
                 }
 
+                // Confere se a ZXing carregou.
+                if (typeof ZXing === "undefined") {
+                    mostrarMensagemScanner(
+                        "A biblioteca de leitura (ZXing) não carregou. " +
+                        "Verifique sua conexão e recarregue a página.",
+                        "erro"
+                    );
+                    return;
+                }
+
                 try {
+                    
                     // Pede a câmera TRASEIRA.
                     streamCamera = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: { ideal: "environment" } },
