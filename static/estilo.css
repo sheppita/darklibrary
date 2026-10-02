@@ -75,7 +75,6 @@ body {
     color: var(--cor-texto);
     background-color: var(--cor-fundo);
     -webkit-font-smoothing: antialiased;
-    padding-top: var(--altura-cabecalho); /* espaço para o cabeçalho fixo */
 }
 
 h1, h2, h3, h4 {
@@ -134,57 +133,48 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   3. Cabeçalho fixo
+   3. Banner + Menu
    ───────────────────────────────────────────── */
 
-.cabecalho {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--altura-cabecalho);
-    background-color: var(--cor-cabecalho);
-    color: var(--cor-cabecalho-texto);
-    z-index: 100;
+.banner {
+    background-color: #000000;
     display: flex;
+    justify-content: center;
     align-items: center;
+    padding: var(--esp-4) var(--esp-4) 0 var(--esp-4);
 }
 
-.cabecalho-conteudo {
+.banner a {
+    display: block;
+    max-width: 480px;
     width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 var(--esp-4);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--esp-4);
 }
 
-.logo {
-    font-family: var(--fonte-titulo);
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--cor-cabecalho-texto);
-    text-decoration: none;
+.banner img {
+    display: block;
+    width: 100%;
+    height: auto;
 }
-
-.logo:hover { text-decoration: none; opacity: 0.9; }
 
 .menu {
     display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: var(--esp-5);
+    padding: var(--esp-4);
+    max-width: 1100px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--cor-borda);
 }
 
 .menu a {
-    color: var(--cor-cabecalho-texto);
+    color: var(--cor-texto);
     font-size: 0.95rem;
-    opacity: 0.85;
+    font-weight: 500;
 }
 
 .menu a:hover {
-    opacity: 1;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 /* ─────────────────────────────────────────────
