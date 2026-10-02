@@ -34,7 +34,7 @@
 
         <div class="campo">
             <label for="titulo">Título <span class="obrigatorio">*</span></label>
-            <input type="text" id="titulo" name="titulo" required maxlength="200" value="{{ livro.titulo }}" autofocus>
+            <input type="text" id="titulo" name="titulo" required maxlength="200" value="{{ livro.titulo }}">
         </div>
 
         <div class="campo">
@@ -44,10 +44,10 @@
 
         <div class="campo-linha">
             <div class="campo">
-                <label for="nacionalidade">Nacionalidade</label>
-                <input type="text" id="nacionalidade" name="nacionalidade" maxlength="80"
-                       value="{{ livro.nacionalidade or '' }}"
-                       placeholder="Ex.: Brasileira">
+                <label for="pais">País</label>
+                <input type="text" id="pais" name="pais" maxlength="80"
+                       value="{{ livro.pais or '' }}"
+                       placeholder="Ex.: Brasil">
             </div>
 
             <div class="campo">

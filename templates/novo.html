@@ -42,8 +42,8 @@
 
         <div class="campo-linha">
             <div class="campo">
-                <label for="nacionalidade">Nacionalidade</label>
-                <input type="text" id="nacionalidade" name="nacionalidade" maxlength="80" placeholder="Ex.: Brasileira">
+                <label for="pais">País</label>
+                <input type="text" id="pais" name="pais" maxlength="80" placeholder="Ex.: Brasil">
             </div>
 
             <div class="campo">
@@ -328,8 +328,6 @@
                             // console.log("ZXing erro:", e && e.name, e && e.message);
                         }
                     }, 400);
-
-                    window.__scannerIntervalo = intervalo;
 
                     // Guarda o intervalo para poder parar depois.
                     window.__scannerIntervalo = intervalo;

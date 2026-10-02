@@ -61,7 +61,7 @@ class Livro(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
     autor = db.Column(db.String(150), nullable=False)
-    nacionalidade = db.Column(db.String(80))
+    pais = db.Column(db.String(80))
     cor_lombada = db.Column(db.String(20))
     estante = db.Column(db.String(20))
     isbn = db.Column(db.String(20))
@@ -281,7 +281,7 @@ def novo():
         livro = Livro(
             titulo=request.form.get("titulo", "").strip(),
             autor=request.form.get("autor", "").strip(),
-            nacionalidade=request.form.get("nacionalidade", "").strip() or None,
+            pais=request.form.get("pais", "").strip() or None,
             cor_lombada=request.form.get("cor_lombada", "").strip() or None,
             estante=request.form.get("estante", "").strip().upper() or None,
             isbn=isbn,
@@ -305,7 +305,7 @@ def editar(livro_id):
 
         livro.titulo = request.form.get("titulo", "").strip()
         livro.autor = request.form.get("autor", "").strip()
-        livro.nacionalidade = request.form.get("nacionalidade", "").strip() or None
+        livro.pais = request.form.get("pais", "").strip() or None
         livro.cor_lombada = request.form.get("cor_lombada", "").strip() or None
         livro.estante = request.form.get("estante", "").strip().upper() or None
         livro.isbn = isbn
@@ -361,9 +361,9 @@ def estatisticas():
         .all()
     )
 
-    por_nacionalidade = (
-        db.session.query(Livro.nacionalidade, db.func.count(Livro.id))
-        .group_by(Livro.nacionalidade)
+    por_pais = (
+        db.session.query(Livro.pais, db.func.count(Livro.id))
+        .group_by(Livro.pais)
         .order_by(db.func.count(Livro.id).desc())
         .all()
     )
@@ -384,7 +384,7 @@ def estatisticas():
         pct_lidos=pct_lidos,
         por_estante=por_estante,
         top_autores=top_autores,
-        por_nacionalidade=por_nacionalidade,
+        por_pais=por_pais,
         por_cor=por_cor,
         sem_cor=sem_cor,
         cores_hex=CORES_HEX,
@@ -420,7 +420,7 @@ def backup():
                 str(livro.id),
                 sql_escape(livro.titulo),
                 sql_escape(livro.autor),
-                sql_escape(livro.nacionalidade),
+                sql_escape(livro.pais),
                 sql_escape(livro.cor_lombada),
                 sql_escape(livro.estante),
                 sql_escape(livro.isbn),
@@ -428,7 +428,7 @@ def backup():
                 sql_escape(livro.capa_url),
             ])
             linhas.append(
-                "INSERT INTO livro (id, titulo, autor, nacionalidade, cor_lombada, estante, isbn, lido, capa_url) "
+                "INSERT INTO livro (id, titulo, autor, pais, cor_lombada, estante, isbn, lido, capa_url) "
                 f"VALUES ({valores});"
             )
 
@@ -494,4 +494,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
-    

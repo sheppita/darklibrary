@@ -69,14 +69,14 @@
         </div>
         {% endif %}
 
-        {# Por nacionalidade #}
-        {% if por_nacionalidade %}
+        {# Por país #}
+        {% if por_pais %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Por nacionalidade</h2>
+            <h2 class="stats-bloco-titulo">Por país</h2>
             <ul class="stats-lista">
-                {% for nac, n in por_nacionalidade %}
+                {% for pais, n in por_pais %}
                     <li>
-                        <span>{{ nac or "(sem nacionalidade)" }}</span>
+                        <span>{{ pais or "(sem país)" }}</span>
                         <span class="stats-n">{{ n }}</span>
                     </li>
                 {% endfor %}
