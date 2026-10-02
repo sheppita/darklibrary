@@ -6,7 +6,10 @@
 
     <div class="pagina-cabecalho">
         <h1>{{ projeto.nome }}</h1>
-        <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
+        <div class="pagina-cabecalho-acoes">
+            <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">+ Adicionar item</a>
+            <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
+        </div>
     </div>
 
     {% if projeto.descricao %}
@@ -48,8 +51,16 @@
                 <div class="card-item card-item-{{ item.status }}">
                     <div class="card-item-cabecalho">
                         <div class="card-item-titulo">{{ item.titulo }}</div>
-                        <div class="card-item-status card-item-status-{{ item.status }}">
-                            {{ status_rotulo[item.status] }}
+                        <div class="card-item-acoes">
+                            <div class="card-item-status card-item-status-{{ item.status }}">
+                                {{ status_rotulo[item.status] }}
+                            </div>
+                            <a class="card-item-acao"
+                               href="{{ url_for('item_editar', projeto_id=projeto.id, item_id=item.id) }}"
+                               title="Editar">✎</a>
+                            <a class="card-item-acao card-item-acao-perigo"
+                               href="{{ url_for('item_excluir', projeto_id=projeto.id, item_id=item.id) }}"
+                               title="Excluir">🗑</a>
                         </div>
                     </div>
 
@@ -72,6 +83,12 @@
     {% else %}
 
         <p class="vazio">Este projeto ainda não tem itens.</p>
+
+        <p class="vazio" style="margin-top: 0;">
+            <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="link-voltar">
+                Adicionar o primeiro item →
+            </a>
+        </p>
 
     {% endif %}
 

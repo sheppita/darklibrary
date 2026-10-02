@@ -52,14 +52,12 @@ CORES_HEX = {
     "Multi":    "#e8dfc9",
 }
 
-# Valores possíveis de status em item_projeto.
 STATUS_ITEM = ["nao_tenho", "tenho_nao_li", "li"]
 
-# Rótulos humanos para os status (usados nos templates).
 STATUS_ROTULO = {
-    "nao_tenho":   "Não tenho",
+    "nao_tenho":    "Não tenho",
     "tenho_nao_li": "Tenho, não li",
-    "li":          "Li",
+    "li":           "Li",
 }
 
 
@@ -91,7 +89,7 @@ class Projeto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False, unique=True)
     descricao = db.Column(db.Text)
-    tipo = db.Column(db.String(40))  # 'nobel', 'mundo', 'canone', ...
+    tipo = db.Column(db.String(40))
     ativo = db.Column(db.Boolean, default=True)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -193,7 +191,7 @@ def chave_ordenacao_estante_simples(estante):
 def chave_ordenacao_item(item):
     """
     Ordenação de itens dentro de um projeto:
-      - se 'ordem' está preenchida, ela manda (útil para listas sequenciais);
+      - se 'ordem' está preenchida, ela manda;
       - senão, ordena por título (case-insensitive).
     Itens sem ordem vão depois dos que têm ordem.
     """
@@ -211,6 +209,28 @@ def sql_escape(valor):
     return f"'{texto}'"
 
 
+def limpar_texto(s):
+    """
+    Remove espaços das pontas. Se sobrar string vazia, devolve None.
+    Usado nos formulários para tratar campos opcionais.
+    """
+    if s is None:
+        return None
+    s = s.strip()
+    return s if s else None
+
+
+def normalizar_isbn(isbn):
+    """
+    Extrai só dígitos (e X/x final) do ISBN. Devolve string ou None.
+    Centraliza uma lógica que estava repetida em outros lugares.
+    """
+    if not isbn:
+        return None
+    limpo = re.sub(r"[^0-9Xx]", "", isbn)
+    return limpo or None
+
+
 def url_capa_open_library(isbn):
     if not isbn:
         return None
@@ -221,10 +241,6 @@ def url_capa_open_library(isbn):
 
 
 def buscar_google_books(isbn_limpo):
-    """
-    Consulta o Google Books pelo ISBN.
-    Devolve um dict com titulo, autor, capa — ou None se não achou.
-    """
     url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_limpo}"
     try:
         r = requests.get(url, timeout=8)
@@ -254,10 +270,6 @@ def buscar_google_books(isbn_limpo):
 
 
 def buscar_open_library(isbn_limpo):
-    """
-    Consulta a Open Library pelo ISBN.
-    Devolve um dict com titulo, autor, capa — ou None se não achou.
-    """
     url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
     try:
         r = requests.get(url, timeout=8)
@@ -583,9 +595,6 @@ def buscar_isbn(isbn):
 
 @app.route("/projetos")
 def projetos():
-    """
-    Lista todos os projetos ativos, com contagem de itens e lidos.
-    """
     lista = Projeto.query.filter(Projeto.ativo.is_(True)).order_by(Projeto.nome).all()
 
     projetos_com_contagem = []
@@ -605,9 +614,6 @@ def projetos():
 
 @app.route("/projetos/<int:projeto_id>")
 def projeto_detalhe(projeto_id):
-    """
-    Página de um projeto: cabeçalho, progresso, lista de itens.
-    """
     projeto = db.get_or_404(Projeto, projeto_id)
 
     itens = sorted(projeto.itens, key=chave_ordenacao_item)
@@ -632,6 +638,149 @@ def projeto_detalhe(projeto_id):
     )
 
 
+def _extrair_campos_item_do_form():
+    """
+    Lê os campos do formulário de item e devolve um dict já tratado.
+    Usado tanto por item_novo quanto por item_editar para evitar
+    duplicação de lógica.
+    """
+    status = request.form.get("status", "").strip()
+    if status not in STATUS_ITEM:
+        status = "nao_tenho"
+
+    ano_raw = request.form.get("ano", "").strip()
+    ano = None
+    if ano_raw:
+        try:
+            ano = int(ano_raw)
+        except ValueError:
+            ano = None
+
+    isbn = limpar_texto(request.form.get("isbn"))
+    capa_url = limpar_texto(request.form.get("capa_url"))
+
+    # Se veio ISBN mas não veio capa, tenta a Open Library.
+    if not capa_url and isbn:
+        capa_url = url_capa_open_library(isbn)
+
+    return {
+        "titulo": (request.form.get("titulo", "") or "").strip(),
+        "autor": (request.form.get("autor", "") or "").strip(),
+        "pais": limpar_texto(request.form.get("pais")),
+        "ano": ano,
+        "isbn": isbn,
+        "capa_url": capa_url,
+        "observacoes": limpar_texto(request.form.get("observacoes")),
+        "status": status,
+    }
+
+
+@app.route("/projetos/<int:projeto_id>/itens/novo", methods=["GET", "POST"])
+def item_novo(projeto_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    if request.method == "POST":
+        dados = _extrair_campos_item_do_form()
+
+        if not dados["titulo"] or not dados["autor"]:
+            return render_template(
+                "item_novo.html",
+                projeto=projeto,
+                status_item=STATUS_ITEM,
+                status_rotulo=STATUS_ROTULO,
+                valores=dados,
+                erro="Título e autor são obrigatórios.",
+            ), 400
+
+        item = ItemProjeto(
+            projeto_id=projeto.id,
+            titulo=dados["titulo"],
+            autor=dados["autor"],
+            pais=dados["pais"],
+            ano=dados["ano"],
+            isbn=dados["isbn"],
+            capa_url=dados["capa_url"],
+            observacoes=dados["observacoes"],
+            status=dados["status"],
+        )
+        db.session.add(item)
+        db.session.commit()
+        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
+
+    return render_template(
+        "item_novo.html",
+        projeto=projeto,
+        status_item=STATUS_ITEM,
+        status_rotulo=STATUS_ROTULO,
+        valores={},
+        erro=None,
+    )
+
+
+@app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/editar", methods=["GET", "POST"])
+def item_editar(projeto_id, item_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+    item = db.get_or_404(ItemProjeto, item_id)
+
+    if item.projeto_id != projeto.id:
+        return "Este item não pertence a este projeto.", 404
+
+    if request.method == "POST":
+        dados = _extrair_campos_item_do_form()
+
+        if not dados["titulo"] or not dados["autor"]:
+            return render_template(
+                "item_editar.html",
+                projeto=projeto,
+                item=item,
+                status_item=STATUS_ITEM,
+                status_rotulo=STATUS_ROTULO,
+                erro="Título e autor são obrigatórios.",
+            ), 400
+
+        item.titulo = dados["titulo"]
+        item.autor = dados["autor"]
+        item.pais = dados["pais"]
+        item.ano = dados["ano"]
+        item.isbn = dados["isbn"]
+        item.capa_url = dados["capa_url"]
+        item.observacoes = dados["observacoes"]
+        item.status = dados["status"]
+
+        db.session.commit()
+        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
+
+    return render_template(
+        "item_editar.html",
+        projeto=projeto,
+        item=item,
+        status_item=STATUS_ITEM,
+        status_rotulo=STATUS_ROTULO,
+        erro=None,
+    )
+
+
+@app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/excluir", methods=["GET", "POST"])
+def item_excluir(projeto_id, item_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+    item = db.get_or_404(ItemProjeto, item_id)
+
+    if item.projeto_id != projeto.id:
+        return "Este item não pertence a este projeto.", 404
+
+    if request.method == "POST":
+        db.session.delete(item)
+        db.session.commit()
+        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
+
+    return render_template(
+        "item_excluir.html",
+        projeto=projeto,
+        item=item,
+        status_rotulo=STATUS_ROTULO,
+    )
+
+
 # ─────────────────────────────────────────────
 # ROTA TEMPORÁRIA — seed de teste
 # ─────────────────────────────────────────────
@@ -639,13 +788,10 @@ def projeto_detalhe(projeto_id):
 @app.route("/projetos/_seed_teste")
 def projetos_seed_teste():
     """
-    ⚠️ ROTA TEMPORÁRIA — apagar na Etapa 3 ⚠️
+    ⚠️ ROTA TEMPORÁRIA — apagar na Etapa 7 ⚠️
 
     Cria um projeto fictício "Nobel de Literatura (teste)" com 4 itens,
-    para validar o layout das páginas /projetos e /projetos/<id>.
-
-    Se o projeto já existe, não faz nada (só redireciona).
-    Para apagar depois: no Neon, DELETE FROM projeto WHERE nome LIKE '%(teste)';
+    para validar o layout. Se o projeto já existe, apenas redireciona.
     """
     nome = "Nobel de Literatura (teste)"
     existente = Projeto.query.filter_by(nome=nome).first()
@@ -659,7 +805,7 @@ def projetos_seed_teste():
         ativo=True,
     )
     db.session.add(p)
-    db.session.flush()  # garante p.id
+    db.session.flush()
 
     itens_seed = [
         {
