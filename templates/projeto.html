@@ -32,31 +32,115 @@
         <p class="projeto-descricao">{{ projeto.descricao }}</p>
     {% endif %}
 
-    {% if total > 0 %}
-        <div class="stats-barra-wrap">
-            <div class="stats-barra">
-                <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
+        {% if dados_mapa is not none %}
+        <div class="mapa-wrapper">
+
+            <h2 class="projeto-secao-titulo">Mapa do mundo</h2>
+
+            <p class="mapa-legenda">
+                Países coloridos = você já leu pelo menos um livro daquele país.
+                Clique num país para ver os livros.
+            </p>
+
+            <div class="mapa-container">
+                <div id="mapa-svg" class="mapa-svg" data-dados='{{ dados_mapa | tojson }}'>
+                    <p class="mapa-carregando">Carregando mapa…</p>
+                </div>
             </div>
-            <div class="stats-barra-legenda">
-                {{ lidos }} de {{ total }} lidos · {{ pct }}%
+
+            <div id="mapa-popup" class="mapa-popup" hidden>
+                <div class="mapa-popup-cabecalho">
+                    <h3 id="mapa-popup-titulo" class="mapa-popup-titulo"></h3>
+                    <button type="button" id="mapa-popup-fechar" class="mapa-popup-fechar" aria-label="Fechar">×</button>
+                </div>
+                <ul id="mapa-popup-lista" class="mapa-popup-lista"></ul>
             </div>
+
+            {% if paises_nao_reconhecidos %}
+                <details class="mapa-aviso">
+                    <summary>
+                        {{ paises_nao_reconhecidos | length }} país(es) não reconhecido(s) no mapa
+                    </summary>
+                    <p class="mapa-aviso-texto">
+                        Estes valores no campo "País" não casaram com a lista canônica.
+                        Eles não coloriram o mapa, mas os livros continuam contando nas
+                        estatísticas. Se quiser que apareçam, edite o cadastro para uma
+                        das grafias reconhecidas.
+                    </p>
+                    <ul class="mapa-aviso-lista">
+                        {% for chave, livros in paises_nao_reconhecidos.items() %}
+                            <li>
+                                <strong>{{ chave }}</strong>
+                                ({{ livros | length }} livro(s))
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+            {% endif %}
+
         </div>
     {% endif %}
 
-    <div class="projeto-resumo">
-        <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ lidos }}</span>
-            <span class="projeto-resumo-rotulo">Lidos</span>
+        {% if dados_mapa is not none and resumo_mapa is not none %}
+
+        {# Projeto do tipo 'mundo': barra e números próprios do mapa. #}
+        {% if resumo_mapa.total_paises > 0 %}
+            {% set pct_mapa = (resumo_mapa.paises_lidos * 100 // resumo_mapa.total_paises) %}
+            <div class="stats-barra-wrap">
+                <div class="stats-barra">
+                    <div class="stats-barra-preenchida" style="width: {{ pct_mapa }}%;"></div>
+                </div>
+                <div class="stats-barra-legenda">
+                    {{ resumo_mapa.paises_lidos }} de {{ resumo_mapa.total_paises }} países lidos · {{ pct_mapa }}%
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="projeto-resumo">
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ resumo_mapa.paises_lidos }}</span>
+                <span class="projeto-resumo-rotulo">Países lidos</span>
+            </div>
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ resumo_mapa.total_paises }}</span>
+                <span class="projeto-resumo-rotulo">Total de países</span>
+            </div>
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ pct_mapa if resumo_mapa.total_paises > 0 else 0 }}%</span>
+                <span class="projeto-resumo-rotulo">Cobertura</span>
+            </div>
         </div>
-        <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
-            <span class="projeto-resumo-rotulo">Tenho, não li</span>
+
+    {% else %}
+
+        {# Projetos normais: barra e números do projeto. #}
+        {% if total > 0 %}
+            <div class="stats-barra-wrap">
+                <div class="stats-barra">
+                    <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
+                </div>
+                <div class="stats-barra-legenda">
+                    {{ lidos }} de {{ total }} lidos · {{ pct }}%
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="projeto-resumo">
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ lidos }}</span>
+                <span class="projeto-resumo-rotulo">Lidos</span>
+            </div>
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
+                <span class="projeto-resumo-rotulo">Tenho, não li</span>
+            </div>
+            <div class="projeto-resumo-item">
+                <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
+                <span class="projeto-resumo-rotulo">Não tenho</span>
+            </div>
         </div>
-        <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
-            <span class="projeto-resumo-rotulo">Não tenho</span>
-        </div>
-    </div>
+
+    {% endif %}   
 
     {% if itens %}
 
@@ -122,6 +206,10 @@
             </a>
         </p>
 
+    {% endif %}
+
+    {% if dados_mapa is not none %}
+        <script src="{{ url_for('static', filename='mapa.js') }}"></script>
     {% endif %}
 
 {% endblock %}

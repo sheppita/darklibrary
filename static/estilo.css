@@ -1462,3 +1462,176 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: var(--esp-5);
     font-size: 0.95rem;
 }
+/* ─────────────────────────────────────────────
+   28. Etapa 8a — mapa do mundo
+   ───────────────────────────────────────────── */
+
+.mapa-wrapper {
+    margin-bottom: var(--esp-6);
+}
+
+.mapa-legenda {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+    margin-bottom: var(--esp-4);
+}
+
+.mapa-container {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-4);
+    box-shadow: var(--sombra-suave);
+    margin-bottom: var(--esp-4);
+}
+
+.mapa-svg {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.mapa-carregando,
+.mapa-erro {
+    text-align: center;
+    color: var(--cor-texto-suave);
+    padding: var(--esp-6) 0;
+    font-size: 0.95rem;
+}
+
+.mapa-erro {
+    color: #b33a3a;
+}
+
+/* Popup do país */
+.mapa-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: var(--esp-4);
+    max-width: 480px;
+    width: calc(100% - 32px);
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 900;
+}
+
+.mapa-popup[hidden] {
+    display: none;
+}
+
+.mapa-popup-cabecalho {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-3);
+    padding-bottom: var(--esp-2);
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.mapa-popup-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.mapa-popup-fechar {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    padding: 0 var(--esp-2);
+    border-radius: var(--raio);
+}
+
+.mapa-popup-fechar:hover {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    opacity: 1;
+}
+
+.mapa-popup-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+}
+
+.mapa-popup-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--esp-2) 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.mapa-popup-item:last-child {
+    border-bottom: none;
+}
+
+.mapa-popup-livro-titulo {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.mapa-popup-livro-autor {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+.mapa-popup-livro-origem {
+    font-size: 0.7rem;
+    color: var(--cor-texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    align-self: flex-start;
+    background-color: var(--cor-fundo);
+    padding: 1px var(--esp-2);
+    border-radius: 999px;
+    margin-top: var(--esp-1);
+}
+
+/* Aviso de países não reconhecidos */
+.mapa-aviso {
+    background-color: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: var(--raio);
+    padding: var(--esp-3) var(--esp-4);
+    font-size: 0.9rem;
+}
+
+.mapa-aviso summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: #8a6d00;
+}
+
+.mapa-aviso-texto {
+    margin: var(--esp-3) 0 var(--esp-2) 0;
+    color: #8a6d00;
+    font-size: 0.85rem;
+}
+
+.mapa-aviso-lista {
+    margin: var(--esp-2) 0 0 0;
+    padding-left: var(--esp-4);
+    list-style: disc;
+    color: #8a6d00;
+    font-size: 0.85rem;
+}
+
+.mapa-aviso-lista li {
+    padding: 2px 0;
+}

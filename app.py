@@ -63,6 +63,104 @@ STATUS_ROTULO = {
 
 
 # ─────────────────────────────────────────────
+# Países — lista canônica e apelidos (Etapa 8a)
+# ─────────────────────────────────────────────
+
+PAISES_CANONICOS = {
+    "AF": "Afeganistão", "ZA": "África do Sul", "AL": "Albânia", "DE": "Alemanha",
+    "AD": "Andorra", "AO": "Angola", "AI": "Anguila", "AQ": "Antártida",
+    "AG": "Antígua e Barbuda", "SA": "Arábia Saudita", "DZ": "Argélia",
+    "AR": "Argentina", "AM": "Armênia", "AW": "Aruba", "AU": "Austrália",
+    "AT": "Áustria", "AZ": "Azerbaijão", "BS": "Bahamas", "BH": "Bahrein",
+    "BD": "Bangladesh", "BB": "Barbados", "BE": "Bélgica", "BZ": "Belize",
+    "BJ": "Benin", "BM": "Bermudas", "BY": "Belarus", "BO": "Bolívia",
+    "BA": "Bósnia e Herzegovina", "BW": "Botsuana", "BR": "Brasil",
+    "BN": "Brunei", "BG": "Bulgária", "BF": "Burkina Faso", "BI": "Burundi",
+    "BT": "Butão", "CV": "Cabo Verde", "CM": "Camarões", "KH": "Camboja",
+    "CA": "Canadá", "QA": "Catar", "KZ": "Cazaquistão", "TD": "Chade",
+    "CL": "Chile", "CN": "China", "CY": "Chipre", "SG": "Cingapura",
+    "CO": "Colômbia", "KM": "Comores", "CG": "Congo",
+    "CD": "Congo, República Democrática do", "KP": "Coreia do Norte",
+    "KR": "Coreia do Sul", "CI": "Costa do Marfim", "CR": "Costa Rica",
+    "HR": "Croácia", "CU": "Cuba", "CW": "Curaçao", "DK": "Dinamarca",
+    "DJ": "Djibuti", "DM": "Dominica", "EG": "Egito", "SV": "El Salvador",
+    "AE": "Emirados Árabes Unidos", "EC": "Equador", "ER": "Eritreia",
+    "SK": "Eslováquia", "SI": "Eslovênia", "ES": "Espanha", "US": "EUA",
+    "EE": "Estônia", "SZ": "Essuatíni", "ET": "Etiópia",
+    "FK": "Falkland (Malvinas)", "FJ": "Fiji", "PH": "Filipinas",
+    "FI": "Finlândia", "FR": "França", "GA": "Gabão", "GM": "Gâmbia",
+    "GH": "Gana", "GE": "Geórgia", "GS": "Geórgia do Sul", "GI": "Gibraltar",
+    "GD": "Granada", "GR": "Grécia", "GL": "Groenlândia", "GP": "Guadalupe",
+    "GU": "Guam", "GT": "Guatemala", "GY": "Guiana", "GF": "Guiana Francesa",
+    "GN": "Guiné", "GQ": "Guiné Equatorial", "GW": "Guiné-Bissau", "HT": "Haiti",
+    "HN": "Honduras", "HK": "Hong Kong", "HU": "Hungria", "YE": "Iêmen",
+    "IM": "Ilha de Man", "IN": "Índia", "ID": "Indonésia", "IR": "Irã",
+    "IQ": "Iraque", "IE": "Irlanda", "IS": "Islândia", "IL": "Israel",
+    "IT": "Itália", "JM": "Jamaica", "JP": "Japão", "JO": "Jordânia",
+    "KI": "Kiribati", "KW": "Kuwait", "LA": "Laos", "LS": "Lesoto",
+    "LV": "Letônia", "LB": "Líbano", "LR": "Libéria", "LY": "Líbia",
+    "LI": "Liechtenstein", "LT": "Lituânia", "LU": "Luxemburgo", "MO": "Macau",
+    "MK": "Macedônia do Norte", "MG": "Madagascar", "MY": "Malásia",
+    "MW": "Malaui", "MV": "Maldivas", "ML": "Mali", "MT": "Malta",
+    "MA": "Marrocos", "MQ": "Martinica", "MU": "Maurício", "MR": "Mauritânia",
+    "MX": "México", "MM": "Mianmar", "FM": "Micronésia", "MZ": "Moçambique",
+    "MD": "Moldávia", "MC": "Mônaco", "MN": "Mongólia", "ME": "Montenegro",
+    "NA": "Namíbia", "NR": "Nauru", "NP": "Nepal", "NI": "Nicarágua",
+    "NE": "Níger", "NG": "Nigéria", "NO": "Noruega", "NC": "Nova Caledônia",
+    "NZ": "Nova Zelândia", "OM": "Omã", "NL": "Países Baixos", "PW": "Palau",
+    "PS": "Palestina", "PA": "Panamá", "PG": "Papua-Nova Guiné",
+    "PK": "Paquistão", "PY": "Paraguai", "PE": "Peru",
+    "PF": "Polinésia Francesa", "PL": "Polônia", "PR": "Porto Rico",
+    "PT": "Portugal", "KE": "Quênia", "KG": "Quirguistão", "GB": "Reino Unido",
+    "CF": "República Centro-Africana", "DO": "República Dominicana",
+    "RO": "Romênia", "RW": "Ruanda", "RU": "Rússia", "EH": "Saara Ocidental",
+    "WS": "Samoa", "SM": "San Marino", "LC": "Santa Lúcia",
+    "KN": "São Cristóvão e Névis", "ST": "São Tomé e Príncipe",
+    "VC": "São Vicente e Granadinas", "SN": "Senegal", "SL": "Serra Leoa",
+    "RS": "Sérvia", "SC": "Seychelles", "SY": "Síria", "SO": "Somália",
+    "LK": "Sri Lanka", "SD": "Sudão", "SS": "Sudão do Sul", "SE": "Suécia",
+    "CH": "Suíça", "SR": "Suriname", "TJ": "Tadjiquistão", "TH": "Tailândia",
+    "TW": "Taiwan", "TZ": "Tanzânia", "CZ": "Tchéquia", "TL": "Timor-Leste",
+    "TG": "Togo", "TK": "Tokelau", "TO": "Tonga", "TT": "Trinidad e Tobago",
+    "TN": "Tunísia", "TM": "Turcomenistão", "TR": "Turquia", "TV": "Tuvalu",
+    "UA": "Ucrânia", "UG": "Uganda", "UY": "Uruguai", "UZ": "Uzbequistão",
+    "VU": "Vanuatu", "VA": "Vaticano", "VE": "Venezuela", "VN": "Vietnã",
+    "ZM": "Zâmbia", "ZW": "Zimbábue",
+}
+
+PAIS_APELIDO = {
+    "brasil": "BR",
+    "eua": "US", "estados unidos": "US", "estados unidos da america": "US",
+    "usa": "US", "united states": "US", "united states of america": "US",
+    "reino unido": "GB", "inglaterra": "GB", "escocia": "GB",
+    "pais de gales": "GB", "irlanda do norte": "GB", "gra bretanha": "GB",
+    "uk": "GB", "gb": "GB", "great britain": "GB", "united kingdom": "GB",
+    "paises baixos": "NL", "holanda": "NL", "netherlands": "NL",
+    "tchequia": "CZ", "republica tcheca": "CZ", "republica checa": "CZ",
+    "czech republic": "CZ",
+    "mianmar": "MM", "birmania": "MM", "myanmar": "MM",
+    "suazilandia": "SZ", "swaziland": "SZ",
+    "vietname": "VN", "vietnam": "VN",
+    "coreia do sul": "KR", "coreia do norte": "KP",
+    "russia": "RU", "federacao russa": "RU",
+    "ira": "IR", "iran": "IR",
+    "congo": "CG", "republica do congo": "CG", "congo brazzaville": "CG",
+    "congo kinshasa": "CD", "republica democratica do congo": "CD", "rdc": "CD",
+    "macedonia": "MK", "macedonia do norte": "MK", "north macedonia": "MK",
+    "timor leste": "TL", "timor-leste": "TL", "east timor": "TL",
+    "cabo verde": "CV", "cape verde": "CV",
+    "guine bissau": "GW", "guine-bissau": "GW",
+    "sao tome e principe": "ST",
+    "antigua e barbuda": "AG",
+    "trinidad e tobago": "TT",
+    "sao cristovao e nevis": "KN",
+    "sao vicente e granadinas": "VC",
+    "belarus": "BY", "bielorrussia": "BY", "bielo-russia": "BY",
+    "moldavia": "MD", "moldova": "MD",
+}
+
+
+# ─────────────────────────────────────────────
 # Modelos
 # ─────────────────────────────────────────────
 
@@ -167,9 +265,7 @@ def chave_ordenacao(livro):
 
     cor = (livro.cor_lombada or "").strip()
     ordem_cor = CORES_INDICE.get(cor, CORES_INDICE["Multi"])
-
     titulo = (livro.titulo or "").lower()
-
     return (grupo_estante, ordem_cor, titulo)
 
 
@@ -388,6 +484,101 @@ def preparar_exclusao_de_livro(livro):
 
 
 # ─────────────────────────────────────────────
+# Funções de país e mapa (Etapa 8a)
+# ─────────────────────────────────────────────
+
+_PAIS_CANONICO_NORMALIZADO_CACHE = None
+
+
+def _obter_mapa_canonico_normalizado():
+    global _PAIS_CANONICO_NORMALIZADO_CACHE
+    if _PAIS_CANONICO_NORMALIZADO_CACHE is None:
+        _PAIS_CANONICO_NORMALIZADO_CACHE = {
+            normalizar_texto(nome): codigo
+            for codigo, nome in PAISES_CANONICOS.items()
+        }
+    return _PAIS_CANONICO_NORMALIZADO_CACHE
+
+
+def codigo_pais_do_texto(texto):
+    if not texto:
+        return None
+    chave = normalizar_texto(texto)
+    if not chave:
+        return None
+
+    if chave in PAIS_APELIDO:
+        return PAIS_APELIDO[chave]
+
+    canonico = _obter_mapa_canonico_normalizado()
+    if chave in canonico:
+        return canonico[chave]
+
+    codigo_upper = (texto or "").strip().upper()
+    if codigo_upper in PAISES_CANONICOS:
+        return codigo_upper
+
+    return None
+
+
+def montar_dados_do_mapa():
+    dados = {}
+    nao_reconhecidos = {}
+
+    def adicionar(codigo, nome, titulo, autor, origem):
+        if codigo not in dados:
+            dados[codigo] = {"nome": nome, "livros": [], "total": 0}
+        dados[codigo]["livros"].append({
+            "titulo": titulo or "(sem título)",
+            "autor": autor or "",
+            "origem": origem,
+        })
+        dados[codigo]["total"] += 1
+
+    livros_lidos = Livro.query.filter(Livro.lido.is_(True)).all()
+    for lv in livros_lidos:
+        codigo = codigo_pais_do_texto(lv.pais)
+        if codigo:
+            adicionar(codigo, PAISES_CANONICOS[codigo], lv.titulo, lv.autor, "DL")
+        else:
+            chave = (lv.pais or "").strip() or "(sem país)"
+            nao_reconhecidos.setdefault(chave, []).append({
+                "titulo": lv.titulo or "(sem título)",
+                "autor": lv.autor or "",
+                "origem": "DL",
+            })
+
+    itens_lidos = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
+    for it in itens_lidos:
+        codigo = codigo_pais_do_texto(it.pais)
+        if codigo:
+            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor, "projeto")
+        else:
+            chave = (it.pais or "").strip() or "(sem país)"
+            nao_reconhecidos.setdefault(chave, []).append({
+                "titulo": it.titulo or "(sem título)",
+                "autor": it.autor or "",
+                "origem": "projeto",
+            })
+
+    return dados, nao_reconhecidos
+
+
+def resumo_do_mapa(dados_mapa):
+    """
+    Recebe o dict devolvido por montar_dados_do_mapa() e devolve um
+    resumo {paises_lidos, total_paises} para exibir na página do
+    projeto Lendo o Mundo.
+    """
+    paises_lidos = len(dados_mapa)
+    total_paises = len(PAISES_CANONICOS)
+    return {
+        "paises_lidos": paises_lidos,
+        "total_paises": total_paises,
+    }
+
+
+# ─────────────────────────────────────────────
 # Busca de ISBN (Google Books / Open Library)
 # ─────────────────────────────────────────────
 
@@ -544,16 +735,6 @@ def home():
 
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
-    """
-    Cadastro de livro físico.
-
-    Suporta vir de um item de projeto: /novo?item_id=42
-      - No GET: pré-preenche o formulário com os dados do item e
-        guarda o item_id num input hidden.
-      - No POST: se item_id veio, vincula o livro criado a esse item
-        e redireciona para o projeto (em vez da home).
-    """
-    # Lê item_id da query string (GET) ou do form (POST)
     item_id_raw = request.args.get("item_id") or request.form.get("item_id")
     item_origem = None
     if item_id_raw:
@@ -577,23 +758,19 @@ def novo():
             capa_url=capa_form or url_capa_open_library(isbn),
         )
         db.session.add(livro)
-        db.session.flush()  # garante livro.id
+        db.session.flush()
 
-        # Se veio de um item de projeto, vincula explicitamente.
         if item_origem is not None:
             vincular_item_a_livro(item_origem, livro)
         else:
-            # Senão, tenta o matching automático normal.
             tentar_vincular_livro(livro)
 
         db.session.commit()
 
-        # Redireciona para o projeto se veio de um item, senão para a home.
         if item_origem is not None:
             return redirect(url_for("projeto_detalhe", projeto_id=item_origem.projeto_id))
         return redirect(url_for("home"))
 
-    # GET: monta valores pré-preenchidos
     if item_origem is not None:
         valores = {
             "titulo": item_origem.titulo or "",
@@ -722,6 +899,8 @@ def estatisticas():
 @app.route("/backup")
 def backup():
     livros = Livro.query.order_by(Livro.id).all()
+    projetos = Projeto.query.order_by(Projeto.id).all()
+    itens = ItemProjeto.query.order_by(ItemProjeto.id).all()
 
     agora = datetime.now()
     data_iso = agora.strftime("%Y-%m-%d %H:%M:%S")
@@ -730,18 +909,27 @@ def backup():
     linhas = []
     linhas.append("-- Dark Library — Backup")
     linhas.append(f"-- Gerado em: {data_iso}")
-    linhas.append(f"-- Total de livros: {len(livros)}")
+    linhas.append(f"-- Livros: {len(livros)}")
+    linhas.append(f"-- Projetos: {len(projetos)}")
+    linhas.append(f"-- Itens de projeto: {len(itens)}")
     linhas.append("")
     linhas.append("-- Restauração:")
-    linhas.append("-- 1. Abra o SQL Editor do Neon")
-    linhas.append("-- 2. Cole este arquivo e execute")
-    linhas.append("-- (atenção: os comandos abaixo APAGAM os dados atuais)")
+    linhas.append("-- 1. Abra o SQL Editor do Neon.")
+    linhas.append("-- 2. Cole este arquivo inteiro e execute de uma vez.")
+    linhas.append("-- 3. ATENÇÃO: os DELETE abaixo APAGAM os dados atuais.")
+    linhas.append("-- 4. Restaure as três tabelas juntas, na ordem em que")
+    linhas.append("--    aparecem os INSERTs (livro -> projeto -> item_projeto).")
+    linhas.append("-- 5. Os SELECT setval no final ajustam as sequences.")
     linhas.append("")
+    linhas.append("-- Limpeza (ordem direta, do filho para o pai):")
+    linhas.append("DELETE FROM item_projeto;")
+    linhas.append("DELETE FROM projeto;")
     linhas.append("DELETE FROM livro;")
     linhas.append("")
 
+    linhas.append("-- Livros")
     if not livros:
-        linhas.append("-- Nenhum livro cadastrado.")
+        linhas.append("-- (nenhum livro cadastrado)")
     else:
         for livro in livros:
             valores = ", ".join([
@@ -759,9 +947,71 @@ def backup():
                 "INSERT INTO livro (id, titulo, autor, pais, cor_lombada, estante, isbn, lido, capa_url) "
                 f"VALUES ({valores});"
             )
+    linhas.append("")
+
+    linhas.append("-- Projetos")
+    if not projetos:
+        linhas.append("-- (nenhum projeto cadastrado)")
+    else:
+        for p in projetos:
+            valores = ", ".join([
+                str(p.id),
+                sql_escape(p.nome),
+                sql_escape(p.descricao),
+                sql_escape(p.tipo),
+                sql_escape(p.ativo),
+                sql_escape(p.criado_em),
+            ])
+            linhas.append(
+                "INSERT INTO projeto (id, nome, descricao, tipo, ativo, criado_em) "
+                f"VALUES ({valores});"
+            )
+    linhas.append("")
+
+    linhas.append("-- Itens de projeto")
+    if not itens:
+        linhas.append("-- (nenhum item cadastrado)")
+    else:
+        for it in itens:
+            valores = ", ".join([
+                str(it.id),
+                str(it.projeto_id),
+                sql_escape(it.titulo),
+                sql_escape(it.autor),
+                sql_escape(it.subtitulo),
+                sql_escape(it.pais),
+                sql_escape(it.ano),
+                sql_escape(it.isbn),
+                sql_escape(it.capa_url),
+                sql_escape(it.observacoes),
+                sql_escape(it.status),
+                sql_escape(it.livro_id),
+                sql_escape(it.ordem),
+                sql_escape(it.criado_em),
+            ])
+            linhas.append(
+                "INSERT INTO item_projeto "
+                "(id, projeto_id, titulo, autor, subtitulo, pais, ano, isbn, capa_url, observacoes, status, livro_id, ordem, criado_em) "
+                f"VALUES ({valores});"
+            )
+    linhas.append("")
+
+    linhas.append("-- Ajuste das sequences (próximo id após restauração)")
+    linhas.append(
+        "SELECT setval(pg_get_serial_sequence('livro', 'id'), "
+        "COALESCE((SELECT MAX(id) FROM livro), 0) + 1, false);"
+    )
+    linhas.append(
+        "SELECT setval(pg_get_serial_sequence('projeto', 'id'), "
+        "COALESCE((SELECT MAX(id) FROM projeto), 0) + 1, false);"
+    )
+    linhas.append(
+        "SELECT setval(pg_get_serial_sequence('item_projeto', 'id'), "
+        "COALESCE((SELECT MAX(id) FROM item_projeto), 0) + 1, false);"
+    )
+    linhas.append("")
 
     conteudo = "\n".join(linhas)
-
     nome_arquivo = f"darklibrary-backup-{data_arquivo}.sql"
 
     return Response(
@@ -771,6 +1021,40 @@ def backup():
             "Content-Disposition": f'attachment; filename="{nome_arquivo}"',
         },
     )
+
+
+@app.route("/api/buscar_isbn/<isbn>")
+def buscar_isbn(isbn):
+    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
+
+    if not isbn_limpo:
+        return jsonify({"erro": "ISBN vazio"}), 400
+
+    resultado = buscar_google_books(isbn_limpo)
+    fonte = "Google Books"
+
+    if not resultado:
+        resultado = buscar_open_library(isbn_limpo)
+        fonte = "Open Library"
+
+    if not resultado:
+        return jsonify({"erro": "ISBN não encontrado no Google Books nem na Open Library"}), 404
+
+    titulo = resultado.get("titulo", "")
+    autor = resultado.get("autor", "")
+    capa = resultado.get("capa", "")
+
+    if not capa:
+        capa = url_capa_open_library(isbn_limpo)
+
+    return jsonify({
+        "isbn": isbn_limpo,
+        "titulo": titulo,
+        "autor": autor,
+        "capa": capa,
+        "fonte": fonte,
+    })
+
 
 # ─────────────────────────────────────────────
 # Rotas — projetos
@@ -815,6 +1099,13 @@ def projeto_detalhe(projeto_id):
         except ValueError:
             vinculados_msg = None
 
+    dados_mapa = None
+    paises_nao_reconhecidos = None
+    resumo_mapa = None
+    if projeto.tipo == "mundo":
+        dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa()
+        resumo_mapa = resumo_do_mapa(dados_mapa)
+
     return render_template(
         "projeto.html",
         projeto=projeto,
@@ -826,6 +1117,9 @@ def projeto_detalhe(projeto_id):
         pct=pct,
         status_rotulo=STATUS_ROTULO,
         vinculados_msg=vinculados_msg,
+        dados_mapa=dados_mapa,
+        paises_nao_reconhecidos=paises_nao_reconhecidos,
+        resumo_mapa=resumo_mapa,
     )
 
 
@@ -996,10 +1290,6 @@ def projeto_vincular_automaticamente(projeto_id):
 
     return redirect(url_for("projeto_detalhe", projeto_id=projeto.id, vinculados=vinculados))
 
-
-# ─────────────────────────────────────────────
-# Rotas — importação em massa
-# ─────────────────────────────────────────────
 
 @app.route("/projetos/<int:projeto_id>/importar", methods=["GET", "POST"])
 def projeto_importar(projeto_id):
