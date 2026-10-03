@@ -91,6 +91,11 @@
                         <div class="card-item-status card-item-status-{{ item.status }}">
                             {{ status_rotulo[item.status] }}
                         </div>
+                        {% if not item.livro_id %}
+                            <a class="card-item-acao"
+                               href="{{ url_for('novo', item_id=item.id) }}"
+                               title="Cadastrar na estante">➕</a>
+                        {% endif %}
                         <a class="card-item-acao"
                            href="{{ url_for('item_editar', projeto_id=projeto.id, item_id=item.id) }}"
                            title="Editar">✎</a>

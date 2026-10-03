@@ -6,15 +6,34 @@
 
     <div class="pagina-cabecalho">
         <h1>Novo livro</h1>
-        <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+        {% if item_origem %}
+            <a href="{{ url_for('projeto_detalhe', projeto_id=item_origem.projeto_id) }}" class="link-voltar">← Voltar</a>
+        {% else %}
+            <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+        {% endif %}
     </div>
 
+    {% if item_origem %}
+        <div class="aviso-item-origem">
+            Cadastrando livro na estante para o item
+            <strong>{{ item_origem.titulo }}</strong>
+            (projeto {{ item_origem.projeto.nome }}).
+            Ao salvar, o item será vinculado automaticamente.
+        </div>
+    {% endif %}
+
     <form method="POST" class="form-cadastro">
+
+        {% if item_origem %}
+            <input type="hidden" name="item_id" value="{{ item_origem.id }}">
+        {% endif %}
 
         <div class="campo">
             <label for="isbn">ISBN</label>
             <div class="campo-com-botao">
-                <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric" placeholder="Ex.: 9788535914849">
+                <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric"
+                       value="{{ valores.isbn or '' }}"
+                       placeholder="Ex.: 9788535914849">
                 <button type="button" id="btn-buscar-isbn" class="botao-secundario">Buscar ISBN</button>
                 <button type="button" id="btn-escanear" class="botao-secundario">📷 Escanear</button>
             </div>
@@ -24,26 +43,31 @@
         <div class="campo">
             <label for="capa_url">URL da capa (opcional)</label>
             <input type="text" id="capa_url" name="capa_url" maxlength="500"
+                   value="{{ valores.capa_url or '' }}"
                    placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem">
-            <div id="preview-capa" class="preview-capa" hidden>
-                <img id="preview-capa-img" alt="Prévia da capa">
+            <div id="preview-capa" class="preview-capa" {% if not valores.capa_url %}hidden{% endif %}>
+                <img id="preview-capa-img" src="{{ valores.capa_url or '' }}" alt="Prévia da capa">
             </div>
         </div>
 
         <div class="campo">
             <label for="titulo">Título <span class="obrigatorio">*</span></label>
-            <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus>
+            <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus
+                   value="{{ valores.titulo or '' }}">
         </div>
 
         <div class="campo">
             <label for="autor">Autor <span class="obrigatorio">*</span></label>
-            <input type="text" id="autor" name="autor" required maxlength="150">
+            <input type="text" id="autor" name="autor" required maxlength="150"
+                   value="{{ valores.autor or '' }}">
         </div>
 
         <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>
-                <input type="text" id="pais" name="pais" maxlength="80" placeholder="Ex.: Brasil">
+                <input type="text" id="pais" name="pais" maxlength="80"
+                       value="{{ valores.pais or '' }}"
+                       placeholder="Ex.: Brasil">
             </div>
 
             <div class="campo">
@@ -69,7 +93,11 @@
 
         <div class="acoes-form">
             <button type="submit">Salvar</button>
-            <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% if item_origem %}
+                <a href="{{ url_for('projeto_detalhe', projeto_id=item_origem.projeto_id) }}" class="link-cancelar">Cancelar</a>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% endif %}
         </div>
 
     </form>
@@ -210,12 +238,10 @@
             }
 
                         async function pararTudo() {
-                // Para o intervalo de leitura do canvas, se estiver ativo.
                 if (window.__scannerIntervalo) {
                     clearInterval(window.__scannerIntervalo);
                     window.__scannerIntervalo = null;
                 }
-                // Para o leitor do ZXing, se estiver ativo.
                 if (leitorZXing) {
                     try {
                         leitorZXing.reset();
@@ -224,16 +250,13 @@
                     }
                     leitorZXing = null;
                 }
-                // Para o stream da câmera.
                 if (streamCamera) {
                     streamCamera.getTracks().forEach(function (t) { t.stop(); });
                     streamCamera = null;
                 }
-                // Limpa o vídeo.
                 if (video) {
                     video.srcObject = null;
                 }
-                // Fecha o overlay.
                 overlay.hidden = true;
                 mensagemScanner.hidden = true;
             }
@@ -261,7 +284,6 @@
                 }
 
                 try {
-                    // Pede a câmera TRASEIRA, com resolução decente.
                     streamCamera = await navigator.mediaDevices.getUserMedia({
                         video: {
                             facingMode: { ideal: "environment" },
@@ -274,7 +296,6 @@
                     video.srcObject = streamCamera;
                     await video.play();
 
-                    // Cria leitor com hints para código de barras de produto.
                     const hints = new Map();
                     const formatos = [
                         ZXing.BarcodeFormat.EAN_13,
@@ -290,11 +311,9 @@
 
                     mostrarMensagemScanner("Procurando código de barras... aponte a câmera.", "aviso");
 
-                    // Canvas escondido para "fotografar" frames.
                     const canvas = document.getElementById("scanner-canvas");
                     const contexto = canvas.getContext("2d", { willReadFrequently: true });
 
-                                        // Loop: a cada 400ms, captura um frame e tenta decodificar.
                     const intervalo = setInterval(async function () {
                         if (!video.videoWidth || !video.videoHeight) {
                             return;
@@ -309,7 +328,6 @@
                         canvas.height = video.videoHeight;
                         contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                        // Converte o canvas em data URL (base64).
                         const dataUrl = canvas.toDataURL("image/png");
 
                         try {
@@ -322,14 +340,10 @@
                                 buscarIsbn();
                             }
                                                 } catch (e) {
-                            // NotFoundException = nada no frame, é normal.
-                            // Outros erros, ignoramos também — não queremos poluir a tela.
-                            // (Se um dia der problema, descomente a linha abaixo.)
-                            // console.log("ZXing erro:", e && e.name, e && e.message);
+                            // ignora
                         }
                     }, 400);
 
-                    // Guarda o intervalo para poder parar depois.
                     window.__scannerIntervalo = intervalo;
 
                 } catch (erro) {

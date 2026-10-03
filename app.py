@@ -211,13 +211,6 @@ def normalizar_isbn(isbn):
 
 
 def normalizar_texto(s):
-    """
-    Normaliza texto para comparação:
-      - Remove acentos (NFKD).
-      - Tudo para minúsculas.
-      - Remove pontuação (mantém letras, números, espaço).
-      - Colapsa espaços múltiplos.
-    """
     if not s:
         return ""
     s = unicodedata.normalize("NFKD", s)
@@ -229,10 +222,6 @@ def normalizar_texto(s):
 
 
 def chave_livro(livro):
-    """
-    Devolve uma tupla (isbn_norm, titulo_norm, autor_norm) para
-    comparação rápida em memória.
-    """
     return (
         normalizar_isbn(livro.isbn),
         normalizar_texto(livro.titulo),
@@ -241,9 +230,6 @@ def chave_livro(livro):
 
 
 def chave_item(item):
-    """
-    Devolve a mesma estrutura de chave_livro, para o item de projeto.
-    """
     return (
         normalizar_isbn(item.isbn),
         normalizar_texto(item.titulo),
@@ -311,32 +297,18 @@ def parse_linha_nobel(linha):
 # ─────────────────────────────────────────────
 
 def _livros_em_memoria():
-    """
-    Carrega todos os livros uma vez e devolve uma lista de tuplas
-    (chave, livro). Usado para matching em lote.
-    """
     livros = Livro.query.all()
     return [(chave_livro(lv), lv) for lv in livros]
 
 
 def encontrar_livro_para_item(item, livros_chaves):
-    """
-    Procura um livro compatível com o item de projeto.
-
-    Ordem:
-      1. Se ambos têm ISBN normalizado e batem -> esse livro.
-      2. Senão, se titulo_norm + autor_norm batem -> esse livro.
-      3. Senão, None.
-    """
     isbn_item, titulo_item, autor_item = chave_item(item)
 
-    # 1ª tentativa: por ISBN
     if isbn_item:
         for chave, lv in livros_chaves:
             if chave[0] == isbn_item:
                 return lv
 
-    # 2ª tentativa: por título + autor (ambos precisam existir)
     if titulo_item and autor_item:
         for chave, lv in livros_chaves:
             if chave[1] == titulo_item and chave[2] == autor_item:
@@ -346,10 +318,6 @@ def encontrar_livro_para_item(item, livros_chaves):
 
 
 def sincronizar_item_com_livro(item):
-    """
-    Ajusta o status do item conforme o estado do livro vinculado.
-    Não faz nada se o item não tem livro.
-    """
     if item.livro is None:
         return
     if item.livro.lido:
@@ -359,19 +327,12 @@ def sincronizar_item_com_livro(item):
 
 
 def vincular_item_a_livro(item, livro):
-    """
-    Vincula e sincroniza.
-    """
     item.livro_id = livro.id
     item.livro = livro
     sincronizar_item_com_livro(item)
 
 
 def tentar_vincular_item(item):
-    """
-    Tenta vincular um item a algum livro. Se já tem livro, sincroniza
-    o status e sai. Devolve True se vinculou agora.
-    """
     if item.livro_id is not None:
         sincronizar_item_com_livro(item)
         return False
@@ -386,19 +347,12 @@ def tentar_vincular_item(item):
 
 
 def tentar_vincular_livro(livro):
-    """
-    Quando um livro é criado/editado, procura itens de projeto que
-    combinem com ele e ainda não estejam vinculados. Devolve a
-    quantidade de vínculos novos.
-    """
     chave_lv = chave_livro(livro)
 
     itens = ItemProjeto.query.filter(ItemProjeto.livro_id.is_(None)).all()
 
     vinculados = 0
     for item in itens:
-        if item.projeto_id is None:
-            continue
         chave_it = chave_item(item)
         bate = False
         if chave_lv[0] and chave_it[0] and chave_lv[0] == chave_it[0]:
@@ -415,10 +369,6 @@ def tentar_vincular_livro(livro):
 
 
 def sincronizar_itens_do_livro(livro):
-    """
-    Quando o 'lido' de um livro muda, percorre os itens vinculados
-    e ajusta o status. Devolve a quantidade de itens afetados.
-    """
     itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
     afetados = 0
     for item in itens:
@@ -430,19 +380,10 @@ def sincronizar_itens_do_livro(livro):
 
 
 def preparar_exclusao_de_livro(livro):
-    """
-    Antes de apagar um livro, ajusta os itens de projeto vinculados
-    (decisão P3 = c):
-      - Se o item era 'li'         -> mantém 'li', mas desvincula.
-      - Se o item era 'tenho_nao_li' -> vira 'nao_tenho' e desvincula.
-    Chamado ANTES do db.session.delete(livro), porque o ON DELETE
-    SET NULL do Postgres zeraria os livro_id primeiro.
-    """
     itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
     for item in itens:
         if item.status == "tenho_nao_li":
             item.status = "nao_tenho"
-        # Se era 'li', mantém 'li'
         item.livro_id = None
 
 
@@ -603,6 +544,24 @@ def home():
 
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
+    """
+    Cadastro de livro físico.
+
+    Suporta vir de um item de projeto: /novo?item_id=42
+      - No GET: pré-preenche o formulário com os dados do item e
+        guarda o item_id num input hidden.
+      - No POST: se item_id veio, vincula o livro criado a esse item
+        e redireciona para o projeto (em vez da home).
+    """
+    # Lê item_id da query string (GET) ou do form (POST)
+    item_id_raw = request.args.get("item_id") or request.form.get("item_id")
+    item_origem = None
+    if item_id_raw:
+        try:
+            item_origem = db.session.get(ItemProjeto, int(item_id_raw))
+        except (ValueError, TypeError):
+            item_origem = None
+
     if request.method == "POST":
         isbn = request.form.get("isbn", "").strip() or None
         capa_form = request.form.get("capa_url", "").strip() or None
@@ -618,14 +577,40 @@ def novo():
             capa_url=capa_form or url_capa_open_library(isbn),
         )
         db.session.add(livro)
-        db.session.flush()  # garante livro.id antes de tentar vincular
+        db.session.flush()  # garante livro.id
 
-        tentar_vincular_livro(livro)
+        # Se veio de um item de projeto, vincula explicitamente.
+        if item_origem is not None:
+            vincular_item_a_livro(item_origem, livro)
+        else:
+            # Senão, tenta o matching automático normal.
+            tentar_vincular_livro(livro)
 
         db.session.commit()
+
+        # Redireciona para o projeto se veio de um item, senão para a home.
+        if item_origem is not None:
+            return redirect(url_for("projeto_detalhe", projeto_id=item_origem.projeto_id))
         return redirect(url_for("home"))
 
-    return render_template("novo.html", cores=CORES_ORDEM)
+    # GET: monta valores pré-preenchidos
+    if item_origem is not None:
+        valores = {
+            "titulo": item_origem.titulo or "",
+            "autor": item_origem.autor or "",
+            "pais": item_origem.pais or "",
+            "isbn": item_origem.isbn or "",
+            "capa_url": item_origem.capa_url or "",
+        }
+    else:
+        valores = {}
+
+    return render_template(
+        "novo.html",
+        cores=CORES_ORDEM,
+        valores=valores,
+        item_origem=item_origem,
+    )
 
 
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
@@ -649,11 +634,9 @@ def editar(livro_id):
 
         db.session.flush()
 
-        # Se o lido mudou, sincroniza itens vinculados.
         if livro.lido != lido_antes:
             sincronizar_itens_do_livro(livro)
 
-        # Tenta vincular com itens de projeto que ainda não têm livro.
         tentar_vincular_livro(livro)
 
         db.session.commit()
@@ -667,9 +650,7 @@ def excluir(livro_id):
     livro = db.get_or_404(Livro, livro_id)
 
     if request.method == "POST":
-        # Antes de apagar, ajusta itens vinculados (P3 = c).
         preparar_exclusao_de_livro(livro)
-
         db.session.delete(livro)
         db.session.commit()
         return redirect(url_for("home"))
@@ -790,41 +771,6 @@ def backup():
             "Content-Disposition": f'attachment; filename="{nome_arquivo}"',
         },
     )
-
-
-@app.route("/api/buscar_isbn/<isbn>")
-def buscar_isbn(isbn):
-    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
-
-    if not isbn_limpo:
-        return jsonify({"erro": "ISBN vazio"}), 400
-
-    resultado = buscar_google_books(isbn_limpo)
-    fonte = "Google Books"
-
-    if not resultado:
-        resultado = buscar_open_library(isbn_limpo)
-        fonte = "Open Library"
-
-    if not resultado:
-        return jsonify({"erro": "ISBN não encontrado no Google Books nem na Open Library"}), 404
-
-    titulo = resultado.get("titulo", "")
-    autor = resultado.get("autor", "")
-    capa = resultado.get("capa", "")
-
-    if not capa:
-        capa_ol = url_capa_open_library(isbn_limpo)
-        capa = capa_ol
-
-    return jsonify({
-        "isbn": isbn_limpo,
-        "titulo": titulo,
-        "autor": autor,
-        "capa": capa,
-        "fonte": fonte,
-    })
-
 
 # ─────────────────────────────────────────────
 # Rotas — projetos
@@ -994,9 +940,7 @@ def item_editar(projeto_id, item_id):
         item.status = dados["status"]
 
         db.session.flush()
-
         tentar_vincular_item(item)
-
         db.session.commit()
         return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
 
@@ -1033,11 +977,6 @@ def item_excluir(projeto_id, item_id):
 
 @app.route("/projetos/<int:projeto_id>/vincular_automaticamente", methods=["POST"])
 def projeto_vincular_automaticamente(projeto_id):
-    """
-    Percorre todos os itens do projeto e tenta vincular cada um a um
-    livro físico. Redireciona com ?vinculados=N para mostrar a
-    mensagem na tela.
-    """
     projeto = db.get_or_404(Projeto, projeto_id)
 
     livros_chaves = _livros_em_memoria()
@@ -1045,7 +984,6 @@ def projeto_vincular_automaticamente(projeto_id):
     vinculados = 0
     for item in projeto.itens:
         if item.livro_id is not None:
-            # Já vinculado: só sincroniza o status.
             sincronizar_item_com_livro(item)
             continue
 
@@ -1142,7 +1080,6 @@ def projeto_importar(projeto_id):
 
             db.session.flush()
 
-            # Após importar, tenta vincular tudo de uma vez.
             livros_chaves = _livros_em_memoria()
             for item in projeto.itens:
                 if item.livro_id is None:
