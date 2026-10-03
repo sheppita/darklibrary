@@ -9,9 +9,24 @@
         <div class="pagina-cabecalho-acoes">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">+ Adicionar item</a>
             <a href="{{ url_for('projeto_importar', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">Importar em massa</a>
+            <form method="POST" action="{{ url_for('projeto_vincular_automaticamente', projeto_id=projeto.id) }}" class="form-inline">
+                <button type="submit" class="botao-secundario botao-pequeno">Vincular automaticamente</button>
+            </form>
             <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
         </div>
     </div>
+
+    {% if vinculados_msg is not none %}
+        <div class="mensagem-sucesso-form">
+            {% if vinculados_msg == 0 %}
+                Nenhum item novo foi vinculado.
+            {% elif vinculados_msg == 1 %}
+                1 item foi vinculado a um livro da estante.
+            {% else %}
+                {{ vinculados_msg }} itens foram vinculados a livros da estante.
+            {% endif %}
+        </div>
+    {% endif %}
 
     {% if projeto.descricao %}
         <p class="projeto-descricao">{{ projeto.descricao }}</p>
@@ -54,7 +69,12 @@
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
                     <div class="card-item-principal">
-                        <div class="card-item-titulo">{{ item.titulo }}</div>
+                        <div class="card-item-titulo">
+                            {{ item.titulo }}
+                            {% if item.livro_id %}
+                                <span class="card-item-vinculo-icone" title="Vinculado à estante">🔗</span>
+                            {% endif %}
+                        </div>
                         {% if item.subtitulo %}
                             <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
                         {% endif %}

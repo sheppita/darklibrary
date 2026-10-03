@@ -1420,3 +1420,32 @@ input:focus, select:focus, textarea:focus {
         font-size: 0.82rem;
     }
 }
+/* ─────────────────────────────────────────────
+   26. Etapa 5 — vinculação
+   ───────────────────────────────────────────── */
+
+.form-inline {
+    display: inline;
+    margin: 0;
+}
+
+.form-inline button {
+    /* Nada de especial, herda do .botao-secundario */
+}
+
+.mensagem-sucesso-form {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    border-radius: var(--raio);
+    padding: var(--esp-3) var(--esp-4);
+    margin-bottom: var(--esp-5);
+    font-size: 0.95rem;
+}
+
+.card-item-vinculo-icone {
+    font-size: 0.85rem;
+    margin-left: var(--esp-1);
+    opacity: 0.75;
+    cursor: help;
+}

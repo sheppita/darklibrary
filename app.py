@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 import requests
@@ -209,12 +210,48 @@ def normalizar_isbn(isbn):
     return limpo or None
 
 
+def normalizar_texto(s):
+    """
+    Normaliza texto para comparação:
+      - Remove acentos (NFKD).
+      - Tudo para minúsculas.
+      - Remove pontuação (mantém letras, números, espaço).
+      - Colapsa espaços múltiplos.
+    """
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = s.lower()
+    s = re.sub(r"[^\w\s]", " ", s, flags=re.UNICODE)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def chave_livro(livro):
+    """
+    Devolve uma tupla (isbn_norm, titulo_norm, autor_norm) para
+    comparação rápida em memória.
+    """
+    return (
+        normalizar_isbn(livro.isbn),
+        normalizar_texto(livro.titulo),
+        normalizar_texto(livro.autor),
+    )
+
+
+def chave_item(item):
+    """
+    Devolve a mesma estrutura de chave_livro, para o item de projeto.
+    """
+    return (
+        normalizar_isbn(item.isbn),
+        normalizar_texto(item.titulo),
+        normalizar_texto(item.autor),
+    )
+
+
 def primeiro_pais(pais):
-    """
-    Se o campo 'pais' contém ' e ' (com espaços), devolve só a parte
-    antes do ' e '. Ex.: 'Alemanha e Suíça' -> 'Alemanha'.
-    Usado na importação em massa do Nobel (decisão P2 = ii).
-    """
     if not pais:
         return pais
     if " e " in pais:
@@ -223,15 +260,6 @@ def primeiro_pais(pais):
 
 
 def parse_linha_nobel(linha):
-    """
-    Faz o parse de uma linha no formato:
-        Autor, AAAA, País
-
-    Devolve:
-        {'ok': True, 'autor': ..., 'ano': ..., 'pais': ..., 'subtitulo': ...}
-        ou
-        {'ok': False, 'erro': 'motivo'}
-    """
     if linha is None:
         return {"ok": False, "erro": "linha vazia"}
 
@@ -277,6 +305,150 @@ def parse_linha_nobel(linha):
         "subtitulo": subtitulo,
     }
 
+
+# ─────────────────────────────────────────────
+# Funções de vinculação e sincronização (Etapa 5)
+# ─────────────────────────────────────────────
+
+def _livros_em_memoria():
+    """
+    Carrega todos os livros uma vez e devolve uma lista de tuplas
+    (chave, livro). Usado para matching em lote.
+    """
+    livros = Livro.query.all()
+    return [(chave_livro(lv), lv) for lv in livros]
+
+
+def encontrar_livro_para_item(item, livros_chaves):
+    """
+    Procura um livro compatível com o item de projeto.
+
+    Ordem:
+      1. Se ambos têm ISBN normalizado e batem -> esse livro.
+      2. Senão, se titulo_norm + autor_norm batem -> esse livro.
+      3. Senão, None.
+    """
+    isbn_item, titulo_item, autor_item = chave_item(item)
+
+    # 1ª tentativa: por ISBN
+    if isbn_item:
+        for chave, lv in livros_chaves:
+            if chave[0] == isbn_item:
+                return lv
+
+    # 2ª tentativa: por título + autor (ambos precisam existir)
+    if titulo_item and autor_item:
+        for chave, lv in livros_chaves:
+            if chave[1] == titulo_item and chave[2] == autor_item:
+                return lv
+
+    return None
+
+
+def sincronizar_item_com_livro(item):
+    """
+    Ajusta o status do item conforme o estado do livro vinculado.
+    Não faz nada se o item não tem livro.
+    """
+    if item.livro is None:
+        return
+    if item.livro.lido:
+        item.status = "li"
+    else:
+        item.status = "tenho_nao_li"
+
+
+def vincular_item_a_livro(item, livro):
+    """
+    Vincula e sincroniza.
+    """
+    item.livro_id = livro.id
+    item.livro = livro
+    sincronizar_item_com_livro(item)
+
+
+def tentar_vincular_item(item):
+    """
+    Tenta vincular um item a algum livro. Se já tem livro, sincroniza
+    o status e sai. Devolve True se vinculou agora.
+    """
+    if item.livro_id is not None:
+        sincronizar_item_com_livro(item)
+        return False
+
+    livros_chaves = _livros_em_memoria()
+    livro = encontrar_livro_para_item(item, livros_chaves)
+    if livro is None:
+        return False
+
+    vincular_item_a_livro(item, livro)
+    return True
+
+
+def tentar_vincular_livro(livro):
+    """
+    Quando um livro é criado/editado, procura itens de projeto que
+    combinem com ele e ainda não estejam vinculados. Devolve a
+    quantidade de vínculos novos.
+    """
+    chave_lv = chave_livro(livro)
+
+    itens = ItemProjeto.query.filter(ItemProjeto.livro_id.is_(None)).all()
+
+    vinculados = 0
+    for item in itens:
+        if item.projeto_id is None:
+            continue
+        chave_it = chave_item(item)
+        bate = False
+        if chave_lv[0] and chave_it[0] and chave_lv[0] == chave_it[0]:
+            bate = True
+        elif chave_lv[1] and chave_it[1] and chave_lv[2] and chave_it[2] \
+                and chave_lv[1] == chave_it[1] and chave_lv[2] == chave_it[2]:
+            bate = True
+
+        if bate:
+            vincular_item_a_livro(item, livro)
+            vinculados += 1
+
+    return vinculados
+
+
+def sincronizar_itens_do_livro(livro):
+    """
+    Quando o 'lido' de um livro muda, percorre os itens vinculados
+    e ajusta o status. Devolve a quantidade de itens afetados.
+    """
+    itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
+    afetados = 0
+    for item in itens:
+        antes = item.status
+        sincronizar_item_com_livro(item)
+        if item.status != antes:
+            afetados += 1
+    return afetados
+
+
+def preparar_exclusao_de_livro(livro):
+    """
+    Antes de apagar um livro, ajusta os itens de projeto vinculados
+    (decisão P3 = c):
+      - Se o item era 'li'         -> mantém 'li', mas desvincula.
+      - Se o item era 'tenho_nao_li' -> vira 'nao_tenho' e desvincula.
+    Chamado ANTES do db.session.delete(livro), porque o ON DELETE
+    SET NULL do Postgres zeraria os livro_id primeiro.
+    """
+    itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
+    for item in itens:
+        if item.status == "tenho_nao_li":
+            item.status = "nao_tenho"
+        # Se era 'li', mantém 'li'
+        item.livro_id = None
+
+
+# ─────────────────────────────────────────────
+# Busca de ISBN (Google Books / Open Library)
+# ─────────────────────────────────────────────
 
 def url_capa_open_library(isbn):
     if not isbn:
@@ -446,6 +618,10 @@ def novo():
             capa_url=capa_form or url_capa_open_library(isbn),
         )
         db.session.add(livro)
+        db.session.flush()  # garante livro.id antes de tentar vincular
+
+        tentar_vincular_livro(livro)
+
         db.session.commit()
         return redirect(url_for("home"))
 
@@ -460,6 +636,8 @@ def editar(livro_id):
         isbn = request.form.get("isbn", "").strip() or None
         capa_form = request.form.get("capa_url", "").strip() or None
 
+        lido_antes = livro.lido
+
         livro.titulo = request.form.get("titulo", "").strip()
         livro.autor = request.form.get("autor", "").strip()
         livro.pais = request.form.get("pais", "").strip() or None
@@ -468,6 +646,15 @@ def editar(livro_id):
         livro.isbn = isbn
         livro.lido = ("lido" in request.form)
         livro.capa_url = capa_form or url_capa_open_library(isbn)
+
+        db.session.flush()
+
+        # Se o lido mudou, sincroniza itens vinculados.
+        if livro.lido != lido_antes:
+            sincronizar_itens_do_livro(livro)
+
+        # Tenta vincular com itens de projeto que ainda não têm livro.
+        tentar_vincular_livro(livro)
 
         db.session.commit()
         return redirect(url_for("home"))
@@ -480,6 +667,9 @@ def excluir(livro_id):
     livro = db.get_or_404(Livro, livro_id)
 
     if request.method == "POST":
+        # Antes de apagar, ajusta itens vinculados (P3 = c).
+        preparar_exclusao_de_livro(livro)
+
         db.session.delete(livro)
         db.session.commit()
         return redirect(url_for("home"))
@@ -672,6 +862,13 @@ def projeto_detalhe(projeto_id):
 
     pct = round(lidos / total * 100) if total > 0 else 0
 
+    vinculados_msg = request.args.get("vinculados")
+    if vinculados_msg is not None:
+        try:
+            vinculados_msg = int(vinculados_msg)
+        except ValueError:
+            vinculados_msg = None
+
     return render_template(
         "projeto.html",
         projeto=projeto,
@@ -682,6 +879,7 @@ def projeto_detalhe(projeto_id):
         nao_tenho=nao_tenho,
         pct=pct,
         status_rotulo=STATUS_ROTULO,
+        vinculados_msg=vinculados_msg,
     )
 
 
@@ -747,6 +945,10 @@ def item_novo(projeto_id):
             status=dados["status"],
         )
         db.session.add(item)
+        db.session.flush()
+
+        tentar_vincular_item(item)
+
         db.session.commit()
         return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
 
@@ -791,6 +993,10 @@ def item_editar(projeto_id, item_id):
         item.observacoes = dados["observacoes"]
         item.status = dados["status"]
 
+        db.session.flush()
+
+        tentar_vincular_item(item)
+
         db.session.commit()
         return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
 
@@ -825,23 +1031,40 @@ def item_excluir(projeto_id, item_id):
     )
 
 
+@app.route("/projetos/<int:projeto_id>/vincular_automaticamente", methods=["POST"])
+def projeto_vincular_automaticamente(projeto_id):
+    """
+    Percorre todos os itens do projeto e tenta vincular cada um a um
+    livro físico. Redireciona com ?vinculados=N para mostrar a
+    mensagem na tela.
+    """
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    livros_chaves = _livros_em_memoria()
+
+    vinculados = 0
+    for item in projeto.itens:
+        if item.livro_id is not None:
+            # Já vinculado: só sincroniza o status.
+            sincronizar_item_com_livro(item)
+            continue
+
+        livro = encontrar_livro_para_item(item, livros_chaves)
+        if livro is not None:
+            vincular_item_a_livro(item, livro)
+            vinculados += 1
+
+    db.session.commit()
+
+    return redirect(url_for("projeto_detalhe", projeto_id=projeto.id, vinculados=vinculados))
+
+
 # ─────────────────────────────────────────────
 # Rotas — importação em massa
 # ─────────────────────────────────────────────
 
 @app.route("/projetos/<int:projeto_id>/importar", methods=["GET", "POST"])
 def projeto_importar(projeto_id):
-    """
-    Importa itens em massa a partir de texto colado.
-
-    Formato esperado (uma linha por item):
-        Autor, AAAA, País
-
-    Fluxo:
-      - GET:  mostra a textarea vazia.
-      - POST acao=previsualizar: faz o parse, mostra tabela. Nada é criado.
-      - POST acao=importar: faz o parse de novo; se tudo ok, cria os itens.
-    """
     projeto = db.get_or_404(Projeto, projeto_id)
 
     if request.method == "POST":
@@ -917,6 +1140,16 @@ def projeto_importar(projeto_id):
                 )
                 db.session.add(item)
 
+            db.session.flush()
+
+            # Após importar, tenta vincular tudo de uma vez.
+            livros_chaves = _livros_em_memoria()
+            for item in projeto.itens:
+                if item.livro_id is None:
+                    livro = encontrar_livro_para_item(item, livros_chaves)
+                    if livro is not None:
+                        vincular_item_a_livro(item, livro)
+
             db.session.commit()
 
             return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
@@ -938,9 +1171,6 @@ def projeto_importar(projeto_id):
 
 @app.route("/projetos/_seed_teste")
 def projetos_seed_teste():
-    """
-    ⚠️ ROTA TEMPORÁRIA — apagar na Etapa 7 ⚠️
-    """
     nome = "Nobel de Literatura (teste)"
     existente = Projeto.query.filter_by(nome=nome).first()
     if existente:
