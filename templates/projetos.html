@@ -15,15 +15,11 @@
         </p>
 
         <div class="lista-projetos">
-            {% for entrada in projetos %}
-                {% set p = entrada.projeto %}
-                <a class="card-projeto" href="{{ url_for('projeto_detalhe', projeto_id=p.id) }}">
+            {% for p in projetos %}
+                <a class="card-projeto" href="{{ url_for('projeto_detalhe', slug=p.slug) }}">
 
                     <div class="card-projeto-cabecalho">
                         <h2 class="card-projeto-nome">{{ p.nome }}</h2>
-                        {% if p.tipo %}
-                            <span class="card-projeto-tipo">{{ p.tipo }}</span>
-                        {% endif %}
                     </div>
 
                     {% if p.descricao %}
@@ -32,15 +28,15 @@
 
                     <div class="card-projeto-progresso">
                         <div class="stats-barra">
-                            <div class="stats-barra-preenchida" style="width: {{ entrada.pct }}%;"></div>
+                            <div class="stats-barra-preenchida" style="width: {{ p.pct }}%;"></div>
                         </div>
                         <div class="card-projeto-legenda">
-                            {% if entrada.tipo_mundo %}
-                                <span>{{ entrada.lidos }} de {{ entrada.total }} Países</span>
+                            {% if p.tipo_mundo %}
+                                <span>{{ p.lidos }} de {{ p.total }} Países</span>
                             {% else %}
-                                <span>{{ entrada.lidos }} de {{ entrada.total }} Lidos</span>
+                                <span>{{ p.lidos }} de {{ p.total }} Lidos</span>
                             {% endif %}
-                            <span>{{ entrada.pct }}%</span>
+                            <span>{{ p.pct }}%</span>
                         </div>
                     </div>
 

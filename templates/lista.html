@@ -60,7 +60,7 @@
     </form>
 
     {% if grupos %}
-        <p class="contador">{{ total }} livro(s) encontrado(s).</p>
+        <p class="contador">{{ total }} Livro(s) Encontrado(s).</p>
 
         {% for estante, livros, gradiente in grupos %}
             <h2 class="titulo-estante" style="--gradiente-estante: {{ gradiente }};">
@@ -88,7 +88,7 @@
 
                         <div class="card-conteudo">
                             <div class="card-titulo">
-                                 {% if livro.literario %}<span class="card-selo-literario" title="Item de Projeto">🖤</span>{% endif %}
+                                {% if not livro.tenho %}<span class="card-selo-sem-tenho" title="Só em Projeto">🪶</span>{% endif %}
                                 {{ livro.titulo }}
                             </div>
 

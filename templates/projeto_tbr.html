@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — {{ projeto.nome }}{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>{{ projeto.nome }}</h1>
+        <div class="pagina-cabecalho-acoes">
+            <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os Projetos</a>
+        </div>
+    </div>
+
+    {% if projeto.descricao %}
+        <p class="projeto-descricao">{{ projeto.descricao }}</p>
+    {% endif %}
+
+    {# ─────────── Barra de progresso ─────────── #}
+    {% if total > 0 %}
+        <div class="stats-barra-wrap">
+            <div class="stats-barra">
+                <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
+            </div>
+            <div class="stats-barra-legenda">
+                {{ lidos }} de {{ total }} Lidos · {{ pct }}%
+            </div>
+        </div>
+    {% endif %}
+
+    {# ─────────── Resumo (2 caixinhas) ─────────── #}
+    <div class="projeto-resumo projeto-resumo-2">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Para Ler</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ lidos }}</span>
+            <span class="projeto-resumo-rotulo">Já Lido(s)</span>
+        </div>
+    </div>
+
+    {# ─────────── Lista de livros ─────────── #}
+    {% if livros_filtrados %}
+
+        <h2 class="projeto-secao-titulo">Livros da TBR</h2>
+
+        <div class="lista-itens">
+            {% for livro in livros_filtrados %}
+                <div class="card-item card-item-{{ 'li' if livro.lido else 'nao_tenho' }}">
+
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if livro.capa_url %}
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">{{ livro.titulo }}</div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
+                        {% endif %}
+                        <div class="card-item-autor">{{ livro.autor }}</div>
+                    </div>
+
+                    <div class="card-item-meta">
+                        {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
+                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
+                    </div>
+
+                    <div class="card-item-acoes">
+                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                            {% if livro.lido %}Li{% else %}Não Lido{% endif %}
+                        </div>
+                        <a class="card-item-acao"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path) }}"
+                           title="Excluir">✕</a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Nenhum Livro na TBR Ainda.</p>
+        <p class="vazio" style="margin-top: 0;">
+            <a href="{{ url_for('novo', projeto='tbr') }}" class="link-voltar">
+                Adicionar o Primeiro Livro →
+            </a>
+        </p>
+
+    {% endif %}
+
+{% endblock %}

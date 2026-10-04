@@ -6,8 +6,16 @@
 
     <div class="pagina-cabecalho">
         <h1>Editar Livro</h1>
-        <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+        {% if next_url %}
+            <a href="{{ next_url }}" class="link-voltar">← Voltar</a>
+        {% else %}
+            <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
+        {% endif %}
     </div>
+
+    {% if erro %}
+        <div class="mensagem-erro-form">{{ erro }}</div>
+    {% endif %}
 
     <form method="POST" class="form-cadastro">
 
@@ -15,79 +23,161 @@
             <input type="hidden" name="next" value="{{ next_url }}">
         {% endif %}
 
-        <div class="campo">
-            <label for="isbn">ISBN</label>
-            <div class="campo-com-botao">
-                <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric"
-                       value="{{ livro.isbn or '' }}"
-                       placeholder="Ex.: 9788535914849">
-                <button type="button" id="btn-buscar-isbn" class="botao-secundario">Buscar ISBN</button>
-            </div>
-            <div id="mensagem-isbn" class="mensagem-isbn" hidden></div>
-        </div>
+        {# ═══════════════ BLOCO 1 — DADOS DO LIVRO ═══════════════ #}
+        <div class="bloco-form">
+            <h3 class="bloco-titulo">Dados do Livro</h3>
 
-        <div class="campo">
-            <label for="capa_url">URL da Capa (Opcional)</label>
-            <input type="text" id="capa_url" name="capa_url" maxlength="500"
-                   value="{{ livro.capa_url or '' }}"
-                   placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem.">
-            <div id="preview-capa" class="preview-capa" {% if not livro.capa_url %}hidden{% endif %}>
-                <img id="preview-capa-img" src="{{ livro.capa_url or '' }}" alt="Prévia da Capa">
-            </div>
-        </div>
-
-        <div class="campo">
-            <label for="titulo">Título <span class="obrigatorio">*</span></label>
-            <input type="text" id="titulo" name="titulo" required maxlength="200" value="{{ livro.titulo }}">
-        </div>
-
-        <div class="campo">
-            <label for="autor">Autor <span class="obrigatorio">*</span></label>
-            <input type="text" id="autor" name="autor" required maxlength="150" value="{{ livro.autor }}">
-        </div>
-
-        <div class="campo-linha">
             <div class="campo">
-                <label for="pais">País</label>
-                <input type="text" id="pais" name="pais" maxlength="80"
-                       value="{{ livro.pais or '' }}"
-                       placeholder="Ex.: Brasil">
+                <label for="titulo">Título <span class="obrigatorio">*</span></label>
+                <input type="text" id="titulo" name="titulo" required maxlength="200" autofocus
+                       value="{{ valores.titulo or '' }}">
             </div>
 
             <div class="campo">
-                <label for="estante">Estante</label>
-                <input type="text" id="estante" name="estante" maxlength="20"
-                       value="{{ livro.estante or '' }}"
-                       placeholder="Ex.: A1, B10">
+                <label for="autor">Autor <span class="obrigatorio">*</span></label>
+                <input type="text" id="autor" name="autor" required maxlength="150"
+                       value="{{ valores.autor or '' }}">
+            </div>
+
+            <div class="campo-linha-3">
+                <div class="campo">
+                    <label for="pais">País <span class="obrigatorio">*</span></label>
+                    <input type="text" id="pais" name="pais" required maxlength="80"
+                           value="{{ valores.pais or '' }}"
+                           placeholder="Ex.: Brasil">
+                </div>
+
+                <div class="campo">
+                    <label for="ano">Ano</label>
+                    <input type="number" id="ano" name="ano" min="1" max="9999"
+                           value="{{ valores.ano or '' }}"
+                           placeholder="Ex.: 1880">
+                </div>
+
+                <div class="campo">
+                    <label for="capa_url">URL da Capa <span class="obrigatorio">*</span></label>
+                    <input type="text" id="capa_url" name="capa_url" required maxlength="500"
+                           value="{{ valores.capa_url or '' }}"
+                           placeholder="https://...">
+                </div>
+            </div>
+
+            <div class="campo">
+                <label for="subtitulo">Subtítulo (Opcional)</label>
+                <input type="text" id="subtitulo" name="subtitulo" maxlength="200"
+                       value="{{ valores.subtitulo or '' }}"
+                       placeholder="Ex.: Laureado Nobel 1901">
+            </div>
+
+            <div class="campo">
+                <label>Prévia da Capa</label>
+                <div id="preview-capa" class="preview-capa" {% if not valores.capa_url %}hidden{% endif %}>
+                    <img id="preview-capa-img" src="{{ valores.capa_url or '' }}" alt="Prévia da Capa">
+                </div>
             </div>
         </div>
 
-        <div class="campo">
-            <label for="cor_lombada">Lombada</label>
-            <select id="cor_lombada" name="cor_lombada">
-                <option value="">— Selecione —</option>
-                {% for cor in cores %}
-                    <option value="{{ cor }}" {% if cor == livro.cor_lombada %}selected{% endif %}>{{ cor }}</option>
-                {% endfor %}
-            </select>
+        {# ═══════════════ BLOCO 2 — TENHO ESTE LIVRO? ═══════════════ #}
+        <div class="bloco-form">
+            <h3 class="bloco-titulo">Tenho Este Livro?</h3>
+
+            <div class="radio-grupo">
+                <label class="radio-item">
+                    <input type="radio" name="tenho" value="sim" {% if valores.tenho %}checked{% endif %}>
+                    <span>Sim</span>
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="tenho" value="nao" {% if not valores.tenho %}checked{% endif %}>
+                    <span>Não</span>
+                </label>
+            </div>
+
+            <div id="bloco-estante" class="campo-linha" {% if not valores.tenho %}hidden{% endif %}>
+                <div class="campo">
+                    <label for="cor_lombada">Lombada <span class="obrigatorio">*</span></label>
+                    <select id="cor_lombada" name="cor_lombada">
+                        <option value="">— Selecione —</option>
+                        {% for cor in cores %}
+                            <option value="{{ cor }}" {% if cor == valores.cor_lombada %}selected{% endif %}>{{ cor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="estante">Estante <span class="obrigatorio">*</span></label>
+                    <input type="text" id="estante" name="estante" maxlength="20"
+                           value="{{ valores.estante or '' }}"
+                           placeholder="Ex.: A1, B10">
+                </div>
+            </div>
         </div>
 
-        <div class="campo-checkbox">
-            <input type="checkbox" id="lido" name="lido" {% if livro.lido %}checked{% endif %}>
-            <label for="lido">Lido</label>
+        {# ═══════════════ BLOCO 3 — JÁ LEU? ═══════════════ #}
+        <div class="bloco-form">
+            <h3 class="bloco-titulo">Já Leu?</h3>
+
+            <div class="radio-grupo">
+                <label class="radio-item">
+                    <input type="radio" name="lido" value="sim" {% if valores.lido %}checked{% endif %}>
+                    <span>Sim</span>
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="lido" value="nao" {% if not valores.lido %}checked{% endif %}>
+                    <span>Não</span>
+                </label>
+            </div>
         </div>
 
-        <div class="campo-checkbox">
-            <input type="checkbox" id="literario" name="literario" {% if livro.literario %}checked{% endif %}>
-            <label for="literario">Item de Projeto?</label>
+        {# ═══════════════ BLOCO 4 — PROJETOS ═══════════════ #}
+        <div class="bloco-form">
+            <h3 class="bloco-titulo">Faz Parte de Algum Projeto?</h3>
+
+            <div class="checkbox-grupo">
+                <label class="checkbox-item">
+                    <input type="checkbox" name="projeto_nobel" {% if valores.projeto_nobel %}checked{% endif %}>
+                    <span>Nobel de Literatura</span>
+                </label>
+
+                <label class="checkbox-item">
+                    <input type="checkbox" name="projeto_mundo" {% if valores.projeto_mundo %}checked{% endif %}>
+                    <span>Lendo o Mundo</span>
+                </label>
+
+                <label class="checkbox-item">
+                    <input type="checkbox" name="projeto_postgrad" id="check-postgrad" {% if valores.projeto_postgrad %}checked{% endif %}>
+                    <span>PostGrad</span>
+                </label>
+
+                <div id="bloco-subprojeto" class="subprojeto-bloco" {% if not valores.projeto_postgrad %}hidden{% endif %}>
+                    <div class="radio-grupo radio-grupo-pequeno">
+                        {% for sub in subprojetos %}
+                            <label class="radio-item">
+                                <input type="radio" name="postgrad_subprojeto" value="{{ sub.slug }}"
+                                       {% if valores.postgrad_subprojeto == sub.slug %}checked{% endif %}>
+                                <span>{{ sub.nome }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <label class="checkbox-item">
+                    <input type="checkbox" name="projeto_tbr" id="check-tbr" {% if valores.projeto_tbr %}checked{% endif %}>
+                    <span>To-Be-Read</span>
+                </label>
+
+                <p class="aviso-projeto">
+                    ⓘ TBR é exclusivo: se marcar TBR, não pode marcar outros projetos (e vice-versa).
+                </p>
+            </div>
         </div>
 
+        {# ═══════════════ AÇÕES ═══════════════ #}
         <div class="acoes-form">
             <button type="submit">Salvar Alterações</button>
             {% if next_url %}
-                 <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
+                <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
             {% else %}
-                 <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+                <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
             {% endif %}
         </div>
 
@@ -95,20 +185,11 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const botao = document.getElementById("btn-buscar-isbn");
-            const inputIsbn = document.getElementById("isbn");
-            const inputTitulo = document.getElementById("titulo");
-            const inputAutor = document.getElementById("autor");
+
+            // ═══════════ Preview da capa ═══════════
             const inputCapa = document.getElementById("capa_url");
-            const mensagem = document.getElementById("mensagem-isbn");
             const previewCapa = document.getElementById("preview-capa");
             const previewCapaImg = document.getElementById("preview-capa-img");
-
-            function mostrarMensagem(texto, tipo) {
-                mensagem.textContent = texto;
-                mensagem.className = "mensagem-isbn mensagem-isbn-" + tipo;
-                mensagem.hidden = false;
-            }
 
             function mostrarPreview(url) {
                 if (!url) {
@@ -122,67 +203,84 @@
 
             previewCapaImg.addEventListener("error", function () {
                 previewCapa.hidden = true;
-                previewCapaImg.removeAttribute("src");
             });
 
             inputCapa.addEventListener("input", function () {
                 mostrarPreview(inputCapa.value.trim());
             });
 
-            botao.addEventListener("click", async function () {
-                const isbn = inputIsbn.value.trim();
+            // ═══════════ Radio Tenho → esconde Lombada/Estante ═══════════
+            const radiosTenho = document.querySelectorAll('input[name="tenho"]');
+            const blocoEstante = document.getElementById("bloco-estante");
+            const inputLombada = document.getElementById("cor_lombada");
+            const inputEstante = document.getElementById("estante");
 
-                if (!isbn) {
-                    mostrarMensagem("Digite um ISBN primeiro.", "erro");
-                    return;
+            function atualizarBlocoEstante() {
+                const tenhoSim = document.querySelector('input[name="tenho"][value="sim"]').checked;
+                if (tenhoSim) {
+                    blocoEstante.hidden = false;
+                    inputLombada.required = true;
+                    inputEstante.required = true;
+                } else {
+                    blocoEstante.hidden = true;
+                    inputLombada.required = false;
+                    inputEstante.required = false;
                 }
+            }
 
-                botao.disabled = true;
-                botao.textContent = "Buscando...";
-                mensagem.hidden = true;
-
-                try {
-                    const resposta = await fetch("/api/buscar_isbn/" + encodeURIComponent(isbn));
-                    const dados = await resposta.json();
-
-                    if (!resposta.ok) {
-                        mostrarMensagem(dados.erro || "Livro não encontrado.", "erro");
-                        return;
-                    }
-
-                    let camposPreenchidos = [];
-                    if (!inputTitulo.value.trim() && dados.titulo) {
-                        inputTitulo.value = dados.titulo;
-                        camposPreenchidos.push("título");
-                    }
-                    if (!inputAutor.value.trim() && dados.autor) {
-                        inputAutor.value = dados.autor;
-                        camposPreenchidos.push("autor");
-                    }
-
-                    if (dados.capa && !inputCapa.value.trim()) {
-                        inputCapa.value = dados.capa;
-                        mostrarPreview(dados.capa);
-                    }
-
-                    if (camposPreenchidos.length === 0) {
-                        mostrarMensagem(
-                            "Livro encontrado, mas os campos já estavam preenchidos.",
-                            "aviso"
-                        );
-                    } else {
-                        mostrarMensagem(
-                            "Encontrado (" + dados.fonte + ")! " + camposPreenchidos.join(" e ") + " preenchido(s).",
-                            "sucesso"
-                        );
-                    }
-                } catch (erro) {
-                    mostrarMensagem("Erro de conexão. Tente de novo.", "erro");
-                } finally {
-                    botao.disabled = false;
-                    botao.textContent = "Buscar ISBN";
-                }
+            radiosTenho.forEach(function (r) {
+                r.addEventListener("change", atualizarBlocoEstante);
             });
+            atualizarBlocoEstante();
+
+            // ═══════════ PostGrad → esconde sub-radios ═══════════
+            const checkPostgrad = document.getElementById("check-postgrad");
+            const blocoSubprojeto = document.getElementById("bloco-subprojeto");
+            const radiosSub = document.querySelectorAll('input[name="postgrad_subprojeto"]');
+
+            function atualizarBlocoSubprojeto() {
+                if (checkPostgrad.checked) {
+                    blocoSubprojeto.hidden = false;
+                } else {
+                    blocoSubprojeto.hidden = true;
+                    radiosSub.forEach(function (r) { r.checked = false; });
+                }
+            }
+
+            checkPostgrad.addEventListener("change", atualizarBlocoSubprojeto);
+
+            // ═══════════ TBR exclusivo ═══════════
+            const checkNobel = document.querySelector('input[name="projeto_nobel"]');
+            const checkMundo = document.querySelector('input[name="projeto_mundo"]');
+            const checkTbr = document.getElementById("check-tbr");
+
+            function atualizarTbr() {
+                const tbrMarcado = checkTbr.checked;
+                const outrosMarcados = checkNobel.checked || checkMundo.checked || checkPostgrad.checked;
+
+                if (tbrMarcado) {
+                    checkNobel.disabled = true;
+                    checkMundo.disabled = true;
+                    checkPostgrad.disabled = true;
+                    checkNobel.checked = false;
+                    checkMundo.checked = false;
+                    checkPostgrad.checked = false;
+                    blocoSubprojeto.hidden = true;
+                } else if (outrosMarcados) {
+                    checkTbr.disabled = true;
+                } else {
+                    checkNobel.disabled = false;
+                    checkMundo.disabled = false;
+                    checkPostgrad.disabled = false;
+                    checkTbr.disabled = false;
+                }
+            }
+
+            checkTbr.addEventListener("change", atualizarTbr);
+            checkNobel.addEventListener("change", atualizarTbr);
+            checkMundo.addEventListener("change", atualizarTbr);
+            checkPostgrad.addEventListener("change", atualizarTbr);
+            atualizarTbr();
         });
     </script>
 

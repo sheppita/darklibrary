@@ -6,7 +6,7 @@
 
     <div class="pagina-cabecalho">
         <h1>{{ nome }}</h1>
-        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id) }}" class="link-voltar">
+        <a href="{{ url_for('projeto_paises', slug=slug) }}" class="link-voltar">
             ← Todos os Países
         </a>
     </div>
@@ -16,13 +16,13 @@
         · Código: <code>{{ codigo }}</code>
     </p>
 
-    {# ─────────── Seção 1: livros já lidos ─────────── #}
-    <h2 class="projeto-secao-titulo">Livros Já Lidos</h2>
+    {# ─────────── Seção 1: Lidos Neste Projeto ─────────── #}
+    <h2 class="projeto-secao-titulo">Lidos Neste Projeto</h2>
 
-    {% if livros_lidos or itens_lidos %}
+    {% if lidos %}
 
         <div class="lista-itens">
-            {% for livro in livros_lidos %}
+            {% for livro in lidos %}
                 <div class="card-item card-item-li">
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
@@ -34,33 +34,23 @@
 
                     <div class="card-item-principal">
                         <div class="card-item-titulo">{{ livro.titulo }}</div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
+                        {% endif %}
                         <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
+
                     <div class="card-item-meta">
-                        <span class="card-item-origem">Estante</span>
-                    </div>
-                </div>
-            {% endfor %}
-
-            {% for item in itens_lidos %}
-                <div class="card-item card-item-li">
-                    <div class="card-item-tarja" aria-hidden="true"></div>
-
-                    <div class="card-item-capa">
-                        {% if item.capa_url %}
-                            <img src="{{ item.capa_url }}" alt="Capa de {{ item.titulo }}" loading="lazy">
-                        {% endif %}
+                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
                     </div>
 
-                    <div class="card-item-principal">
-                        <div class="card-item-titulo">{{ item.titulo }}</div>
-                        {% if item.subtitulo %}
-                            <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
-                        {% endif %}
-                        <div class="card-item-autor">{{ item.autor }}</div>
-                    </div>
-                    <div class="card-item-meta">
-                        <span class="card-item-origem">Projeto</span>
+                    <div class="card-item-acoes">
+                        <a class="card-item-acao"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path) }}"
+                           title="Excluir">✕</a>
                     </div>
                 </div>
             {% endfor %}
@@ -72,58 +62,47 @@
 
     {% endif %}
 
-    {# ─────────── Seção 2: recomendações ─────────── #}
+    {# ─────────── Seção 2: Recomendações Neste Projeto ─────────── #}
     <div class="pais-secao-cabecalho">
         <h2 class="projeto-secao-titulo">Recomendações Neste Projeto</h2>
-        <a href="{{ url_for('recomendacao_nova', projeto_id=projeto.id, codigo=codigo) }}"
+        <a href="{{ url_for('novo', projeto='mundo', pais=codigo) }}"
            class="botao-secundario botao-pequeno">+ Adicionar Recomendação</a>
     </div>
 
-    {% if recomendacoes %}
+    {% if nao_lidos %}
 
         <div class="lista-itens">
-            {% for item in recomendacoes %}
-                <div class="card-item card-item-{{ item.status }}">
+            {% for livro in nao_lidos %}
+                <div class="card-item card-item-{{ 'tenho_nao_li' if livro.tenho else 'nao_tenho' }}">
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
                     <div class="card-item-capa">
-                        {% if item.capa_url %}
-                            <img src="{{ item.capa_url }}" alt="Capa de {{ item.titulo }}" loading="lazy">
+                        {% if livro.capa_url %}
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
                         {% endif %}
                     </div>
 
                     <div class="card-item-principal">
-                        <div class="card-item-titulo">
-                            {{ item.titulo }}
-                            {% if item.livro_id %}
-                                <span class="card-item-vinculo-icone" title="Vinculado à Estante">🔗</span>
-                            {% endif %}
-                        </div>
-                        {% if item.subtitulo %}
-                            <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
+                        <div class="card-item-titulo">{{ livro.titulo }}</div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
                         {% endif %}
-                        <div class="card-item-autor">{{ item.autor }}</div>
+                        <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
 
                     <div class="card-item-meta">
-                        {% if item.ano %}<span>{{ item.ano }}</span>{% endif %}
-                        {% if item.isbn %}<span class="card-item-isbn">ISBN {{ item.isbn }}</span>{% endif %}
+                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
                     </div>
 
                     <div class="card-item-acoes">
-                        <div class="card-item-status card-item-status-{{ item.status }}">
-                            {{ status_rotulo[item.status] }}
+                        <div class="card-item-status card-item-status-{{ 'tenho_nao_li' if livro.tenho else 'nao_tenho' }}">
+                            {% if livro.tenho %}Tenho, Não Li{% else %}Não Tenho{% endif %}
                         </div>
-                        {% if not item.livro_id %}
-                            <a class="card-item-acao"
-                               href="{{ url_for('novo', item_id=item.id) }}"
-                               title="Cadastrar na Estante">➕</a>
-                        {% endif %}
                         <a class="card-item-acao"
-                           href="{{ url_for('recomendacao_editar', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
                            title="Editar">✎</a>
                         <a class="card-item-acao card-item-acao-perigo"
-                           href="{{ url_for('recomendacao_excluir', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path) }}"
                            title="Excluir">✕</a>
                     </div>
                 </div>

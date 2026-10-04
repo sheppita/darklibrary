@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — Lidos{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>Lidos</h1>
+    </div>
+
+    {# ─────────── Filtros em cápsula ─────────── #}
+    <div class="filtros-paises">
+        <a href="{{ url_for('lidos', filtro='lidos') }}"
+           class="filtro-pais {% if filtro == 'lidos' %}filtro-pais-ativo{% endif %}">
+            Todos os Lidos ({{ total_lidos }})
+        </a>
+        <a href="{{ url_for('lidos', filtro='lidos_tenho') }}"
+           class="filtro-pais {% if filtro == 'lidos_tenho' %}filtro-pais-ativo{% endif %}">
+            Lidos + Tenho ({{ total_lidos_tenho }})
+        </a>
+        <a href="{{ url_for('lidos', filtro='lidos_nao_tenho') }}"
+           class="filtro-pais {% if filtro == 'lidos_nao_tenho' %}filtro-pais-ativo{% endif %}">
+            Lidos + Não Tenho ({{ total_lidos_nao_tenho }})
+        </a>
+        <a href="{{ url_for('lidos', filtro='nao_lidos_nao_tenho') }}"
+           class="filtro-pais {% if filtro == 'nao_lidos_nao_tenho' %}filtro-pais-ativo{% endif %}">
+            Não Lidos + Não Tenho ({{ total_nao_lidos_nao_tenho }})
+        </a>
+    </div>
+
+    <p class="contador">
+        {{ livros|length }} Livro(s)
+    </p>
+
+    {% if livros %}
+
+        <div class="lista-itens">
+            {% for livro in livros %}
+                <div class="card-item card-item-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if livro.capa_url %}
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">
+                            {{ livro.titulo }}
+                            {% if not livro.tenho %}
+                                <span class="card-selo-sem-tenho" title="Só em Projeto">🪶</span>
+                            {% endif %}
+                        </div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
+                        {% endif %}
+                        <div class="card-item-autor">{{ livro.autor }}</div>
+                    </div>
+
+                    <div class="card-item-meta">
+                        {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
+                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
+                    </div>
+
+                    <div class="card-item-acoes">
+                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                            {% if livro.lido %}Li{% else %}Não Lido{% endif %}
+                        </div>
+                        <a class="card-item-acao"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Excluir">✕</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Nenhum Livro Neste Filtro.</p>
+
+    {% endif %}
+
+{% endblock %}

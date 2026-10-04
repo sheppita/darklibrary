@@ -1818,3 +1818,322 @@ input:focus, select:focus, textarea:focus {
 .botao-navegacao:active {
     transform: translateY(0);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ETAPA 20 — REFORMA DOS PROJETOS
+   Estilos novos para formulários, selos e badges
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   33. Formulário — blocos (fieldsets → agora divs)
+   ───────────────────────────────────────────── */
+
+.bloco-form {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-5);
+    margin: 0 0 var(--esp-5) 0;
+    background-color: var(--cor-superficie);
+    box-shadow: var(--sombra-suave);
+}
+
+/* Título do bloco */
+.bloco-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    padding: 0 0 var(--esp-2) 0;
+    margin: 0 0 var(--esp-4) 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+/* ─────────────────────────────────────────────
+   34. Campo com 3 colunas (País / Ano / Capa)
+   ───────────────────────────────────────────── */
+
+.campo-linha-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-4);
+}
+
+@media (min-width: 640px) {
+    .campo-linha-3 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 900px) {
+    .campo-linha-3 {
+        grid-template-columns: 1fr 1fr 2fr;
+    }
+}
+
+/* ─────────────────────────────────────────────
+   35. Radio grupo (Tenho / Lido / Subprojeto)
+   ───────────────────────────────────────────── */
+
+.radio-grupo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-4);
+}
+
+.radio-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-2);
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: var(--esp-2) var(--esp-3);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background-color: var(--cor-fundo);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.radio-item:hover {
+    background-color: var(--cor-superficie);
+    border-color: var(--cor-texto);
+}
+
+.radio-item input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--cor-texto);
+    cursor: pointer;
+    margin: 0;
+}
+
+.radio-item input[type="radio"]:checked + span {
+    font-weight: 600;
+}
+
+.radio-grupo-pequeno {
+    gap: var(--esp-2);
+    margin-bottom: 0;
+}
+
+.radio-grupo-pequeno .radio-item {
+    font-size: 0.85rem;
+    padding: var(--esp-1) var(--esp-2);
+}
+
+/* ─────────────────────────────────────────────
+   36. Checkbox grupo (Projetos)
+   ───────────────────────────────────────────── */
+
+.checkbox-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-3);
+    cursor: pointer;
+    user-select: none;
+    font-size: 1rem;
+    padding: var(--esp-3) var(--esp-4);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background-color: var(--cor-fundo);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.checkbox-item:hover {
+    background-color: var(--cor-superficie);
+    border-color: var(--cor-texto);
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cor-texto);
+    cursor: pointer;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.checkbox-item input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.checkbox-item input[type="checkbox"]:disabled + span {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   37. Subprojeto (dentro do checkbox PostGrad)
+   ───────────────────────────────────────────── */
+
+.subprojeto-bloco {
+    margin-left: var(--esp-5);
+    padding: var(--esp-3) var(--esp-4);
+    border-left: 3px solid var(--cor-borda);
+    background-color: var(--cor-superficie);
+    border-radius: var(--raio);
+}
+
+.subprojeto-bloco[hidden] {
+    display: none;
+}
+
+/* ─────────────────────────────────────────────
+   38. Aviso de projeto (TBR exclusivo)
+   ───────────────────────────────────────────── */
+
+.aviso-projeto {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin: var(--esp-3) 0 0 0;
+    padding: var(--esp-2) var(--esp-3);
+    background-color: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: var(--raio);
+}
+
+/* ─────────────────────────────────────────────
+   39. Selo "só em projeto" (🪶) nos cards
+   ───────────────────────────────────────────── */
+
+.card-selo-sem-tenho {
+    font-size: 0.85rem;
+    margin-right: var(--esp-1);
+    vertical-align: middle;
+    opacity: 0.85;
+    cursor: help;
+}
+
+/* ─────────────────────────────────────────────
+   40. Badge de subprojeto PostGrad
+   ───────────────────────────────────────────── */
+
+.badge-subprojeto {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px var(--esp-2);
+    margin-left: var(--esp-2);
+    border-radius: 999px;
+    background-color: #ede7f6;
+    color: #5e35b1;
+    vertical-align: middle;
+}
+
+/* ─────────────────────────────────────────────
+   41. Ajuste do bloco-estante (escondido/mostrado via JS)
+   ───────────────────────────────────────────── */
+
+#bloco-estante[hidden] {
+    display: none;
+}
+
+/* ─────────────────────────────────────────────
+   42. Ajuste do form-cadastro (remove max-width antigo)
+   ───────────────────────────────────────────── */
+
+.form-cadastro {
+    max-width: 100%;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ETAPA 20 — REFORMA DOS PROJETOS (continuação)
+   Resumos de projeto e ajustes finais
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   43. Resumo com 4 caixinhas (Nobel / PostGrad)
+   ───────────────────────────────────────────── */
+
+.projeto-resumo-4 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-6);
+}
+
+@media (min-width: 640px) {
+    .projeto-resumo-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ─────────────────────────────────────────────
+   44. Resumo com 2 caixinhas (TBR)
+   ───────────────────────────────────────────── */
+
+.projeto-resumo-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-6);
+    max-width: 500px;
+}
+
+/* ─────────────────────────────────────────────
+   45. Ajuste geral dos resumos (usam as mesmas classes)
+   ───────────────────────────────────────────── */
+
+.projeto-resumo-4 .projeto-resumo-item,
+.projeto-resumo-2 .projeto-resumo-item {
+    padding: var(--esp-3);
+}
+
+.projeto-resumo-4 .projeto-resumo-numero,
+.projeto-resumo-2 .projeto-resumo-numero {
+    font-size: 1.4rem;
+}
+
+.projeto-resumo-4 .projeto-resumo-rotulo,
+.projeto-resumo-2 .projeto-resumo-rotulo {
+    font-size: 0.7rem;
+}
+
+/* ─────────────────────────────────────────────
+   46. Ajuste do card-item sem "acoes" (Lidos Deste Projeto)
+   ───────────────────────────────────────────── */
+
+.card-item-li .card-item-meta:last-child {
+    margin-left: auto;
+}
+
+/* ─────────────────────────────────────────────
+   47. Ajuste do filtro de subprojeto (PostGrad)
+   Reaproveita .filtros-paises, mas com um respiro extra
+   ───────────────────────────────────────────── */
+
+.projeto-postgrad .filtros-paises {
+    margin-bottom: var(--esp-3);
+}
+
+/* ─────────────────────────────────────────────
+   48. Esconde o input file (se algum dia existir)
+   ───────────────────────────────────────────── */
+
+input[type="file"] {
+    display: none;
+}
+
+/* ─────────────────────────────────────────────
+   49. Badge de status do card-item quando projeto é postgrad
+   ───────────────────────────────────────────── */
+
+.card-item-titulo .badge-subprojeto {
+    margin-left: var(--esp-2);
+}

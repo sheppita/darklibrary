@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — {{ projeto.nome }}{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>{{ projeto.nome }}</h1>
+        <div class="pagina-cabecalho-acoes">
+            <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os Projetos</a>
+        </div>
+    </div>
+
+    {% if projeto.descricao %}
+        <p class="projeto-descricao">{{ projeto.descricao }}</p>
+    {% endif %}
+
+    {# ─────────── Barra de progresso ─────────── #}
+    {% if total > 0 %}
+        <div class="stats-barra-wrap">
+            <div class="stats-barra">
+                <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
+            </div>
+            <div class="stats-barra-legenda">
+                {{ lidos }} de {{ total }} Lidos · {{ pct }}%
+            </div>
+        </div>
+    {% endif %}
+
+    {# ─────────── Resumo (4 caixinhas) ─────────── #}
+    <div class="projeto-resumo projeto-resumo-4">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lido(s)</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
+            <span class="projeto-resumo-rotulo">Tenho, Não Li</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Não Lido(s)</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
+            <span class="projeto-resumo-rotulo">Não Tenho</span>
+        </div>
+    </div>
+
+    {# ─────────── Filtros em cápsula ─────────── #}
+    <div class="filtros-paises">
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='lido') }}"
+           class="filtro-pais {% if filtro == 'lido' %}filtro-pais-ativo{% endif %}">Lido</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='nao_lido') }}"
+           class="filtro-pais {% if filtro == 'nao_lido' %}filtro-pais-ativo{% endif %}">Não Lido</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='tenho') }}"
+           class="filtro-pais {% if filtro == 'tenho' %}filtro-pais-ativo{% endif %}">Tenho</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='recomendacoes') }}"
+           class="filtro-pais {% if filtro == 'recomendacoes' %}filtro-pais-ativo{% endif %}">Recomendações</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='todos') }}"
+           class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">Todos</a>
+    </div>
+
+    {# ─────────── Lista de livros ─────────── #}
+    {% if livros_filtrados %}
+
+        <div class="lista-itens">
+            {% for livro in livros_filtrados %}
+                <div class="card-item card-item-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
+
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if livro.capa_url %}
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">
+                            {{ livro.titulo }}
+                            {% if livro.projeto_postgrad and livro.postgrad_subprojeto %}
+                                <span class="badge-subprojeto">{{ livro.postgrad_subprojeto | replace('_', '-') | title }}</span>
+                            {% endif %}
+                        </div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
+                        {% endif %}
+                        <div class="card-item-autor">{{ livro.autor }}</div>
+                    </div>
+
+                    <div class="card-item-meta">
+                        {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
+                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
+                    </div>
+
+                    <div class="card-item-acoes">
+                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
+                            {% if livro.lido %}Li
+                            {% elif livro.tenho %}Tenho, Não Li
+                            {% else %}Não Tenho
+                            {% endif %}
+                        </div>
+                        <a class="card-item-acao"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Excluir">✕</a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        {% if filtro == 'todos' and total == 0 %}
+            <p class="vazio">Este Projeto Não Tem Livros.</p>
+        {% else %}
+            <p class="vazio">Nenhum Livro Neste Filtro.</p>
+            <p class="vazio" style="margin-top: 0;">
+                <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='todos') }}" class="link-voltar">
+                    Ver Todos os Livros →
+                </a>
+            </p>
+        {% endif %}
+
+    {% endif %}
+
+{% endblock %}

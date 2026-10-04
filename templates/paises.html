@@ -6,31 +6,39 @@
 
     <div class="pagina-cabecalho">
         <h1>Países — {{ projeto.nome }}</h1>
-        <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
+        <a href="{{ url_for('projeto_detalhe', slug=slug) }}" class="link-voltar">
             ← Voltar ao Projeto
         </a>
     </div>
 
     <p class="projeto-descricao">
         Todos os países do mundo. Um país fica <strong>verde</strong> quando você
-        lê pelo menos um livro de autor daquele país (na estante ou em qualquer projeto).
-        Clique num país para ver os livros lidos e cadastrar recomendações.
+        lê pelo menos um livro de autor daquele país.
     </p>
 
+    {# ─────────── Busca por país ─────────── #}
+    <div class="campo">
+        <input type="text" id="busca-pais"
+               placeholder="Buscar por Nome ou Código..."
+               value="{{ busca_pais or '' }}"
+               autocomplete="off">
+    </div>
+
+    {# ─────────── Filtros em cápsula ─────────── #}
     <div class="filtros-paises">
-        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='lidos') }}"
+        <a href="{{ url_for('projeto_paises', slug=slug, filtro='lidos') }}"
            class="filtro-pais {% if filtro == 'lidos' %}filtro-pais-ativo{% endif %}">
             Lidos
         </a>
-        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='nao_lidos') }}"
+        <a href="{{ url_for('projeto_paises', slug=slug, filtro='nao_lidos') }}"
            class="filtro-pais {% if filtro == 'nao_lidos' %}filtro-pais-ativo{% endif %}">
             Não Lidos
         </a>
-        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='com_recomendacoes') }}"
+        <a href="{{ url_for('projeto_paises', slug=slug, filtro='com_recomendacoes') }}"
            class="filtro-pais {% if filtro == 'com_recomendacoes' %}filtro-pais-ativo{% endif %}">
             Com Recomendações
         </a>
-        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='todos') }}"
+        <a href="{{ url_for('projeto_paises', slug=slug, filtro='todos') }}"
            class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">
             Todos
         </a>
@@ -42,10 +50,12 @@
 
     {% if paises %}
 
-        <div class="lista-paises">
+        <div class="lista-paises" id="lista-paises">
             {% for p in paises %}
                 <a class="card-pais {% if p.lido %}card-pais-lido{% endif %}"
-                   href="{{ url_for('projeto_pais_detalhe', projeto_id=projeto.id, codigo=p.codigo) }}">
+                   href="{{ url_for('projeto_pais_detalhe', slug=slug, codigo=p.codigo) }}"
+                   data-nome="{{ p.nome | lower }}"
+                   data-codigo="{{ p.codigo | lower }}">
 
                     <div class="card-pais-nome">
                         {{ p.nome }}
@@ -67,10 +77,52 @@
             {% endfor %}
         </div>
 
+        <p class="vazio" id="msg-sem-resultado" hidden>
+            Nenhum País Encontrado.
+        </p>
+
     {% else %}
 
         <p class="vazio">Nenhum País Neste Filtro.</p>
 
     {% endif %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("busca-pais");
+            const cards = document.querySelectorAll("#lista-paises .card-pais");
+            const msg = document.getElementById("msg-sem-resultado");
+
+            if (!input) return;
+
+            function filtrar() {
+                const termo = input.value.trim().toLowerCase();
+                let visiveis = 0;
+
+                cards.forEach(function (card) {
+                    const nome = card.getAttribute("data-nome") || "";
+                    const codigo = card.getAttribute("data-codigo") || "";
+                    const bate = !termo || nome.includes(termo) || codigo.includes(termo);
+
+                    if (bate) {
+                        card.style.display = "";
+                        visiveis++;
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                if (msg) {
+                    if (visiveis === 0 && cards.length > 0) {
+                        msg.hidden = false;
+                    } else {
+                        msg.hidden = true;
+                    }
+                }
+            }
+
+            input.addEventListener("input", filtrar);
+        });
+    </script>
 
 {% endblock %}

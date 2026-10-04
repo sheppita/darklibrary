@@ -3,7 +3,6 @@ import re
 import unicodedata
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
-import requests
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -52,13 +51,45 @@ CORES_HEX = {
     "Multi":    "#e8dfc9",
 }
 
-STATUS_ITEM = ["nao_tenho", "tenho_nao_li", "li"]
+# ─────────────────────────────────────────────
+# Projetos (hardcoded após a reforma)
+# ─────────────────────────────────────────────
 
-STATUS_ROTULO = {
-    "nao_tenho":    "Não tenho",
-    "tenho_nao_li": "Tenho, não li",
-    "li":           "Li",
-}
+PROJETOS_DISPONIVEIS = [
+    {
+        "slug": "nobel",
+        "nome": "Nobel de Literatura",
+        "descricao": "Ler pelo menos um livro de cada ganhador do Nobel.",
+        "campo": "projeto_nobel",
+    },
+    {
+        "slug": "mundo",
+        "nome": "Lendo o Mundo",
+        "descricao": "Ler um livro de autor de cada país do mundo.",
+        "campo": "projeto_mundo",
+    },
+    {
+        "slug": "postgrad",
+        "nome": "PostGrad — Literatura Crítica Comparada",
+        "descricao": "Livros da ementa da pós-graduação.",
+        "campo": "projeto_postgrad",
+    },
+    {
+        "slug": "tbr",
+        "nome": "To-Be-Read",
+        "descricao": "Livros que eu quero ler, sem projeto definido.",
+        "campo": "projeto_tbr",
+    },
+]
+
+PROJETOS_POR_SLUG = {p["slug"]: p for p in PROJETOS_DISPONIVEIS}
+
+# Subprojetos de PostGrad
+SUBPROJETOS_POSTGRAD = [
+    {"slug": "textos_base", "nome": "Textos-Base"},
+    {"slug": "literatura",  "nome": "Literatura"},
+    {"slug": "eixo9",       "nome": "Eixo 9"},
+]
 
 # ─────────────────────────────────────────────
 # Países — lista canônica e apelidos
@@ -158,102 +189,36 @@ PAIS_APELIDO = {
 }
 
 # ─────────────────────────────────────────────
-# Modelos
+# Modelo
 # ─────────────────────────────────────────────
 
 class Livro(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
     autor = db.Column(db.String(150), nullable=False)
-    pais = db.Column(db.String(80))
+    pais = db.Column(db.String(80), nullable=False)
+    ano = db.Column(db.Integer)
+    capa_url = db.Column(db.String(500), nullable=False)
+
+    tenho = db.Column(db.Boolean, default=True, nullable=False)
+    lido = db.Column(db.Boolean, default=False, nullable=False)
+
     cor_lombada = db.Column(db.String(20))
     estante = db.Column(db.String(20))
-    isbn = db.Column(db.String(20))
-    lido = db.Column(db.Boolean, default=False)
-    capa_url = db.Column(db.String(500))
-    literario = db.Column(db.Boolean, default=False)
 
-    # ── Campos novos da Etapa 20 (Reforma) ──
-    tenho = db.Column(db.Boolean, default=True, nullable=False)
     projeto_nobel = db.Column(db.Boolean, default=False, nullable=False)
     projeto_mundo = db.Column(db.Boolean, default=False, nullable=False)
     projeto_postgrad = db.Column(db.Boolean, default=False, nullable=False)
     projeto_tbr = db.Column(db.Boolean, default=False, nullable=False)
+
     postgrad_subprojeto = db.Column(db.String(20))
+
     subtitulo = db.Column(db.String(200))
-    ano = db.Column(db.Integer)
+
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<Livro {self.titulo}>"
-
-class Projeto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(120), nullable=False, unique=True)
-    descricao = db.Column(db.Text)
-    tipo = db.Column(db.String(40))
-    ativo = db.Column(db.Boolean, default=True)
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
-
-    itens = db.relationship(
-        "ItemProjeto",
-        back_populates="projeto",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        order_by="ItemProjeto.ordem, ItemProjeto.titulo",
-    )
-
-    def __repr__(self):
-        return f"<Projeto {self.nome}>"
-
-class ItemProjeto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    projeto_id = db.Column(
-        db.Integer,
-        db.ForeignKey("projeto.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    titulo = db.Column(db.String(200), nullable=False)
-    autor = db.Column(db.String(150), nullable=False)
-    subtitulo = db.Column(db.String(200))
-    pais = db.Column(db.String(80), index=True)
-    pais_codigo = db.Column(db.String(2), index=True)
-    ano = db.Column(db.Integer)
-    isbn = db.Column(db.String(20))
-    capa_url = db.Column(db.String(500))
-    observacoes = db.Column(db.Text)
-
-    status = db.Column(
-        db.String(20),
-        nullable=False,
-        default="nao_tenho",
-        index=True,
-    )
-
-    livro_id = db.Column(
-        db.Integer,
-        db.ForeignKey("livro.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
-
-    ordem = db.Column(db.Integer)
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
-
-    projeto = db.relationship("Projeto", back_populates="itens")
-    livro = db.relationship("Livro")
-
-    __table_args__ = (
-        db.CheckConstraint(
-            "status IN ('nao_tenho','tenho_nao_li','li')",
-            name="status_valido",
-        ),
-    )
-
-    def __repr__(self):
-        return f"<ItemProjeto {self.titulo} ({self.status})>"
 
 # ─────────────────────────────────────────────
 # Funções auxiliares
@@ -282,9 +247,9 @@ def chave_ordenacao_estante_simples(estante):
         return (0, m.group(1), int(m.group(2)))
     return (1, estante, 0)
 
-def chave_ordenacao_item(item):
-    ano = item.ano if item.ano is not None else 0
-    return (-ano, (item.titulo or "").lower())
+def chave_ordenacao_livro(livro):
+    ano = livro.ano if livro.ano is not None else 0
+    return (-ano, (livro.titulo or "").lower())
 
 def sql_escape(valor):
     if valor is None:
@@ -300,12 +265,6 @@ def limpar_texto(s):
     s = s.strip()
     return s if s else None
 
-def normalizar_isbn(isbn):
-    if not isbn:
-        return None
-    limpo = re.sub(r"[^0-9Xx]", "", isbn)
-    return limpo or None
-
 def normalizar_texto(s):
     if not s:
         return ""
@@ -316,26 +275,17 @@ def normalizar_texto(s):
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
-def chave_livro(livro):
-    return (
-        normalizar_isbn(livro.isbn),
-        normalizar_texto(livro.titulo),
-        normalizar_texto(livro.autor),
-    )
+def _extrair_campos_livro_do_form():
+    """
+    Extrai os campos do formulário /novo e /editar.
+    Retorna um dict pronto pra criar/atualizar um Livro.
+    """
+    titulo = (request.form.get("titulo", "") or "").strip()
+    autor = (request.form.get("autor", "") or "").strip()
+    pais = (request.form.get("pais", "") or "").strip()
+    capa_url = (request.form.get("capa_url", "") or "").strip()
 
-def chave_item(item):
-    return (
-        normalizar_isbn(item.isbn),
-        normalizar_texto(item.titulo),
-        normalizar_texto(item.autor),
-    )
-
-def _extrair_campos_item_do_form():
-    status = request.form.get("status", "").strip()
-    if status not in STATUS_ITEM:
-        status = "nao_tenho"
-
-    ano_raw = request.form.get("ano", "").strip()
+    ano_raw = (request.form.get("ano", "") or "").strip()
     ano = None
     if ano_raw:
         try:
@@ -343,114 +293,65 @@ def _extrair_campos_item_do_form():
         except ValueError:
             ano = None
 
-    isbn = limpar_texto(request.form.get("isbn"))
-    capa_url = limpar_texto(request.form.get("capa_url"))
+    tenho = request.form.get("tenho", "sim") == "sim"
+    lido = request.form.get("lido", "nao") == "sim"
 
-    if not capa_url and isbn:
-        capa_url = url_capa_open_library(isbn)
+    cor_lombada = limpar_texto(request.form.get("cor_lombada"))
+    estante = limpar_texto(request.form.get("estante"))
+    if not tenho:
+        cor_lombada = None
+        estante = None
 
-    pais_texto = limpar_texto(request.form.get("pais"))
-    pais_codigo = codigo_pais_do_texto(pais_texto) if pais_texto else None
+    projeto_nobel = "projeto_nobel" in request.form
+    projeto_mundo = "projeto_mundo" in request.form
+    projeto_postgrad = "projeto_postgrad" in request.form
+    projeto_tbr = "projeto_tbr" in request.form
+
+    postgrad_subprojeto = None
+    if projeto_postgrad:
+        sub = (request.form.get("postgrad_subprojeto", "") or "").strip()
+        if sub in ("textos_base", "literatura", "eixo9"):
+            postgrad_subprojeto = sub
+
+    subtitulo = limpar_texto(request.form.get("subtitulo"))
 
     return {
-        "titulo": (request.form.get("titulo", "") or "").strip(),
-        "autor": (request.form.get("autor", "") or "").strip(),
-        "subtitulo": limpar_texto(request.form.get("subtitulo")),
-        "pais": pais_texto,
-        "pais_codigo": pais_codigo,
+        "titulo": titulo,
+        "autor": autor,
+        "pais": pais,
         "ano": ano,
-        "isbn": isbn,
         "capa_url": capa_url,
-        "observacoes": limpar_texto(request.form.get("observacoes")),
-        "status": status,
+        "tenho": tenho,
+        "lido": lido,
+        "cor_lombada": cor_lombada,
+        "estante": estante.upper() if estante else None,
+        "projeto_nobel": projeto_nobel,
+        "projeto_mundo": projeto_mundo,
+        "projeto_postgrad": projeto_postgrad,
+        "projeto_tbr": projeto_tbr,
+        "postgrad_subprojeto": postgrad_subprojeto,
+        "subtitulo": subtitulo,
     }
 
-# ─────────────────────────────────────────────
-# Funções de vinculação e sincronização
-# ─────────────────────────────────────────────
-
-def _livros_em_memoria():
-    livros = Livro.query.all()
-    return [(chave_livro(lv), lv) for lv in livros]
-
-def encontrar_livro_para_item(item, livros_chaves):
-    isbn_item, titulo_item, autor_item = chave_item(item)
-
-    if isbn_item:
-        for chave, lv in livros_chaves:
-            if chave[0] == isbn_item:
-                return lv
-
-    if titulo_item and autor_item:
-        for chave, lv in livros_chaves:
-            if chave[1] == titulo_item and chave[2] == autor_item:
-                return lv
-
+def _validar_campos_livro(dados):
+    """Retorna mensagem de erro, ou None se estiver tudo ok."""
+    if not dados["titulo"]:
+        return "Título é obrigatório."
+    if not dados["autor"]:
+        return "Autor é obrigatório."
+    if not dados["pais"]:
+        return "País é obrigatório."
+    if not dados["capa_url"]:
+        return "URL da Capa é obrigatória."
+    if dados["tenho"]:
+        if not dados["cor_lombada"]:
+            return "Lombada é obrigatória quando você tem o livro."
+        if not dados["estante"]:
+            return "Estante é obrigatória quando você tem o livro."
+    if dados["projeto_tbr"]:
+        if dados["projeto_nobel"] or dados["projeto_mundo"] or dados["projeto_postgrad"]:
+            return "TBR é exclusivo: não pode ser marcado junto com outros projetos."
     return None
-
-def sincronizar_item_com_livro(item):
-    if item.livro is None:
-        return
-    if item.livro.lido:
-        item.status = "li"
-    else:
-        item.status = "tenho_nao_li"
-
-def vincular_item_a_livro(item, livro):
-    item.livro_id = livro.id
-    item.livro = livro
-    sincronizar_item_com_livro(item)
-
-def tentar_vincular_item(item):
-    if item.livro_id is not None:
-        sincronizar_item_com_livro(item)
-        return False
-
-    livros_chaves = _livros_em_memoria()
-    livro = encontrar_livro_para_item(item, livros_chaves)
-    if livro is None:
-        return False
-
-    vincular_item_a_livro(item, livro)
-    return True
-
-def tentar_vincular_livro(livro):
-    chave_lv = chave_livro(livro)
-
-    itens = ItemProjeto.query.filter(ItemProjeto.livro_id.is_(None)).all()
-
-    vinculados = 0
-    for item in itens:
-        chave_it = chave_item(item)
-        bate = False
-        if chave_lv[0] and chave_it[0] and chave_lv[0] == chave_it[0]:
-            bate = True
-        elif chave_lv[1] and chave_it[1] and chave_lv[2] and chave_it[2] \
-                and chave_lv[1] == chave_it[1] and chave_lv[2] == chave_it[2]:
-            bate = True
-
-        if bate:
-            vincular_item_a_livro(item, livro)
-            vinculados += 1
-
-    return vinculados
-
-def sincronizar_itens_do_livro(livro):
-    itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
-    afetados = 0
-    for item in itens:
-        antes = item.status
-        sincronizar_item_com_livro(item)
-        if item.status != antes:
-            afetados += 1
-    return afetados
-
-def preparar_exclusao_de_livro(livro):
-    itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
-    for item in itens:
-        if item.status == "tenho_nao_li":
-            item.status = "nao_tenho"
-        item.livro_id = None
 
 # ─────────────────────────────────────────────
 # Funções de país e mapa
@@ -487,10 +388,10 @@ def codigo_pais_do_texto(texto):
 
     return None
 
-def montar_dados_do_mapa(projeto):
+def montar_dados_do_mapa():
     """
-    Monta os dados do mapa para o projeto tipo 'mundo'.
-    Considera APENAS itens do projeto com status='li'.
+    Monta os dados do mapa do Lendo o Mundo.
+    Considera APENAS livros com projeto_mundo=True e lido=True.
     """
     dados = {}
     nao_reconhecidos = {}
@@ -506,41 +407,35 @@ def montar_dados_do_mapa(projeto):
         })
         dados[codigo]["total"] += 1
 
-    itens_lidos = ItemProjeto.query.filter(
-        ItemProjeto.projeto_id == projeto.id,
-        ItemProjeto.status == "li",
+    livros = Livro.query.filter(
+        Livro.projeto_mundo.is_(True),
+        Livro.lido.is_(True),
     ).all()
 
-    for it in itens_lidos:
-        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+    for lv in livros:
+        codigo = codigo_pais_do_texto(lv.pais)
         if codigo:
-            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor, it.capa_url)
+            adicionar(codigo, PAISES_CANONICOS[codigo], lv.titulo, lv.autor, lv.capa_url)
         else:
-            chave = (it.pais or "").strip() or "(sem país)"
+            chave = (lv.pais or "").strip() or "(sem país)"
             nao_reconhecidos.setdefault(chave, []).append({
-                "titulo": it.titulo or "(sem título)",
-                "autor": it.autor or "",
+                "titulo": lv.titulo or "(sem título)",
+                "autor": lv.autor or "",
                 "origem": "projeto",
             })
 
     return dados, nao_reconhecidos
 
 def resumo_do_mapa(dados_mapa):
-    paises_lidos = len(dados_mapa)
-    total_paises = len(PAISES_CANONICOS)
     return {
-        "paises_lidos": paises_lidos,
-        "total_paises": total_paises,
+        "paises_lidos": len(dados_mapa),
+        "total_paises": len(PAISES_CANONICOS),
     }
 
 def _montar_livros_lidos_do_projeto(dados_mapa):
-    """
-    Monta a lista de livros lidos do projeto tipo 'mundo',
-    a partir do dicionário montado por montar_dados_do_mapa().
-    """
+    """Achata os livros do mapa numa lista ordenada por país/título."""
     if not dados_mapa:
         return []
-
     livros = []
     for codigo, info in dados_mapa.items():
         nome_pais = info.get("nome", codigo)
@@ -552,47 +447,32 @@ def _montar_livros_lidos_do_projeto(dados_mapa):
                 "origem": livro.get("origem", ""),
                 "capa_url": livro.get("capa_url", ""),
             })
-
     livros.sort(key=lambda lv: (lv["pais"].lower(), lv["titulo"].lower()))
     return livros
 
-def _conjunto_paises_lidos(projeto):
-    """
-    Retorna o conjunto de códigos ISO-2 de países com pelo menos um
-    item do projeto Lendo o Mundo com status='li'.
-    """
+def _conjunto_paises_lidos():
+    """Códigos ISO-2 de países com pelo menos um livro do Lendo o Mundo lido."""
     codigos = set()
-    itens = ItemProjeto.query.filter(
-        ItemProjeto.projeto_id == projeto.id,
-        ItemProjeto.status == "li",
+    livros = Livro.query.filter(
+        Livro.projeto_mundo.is_(True),
+        Livro.lido.is_(True),
     ).all()
-    for it in itens:
-        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+    for lv in livros:
+        codigo = codigo_pais_do_texto(lv.pais)
         if codigo:
             codigos.add(codigo)
     return codigos
 
-def _conjunto_paises_com_recomendacoes(projeto):
-    codigos = set()
-    itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
-    for it in itens:
-        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
-        if codigo:
-            codigos.add(codigo)
-    return codigos
+def listar_paises_do_projeto(filtro):
+    lidos = _conjunto_paises_lidos()
 
-def listar_paises_do_projeto(projeto, filtro):
-    lidos = _conjunto_paises_lidos(projeto)
-    com_rec = _conjunto_paises_com_recomendacoes(projeto)
-
-    itens_projeto = ItemProjeto.query.filter(
-        ItemProjeto.projeto_id == projeto.id
-    ).all()
-
+    livros_mundo = Livro.query.filter(Livro.projeto_mundo.is_(True)).all()
+    com_rec = set()
     contagem_rec = {}
-    for it in itens_projeto:
-        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+    for lv in livros_mundo:
+        codigo = codigo_pais_do_texto(lv.pais)
         if codigo:
+            com_rec.add(codigo)
             contagem_rec[codigo] = contagem_rec.get(codigo, 0) + 1
 
     lista = []
@@ -617,95 +497,32 @@ def listar_paises_do_projeto(projeto, filtro):
 
     return lista
 
-def listar_recomendacoes_do_pais(projeto, codigo):
-    itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
-    resultado = [
-        it for it in itens
-        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
-    ]
-    resultado.sort(key=chave_ordenacao_item)
-    return resultado
-
-def listar_livros_lidos_do_pais(projeto, codigo):
+def listar_livros_do_pais(codigo):
     """
-    Retorna itens do projeto Lendo o Mundo com status='li' para o país.
-    Apenas itens do projeto são considerados (não mais livros da DL).
+    Retorna (lidos, nao_lidos) de um país no Lendo o Mundo.
     """
-    itens = ItemProjeto.query.filter(
-        ItemProjeto.projeto_id == projeto.id,
-        ItemProjeto.status == "li",
-    ).all()
-
-    itens_pais = [
-        it for it in itens
-        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
+    livros = Livro.query.filter(Livro.projeto_mundo.is_(True)).all()
+    do_pais = [
+        lv for lv in livros
+        if codigo_pais_do_texto(lv.pais) == codigo
     ]
+    do_pais.sort(key=chave_ordenacao_livro)
+    lidos = [lv for lv in do_pais if lv.lido]
+    nao_lidos = [lv for lv in do_pais if not lv.lido]
+    return lidos, nao_lidos
 
-    return itens_pais
+def _query_do_projeto(campo):
+    """Retorna a query base de todos os livros daquele projeto."""
+    return Livro.query.filter(getattr(Livro, campo).is_(True))
 
-# ─────────────────────────────────────────────
-# Busca de ISBN
-# ─────────────────────────────────────────────
-
-def url_capa_open_library(isbn):
-    if not isbn:
-        return None
-    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
-    if not isbn_limpo:
-        return None
-    return f"https://covers.openlibrary.org/b/isbn/{isbn_limpo}-L.jpg?default=false"
-
-def buscar_google_books(isbn_limpo):
-    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_limpo}"
-    try:
-        r = requests.get(url, timeout=8)
-        r.raise_for_status()
-        dados = r.json()
-    except requests.RequestException:
-        return None
-
-    items = dados.get("items", [])
-    if not items:
-        return None
-
-    info = items[0].get("volumeInfo", {})
-    titulo = info.get("title", "")
-    autores = info.get("authors", [])
-    autor = autores[0] if autores else ""
-
-    capa = ""
-    links = info.get("imageLinks", {})
-    if links:
-        capa = links.get("thumbnail") or links.get("smallThumbnail") or ""
-        if capa:
-            capa = capa.replace("http://", "https://", 1)
-            capa = re.sub(r"&zoom=\d+", "", capa)
-
-    return {"titulo": titulo, "autor": autor, "capa": capa}
-
-def buscar_open_library(isbn_limpo):
-    url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
-    try:
-        r = requests.get(url, timeout=8)
-        r.raise_for_status()
-        dados = r.json()
-    except requests.RequestException:
-        return None
-
-    chave = f"ISBN:{isbn_limpo}"
-    if chave not in dados:
-        return None
-
-    info = dados[chave]
-    titulo = info.get("title", "")
-    autores = info.get("authors", [])
-    autor = autores[0]["name"] if autores else ""
-
-    capa = ""
-    if "cover" in info and "medium" in info["cover"]:
-        capa = info["cover"]["medium"]
-
-    return {"titulo": titulo, "autor": autor, "capa": capa}
+def _contar_por_status(livros):
+    """Dado uma lista de livros, retorna dict com as 4 contagens."""
+    return {
+        "lidos": sum(1 for lv in livros if lv.lido),
+        "nao_lidos": sum(1 for lv in livros if not lv.lido),
+        "tenho_nao_li": sum(1 for lv in livros if lv.tenho and not lv.lido),
+        "nao_tenho": sum(1 for lv in livros if not lv.tenho),
+    }
 
 # ─────────────────────────────────────────────
 # Utilidade: validação de next
@@ -734,6 +551,10 @@ def home():
     filtro_pais = request.args.get("pais", "").strip()
 
     query = Livro.query
+
+    # Se NÃO tem busca ativa, mostra só os que tenho
+    if not busca:
+        query = query.filter(Livro.tenho.is_(True))
 
     if busca:
         termo = f"%{busca}%"
@@ -764,11 +585,7 @@ def home():
     for livro in livros:
         cor = (livro.cor_lombada or "").strip()
         livro.cor_hex = CORES_HEX.get(cor, CORES_HEX["Multi"])
-
-        if livro.capa_url:
-            livro.capa_final = livro.capa_url
-        else:
-            livro.capa_final = url_capa_open_library(livro.isbn)
+        livro.capa_final = livro.capa_url or None
 
     grupos = []
     estante_atual = "__inicio__"
@@ -781,7 +598,6 @@ def home():
     grupos_com_gradiente = []
     for estante, livros_do_grupo in grupos:
         cores = [livro.cor_hex for livro in livros_do_grupo]
-
         if len(cores) == 1:
             gradiente = cores[0]
         else:
@@ -792,16 +608,19 @@ def home():
                 fim = (i + 1) * passo
                 stops.append(f"{cor} {inicio:.2f}% {fim:.2f}%")
             gradiente = f"linear-gradient(to right, {', '.join(stops)})"
-
         grupos_com_gradiente.append((estante, livros_do_grupo, gradiente))
 
     estantes_disponiveis = sorted(
-        [e for (e,) in db.session.query(Livro.estante).distinct().all() if e],
+        [e for (e,) in db.session.query(Livro.estante).filter(
+            Livro.tenho.is_(True)
+        ).distinct().all() if e],
         key=chave_ordenacao_estante_simples,
     )
 
     paises_disponiveis = sorted(
-        [p for (p,) in db.session.query(Livro.pais).distinct().all() if p],
+        [p for (p,) in db.session.query(Livro.pais).filter(
+            Livro.tenho.is_(True)
+        ).distinct().all() if p],
         key=lambda s: normalizar_texto(s),
     )
 
@@ -828,114 +647,115 @@ def home():
 
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
-    item_id_raw = request.args.get("item_id") or request.form.get("item_id")
-    item_origem = None
-    if item_id_raw:
-        try:
-            item_origem = db.session.get(ItemProjeto, int(item_id_raw))
-        except (ValueError, TypeError):
-            item_origem = None
-
     next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
+    projeto_pre = request.args.get("projeto", "").strip().lower()
+    pais_pre = request.args.get("pais", "").strip()
 
     if request.method == "POST":
-        isbn = request.form.get("isbn", "").strip() or None
-        capa_form = request.form.get("capa_url", "").strip() or None
+        dados = _extrair_campos_livro_do_form()
+        erro = _validar_campos_livro(dados)
+        if erro:
+            return render_template(
+                "novo.html",
+                cores=CORES_ORDEM,
+                valores=dados,
+                erro=erro,
+                next_url=next_url,
+                projetos=PROJETOS_DISPONIVEIS,
+                subprojetos=SUBPROJETOS_POSTGRAD,
+            ), 400
 
-        livro = Livro(
-            titulo=request.form.get("titulo", "").strip(),
-            autor=request.form.get("autor", "").strip(),
-            pais=request.form.get("pais", "").strip() or None,
-            cor_lombada=request.form.get("cor_lombada", "").strip() or None,
-            estante=request.form.get("estante", "").strip().upper() or None,
-            isbn=isbn,
-            lido=("lido" in request.form),
-            capa_url=capa_form or url_capa_open_library(isbn),
-            literario=("literario" in request.form),
-        )
+        livro = Livro(**dados)
         db.session.add(livro)
-        db.session.flush()
-
-        if item_origem is not None:
-            vincular_item_a_livro(item_origem, livro)
-        else:
-            tentar_vincular_livro(livro)
-
         db.session.commit()
 
-        if item_origem is not None:
-            return redirect(url_for("projeto_detalhe", projeto_id=item_origem.projeto_id))
         if next_url:
             return redirect(next_url)
         return redirect(url_for("home"))
 
-    if item_origem is not None:
-        valores = {
-            "titulo": item_origem.titulo or "",
-            "autor": item_origem.autor or "",
-            "pais": item_origem.pais or "",
-            "isbn": item_origem.isbn or "",
-            "capa_url": item_origem.capa_url or "",
-        }
-    else:
-        valores = {}
+    # GET
+    valores = {}
+    if pais_pre:
+        valores["pais"] = pais_pre
+    if projeto_pre and projeto_pre in PROJETOS_POR_SLUG:
+        campo = PROJETOS_POR_SLUG[projeto_pre]["campo"]
+        valores[campo] = True
 
     return render_template(
         "novo.html",
         cores=CORES_ORDEM,
         valores=valores,
-        item_origem=item_origem,
+        erro=None,
         next_url=next_url,
+        projetos=PROJETOS_DISPONIVEIS,
+        subprojetos=SUBPROJETOS_POSTGRAD,
     )
 
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
 def editar(livro_id):
     livro = db.get_or_404(Livro, livro_id)
-
     next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
 
     if request.method == "POST":
-        isbn = request.form.get("isbn", "").strip() or None
-        capa_form = request.form.get("capa_url", "").strip() or None
+        dados = _extrair_campos_livro_do_form()
+        erro = _validar_campos_livro(dados)
+        if erro:
+            return render_template(
+                "editar.html",
+                livro=livro,
+                valores=dados,
+                cores=CORES_ORDEM,
+                erro=erro,
+                next_url=next_url,
+                projetos=PROJETOS_DISPONIVEIS,
+                subprojetos=SUBPROJETOS_POSTGRAD,
+            ), 400
 
-        lido_antes = livro.lido
-
-        livro.titulo = request.form.get("titulo", "").strip()
-        livro.autor = request.form.get("autor", "").strip()
-        livro.pais = request.form.get("pais", "").strip() or None
-        livro.cor_lombada = request.form.get("cor_lombada", "").strip() or None
-        livro.estante = request.form.get("estante", "").strip().upper() or None
-        livro.isbn = isbn
-        livro.lido = ("lido" in request.form)
-        livro.capa_url = capa_form or url_capa_open_library(isbn)
-        livro.literario = ("literario" in request.form)
-
-        db.session.flush()
-
-        if livro.lido != lido_antes:
-            sincronizar_itens_do_livro(livro)
-
-        tentar_vincular_livro(livro)
-
+        for campo, valor in dados.items():
+            setattr(livro, campo, valor)
         db.session.commit()
 
         if next_url:
             return redirect(next_url)
         return redirect(url_for("home"))
 
-    return render_template("editar.html", livro=livro, cores=CORES_ORDEM, next_url=next_url)
+    valores = {
+        "titulo": livro.titulo,
+        "autor": livro.autor,
+        "pais": livro.pais,
+        "ano": livro.ano,
+        "capa_url": livro.capa_url,
+        "tenho": livro.tenho,
+        "lido": livro.lido,
+        "cor_lombada": livro.cor_lombada,
+        "estante": livro.estante,
+        "projeto_nobel": livro.projeto_nobel,
+        "projeto_mundo": livro.projeto_mundo,
+        "projeto_postgrad": livro.projeto_postgrad,
+        "projeto_tbr": livro.projeto_tbr,
+        "postgrad_subprojeto": livro.postgrad_subprojeto,
+        "subtitulo": livro.subtitulo,
+    }
+
+    return render_template(
+        "editar.html",
+        livro=livro,
+        valores=valores,
+        cores=CORES_ORDEM,
+        erro=None,
+        next_url=next_url,
+        projetos=PROJETOS_DISPONIVEIS,
+        subprojetos=SUBPROJETOS_POSTGRAD,
+    )
 
 @app.route("/excluir/<int:livro_id>", methods=["GET", "POST"])
 def excluir(livro_id):
     livro = db.get_or_404(Livro, livro_id)
-
     next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
 
     if request.method == "POST":
-        preparar_exclusao_de_livro(livro)
         db.session.delete(livro)
         db.session.commit()
-
         if next_url:
             return redirect(next_url)
         return redirect(url_for("home"))
@@ -944,27 +764,36 @@ def excluir(livro_id):
 
 @app.route("/estatisticas")
 def estatisticas():
-    total = Livro.query.count()
-    total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
+    total = Livro.query.filter(Livro.tenho.is_(True)).count()
+    total_lidos = Livro.query.filter(Livro.tenho.is_(True), Livro.lido.is_(True)).count()
     total_nao_lidos = total - total_lidos
 
-    if total > 0:
-        pct_lidos = round(total_lidos / total * 100)
-    else:
-        pct_lidos = 0
+    pct_lidos = round(total_lidos / total * 100) if total > 0 else 0
 
-    total_literarios = Livro.query.filter(Livro.literario.is_(True)).count()
-    total_nao_literarios = total - total_literarios
+    total_com_projeto = Livro.query.filter(
+        db.or_(
+            Livro.projeto_nobel.is_(True),
+            Livro.projeto_mundo.is_(True),
+            Livro.projeto_postgrad.is_(True),
+            Livro.projeto_tbr.is_(True),
+        )
+    ).count()
+    total_sem_projeto = Livro.query.count() - total_com_projeto
 
     total_autores_distintos = (
-        db.session.query(db.func.count(db.func.distinct(Livro.autor))).scalar() or 0
+        db.session.query(db.func.count(db.func.distinct(Livro.autor)))
+        .filter(Livro.tenho.is_(True))
+        .scalar() or 0
     )
     total_paises_distintos = (
-        db.session.query(db.func.count(db.func.distinct(Livro.pais))).scalar() or 0
+        db.session.query(db.func.count(db.func.distinct(Livro.pais)))
+        .filter(Livro.tenho.is_(True))
+        .scalar() or 0
     )
 
     por_estante_raw = (
         db.session.query(Livro.estante, db.func.count(Livro.id))
+        .filter(Livro.tenho.is_(True))
         .group_by(Livro.estante)
         .all()
     )
@@ -978,6 +807,7 @@ def estatisticas():
 
     top_autores = (
         db.session.query(Livro.autor, db.func.count(Livro.id))
+        .filter(Livro.tenho.is_(True))
         .group_by(Livro.autor)
         .order_by(db.func.count(Livro.id).desc(), Livro.autor.asc())
         .all()
@@ -985,6 +815,7 @@ def estatisticas():
 
     por_pais = (
         db.session.query(Livro.pais, db.func.count(Livro.id))
+        .filter(Livro.tenho.is_(True))
         .group_by(Livro.pais)
         .order_by(db.func.count(Livro.id).desc())
         .all()
@@ -992,6 +823,7 @@ def estatisticas():
 
     por_cor_raw = dict(
         db.session.query(Livro.cor_lombada, db.func.count(Livro.id))
+        .filter(Livro.tenho.is_(True))
         .group_by(Livro.cor_lombada)
         .all()
     )
@@ -1004,8 +836,8 @@ def estatisticas():
         total_lidos=total_lidos,
         total_nao_lidos=total_nao_lidos,
         pct_lidos=pct_lidos,
-        total_literarios=total_literarios,
-        total_nao_literarios=total_nao_literarios,
+        total_literarios=total_com_projeto,
+        total_nao_literarios=total_sem_projeto,
         total_autores_distintos=total_autores_distintos,
         total_paises_distintos=total_paises_distintos,
         por_estante=por_estante,
@@ -1016,11 +848,45 @@ def estatisticas():
         cores_hex=CORES_HEX,
     )
 
+@app.route("/lidos")
+def lidos():
+    filtro = request.args.get("filtro", "lidos").strip()
+    if filtro not in ("lidos", "lidos_tenho", "lidos_nao_tenho", "nao_lidos_nao_tenho"):
+        filtro = "lidos"
+
+    query = Livro.query
+
+    if filtro == "lidos":
+        query = query.filter(Livro.lido.is_(True))
+    elif filtro == "lidos_tenho":
+        query = query.filter(Livro.lido.is_(True), Livro.tenho.is_(True))
+    elif filtro == "lidos_nao_tenho":
+        query = query.filter(Livro.lido.is_(True), Livro.tenho.is_(False))
+    elif filtro == "nao_lidos_nao_tenho":
+        query = query.filter(Livro.lido.is_(False), Livro.tenho.is_(False))
+
+    livros = query.all()
+    livros.sort(key=chave_ordenacao_livro)
+
+    # Contagens
+    total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
+    total_lidos_tenho = Livro.query.filter(Livro.lido.is_(True), Livro.tenho.is_(True)).count()
+    total_lidos_nao_tenho = Livro.query.filter(Livro.lido.is_(True), Livro.tenho.is_(False)).count()
+    total_nao_lidos_nao_tenho = Livro.query.filter(Livro.lido.is_(False), Livro.tenho.is_(False)).count()
+
+    return render_template(
+        "lidos.html",
+        livros=livros,
+        filtro=filtro,
+        total_lidos=total_lidos,
+        total_lidos_tenho=total_lidos_tenho,
+        total_lidos_nao_tenho=total_lidos_nao_tenho,
+        total_nao_lidos_nao_tenho=total_nao_lidos_nao_tenho,
+    )
+
 @app.route("/backup")
 def backup():
     livros = Livro.query.order_by(Livro.id).all()
-    projetos = Projeto.query.order_by(Projeto.id).all()
-    itens = ItemProjeto.query.order_by(ItemProjeto.id).all()
 
     agora = datetime.now()
     data_iso = agora.strftime("%Y-%m-%d %H:%M:%S")
@@ -1030,20 +896,12 @@ def backup():
     linhas.append("-- Dark Library — Backup")
     linhas.append(f"-- Gerado em: {data_iso}")
     linhas.append(f"-- Livros: {len(livros)}")
-    linhas.append(f"-- Projetos: {len(projetos)}")
-    linhas.append(f"-- Itens de projeto: {len(itens)}")
     linhas.append("")
     linhas.append("-- Restauração:")
     linhas.append("-- 1. Abra o SQL Editor do Neon.")
     linhas.append("-- 2. Cole este arquivo inteiro e execute de uma vez.")
-    linhas.append("-- 3. ATENÇÃO: os DELETE abaixo APAGAM os dados atuais.")
-    linhas.append("-- 4. Restaure as três tabelas juntas, na ordem em que")
-    linhas.append("--    aparecem os INSERTs (livro -> projeto -> item_projeto).")
-    linhas.append("-- 5. Os SELECT setval no final ajustam as sequences.")
+    linhas.append("-- 3. ATENÇÃO: o DELETE abaixo APAGA os dados atuais.")
     linhas.append("")
-    linhas.append("-- Limpeza (ordem direta, do filho para o pai):")
-    linhas.append("DELETE FROM item_projeto;")
-    linhas.append("DELETE FROM projeto;")
     linhas.append("DELETE FROM livro;")
     linhas.append("")
 
@@ -1057,79 +915,33 @@ def backup():
                 sql_escape(livro.titulo),
                 sql_escape(livro.autor),
                 sql_escape(livro.pais),
+                sql_escape(livro.ano),
+                sql_escape(livro.capa_url),
+                sql_escape(livro.tenho),
+                sql_escape(livro.lido),
                 sql_escape(livro.cor_lombada),
                 sql_escape(livro.estante),
-                sql_escape(livro.isbn),
-                sql_escape(livro.lido),
-                sql_escape(livro.capa_url),
-                sql_escape(livro.literario),
+                sql_escape(livro.projeto_nobel),
+                sql_escape(livro.projeto_mundo),
+                sql_escape(livro.projeto_postgrad),
+                sql_escape(livro.projeto_tbr),
+                sql_escape(livro.postgrad_subprojeto),
+                sql_escape(livro.subtitulo),
+                sql_escape(livro.criado_em),
             ])
             linhas.append(
-                "INSERT INTO livro (id, titulo, autor, pais, cor_lombada, estante, isbn, lido, capa_url, literario) "
+                "INSERT INTO livro "
+                "(id, titulo, autor, pais, ano, capa_url, tenho, lido, cor_lombada, estante, "
+                "projeto_nobel, projeto_mundo, projeto_postgrad, projeto_tbr, "
+                "postgrad_subprojeto, subtitulo, criado_em) "
                 f"VALUES ({valores});"
             )
     linhas.append("")
 
-    linhas.append("-- Projetos")
-    if not projetos:
-        linhas.append("-- (nenhum projeto cadastrado)")
-    else:
-        for p in projetos:
-            valores = ", ".join([
-                str(p.id),
-                sql_escape(p.nome),
-                sql_escape(p.descricao),
-                sql_escape(p.tipo),
-                sql_escape(p.ativo),
-                sql_escape(p.criado_em),
-            ])
-            linhas.append(
-                "INSERT INTO projeto (id, nome, descricao, tipo, ativo, criado_em) "
-                f"VALUES ({valores});"
-            )
-    linhas.append("")
-
-    linhas.append("-- Itens de projeto")
-    if not itens:
-        linhas.append("-- (nenhum item cadastrado)")
-    else:
-        for it in itens:
-            valores = ", ".join([
-                str(it.id),
-                str(it.projeto_id),
-                sql_escape(it.titulo),
-                sql_escape(it.autor),
-                sql_escape(it.subtitulo),
-                sql_escape(it.pais),
-                sql_escape(it.pais_codigo),
-                sql_escape(it.ano),
-                sql_escape(it.isbn),
-                sql_escape(it.capa_url),
-                sql_escape(it.observacoes),
-                sql_escape(it.status),
-                sql_escape(it.livro_id),
-                sql_escape(it.ordem),
-                sql_escape(it.criado_em),
-            ])
-            linhas.append(
-                "INSERT INTO item_projeto "
-                "(id, projeto_id, titulo, autor, subtitulo, pais, pais_codigo, ano, isbn, capa_url, observacoes, status, livro_id, ordem, criado_em) "
-                f"VALUES ({valores});"
-            )
-    linhas.append("")
-
-    linhas.append("-- Ajuste das sequences (próximo id após restauração)")
+    linhas.append("-- Ajuste da sequence")
     linhas.append(
         "SELECT setval(pg_get_serial_sequence('livro', 'id'), "
         "COALESCE((SELECT MAX(id) FROM livro), 0) + 1, false);"
-    )
-    linhas.append(
-        "SELECT setval(pg_get_serial_sequence('projeto', 'id'), "
-        "COALESCE((SELECT MAX(id) FROM projeto), 0) + 1, false);"
-    )
-    linhas.append(
-        "SELECT setval(pg_get_serial_sequence('item_projeto', 'id'), "
-        "COALESCE((SELECT MAX(id) FROM item_projeto), 0) + 1, false);"
     )
     linhas.append("")
 
@@ -1144,462 +956,168 @@ def backup():
         },
     )
 
-@app.route("/api/buscar_isbn/<isbn>")
-def buscar_isbn(isbn):
-    isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
-
-    if not isbn_limpo:
-        return jsonify({"erro": "ISBN vazio"}), 400
-
-    resultado = buscar_google_books(isbn_limpo)
-    fonte = "Google Books"
-
-    if not resultado:
-        resultado = buscar_open_library(isbn_limpo)
-        fonte = "Open Library"
-
-    if not resultado:
-        return jsonify({"erro": "ISBN não encontrado no Google Books nem na Open Library"}), 404
-
-    titulo = resultado.get("titulo", "")
-    autor = resultado.get("autor", "")
-    capa = resultado.get("capa", "")
-
-    if not capa:
-        capa = url_capa_open_library(isbn_limpo)
-
-    return jsonify({
-        "isbn": isbn_limpo,
-        "titulo": titulo,
-        "autor": autor,
-        "capa": capa,
-        "fonte": fonte,
-    })
-
 # ─────────────────────────────────────────────
 # Rotas — projetos
 # ─────────────────────────────────────────────
 
 @app.route("/projetos")
 def projetos():
-    lista = Projeto.query.filter(Projeto.ativo.is_(True)).order_by(Projeto.nome).all()
-
     projetos_com_contagem = []
-    for p in lista:
-        if p.tipo == "mundo":
-            # Cobertura de países para projetos tipo 'mundo'
-            dados_mapa, _ = montar_dados_do_mapa(p)
+    for p in PROJETOS_DISPONIVEIS:
+        campo = p["campo"]
+        if p["slug"] == "mundo":
+            dados_mapa, _ = montar_dados_do_mapa()
             resumo = resumo_do_mapa(dados_mapa)
             total = resumo["total_paises"]
             lidos = resumo["paises_lidos"]
+            tipo_mundo = True
         else:
-            total = len(p.itens)
-            lidos = sum(1 for it in p.itens if it.status == "li")
+            livros = _query_do_projeto(campo).all()
+            contagens = _contar_por_status(livros)
+            total = len(livros)
+            lidos = contagens["lidos"]
+            tipo_mundo = False
 
         pct = round(lidos / total * 100) if total > 0 else 0
         projetos_com_contagem.append({
-            "projeto": p,
+            "slug": p["slug"],
+            "nome": p["nome"],
+            "descricao": p["descricao"],
             "total": total,
             "lidos": lidos,
             "pct": pct,
-            "tipo_mundo": p.tipo == "mundo",
+            "tipo_mundo": tipo_mundo,
         })
 
     return render_template("projetos.html", projetos=projetos_com_contagem)
 
-@app.route("/projetos/<int:projeto_id>")
-def projeto_detalhe(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
+@app.route("/projetos/<slug>")
+def projeto_detalhe(slug):
+    if slug not in PROJETOS_POR_SLUG:
+        return f"Projeto '{slug}' não encontrado.", 404
 
-    itens = sorted(projeto.itens, key=chave_ordenacao_item)
+    projeto = PROJETOS_POR_SLUG[slug]
+    campo = projeto["campo"]
 
-    # Filtros em cápsula (só para projetos que NÃO são tipo 'mundo')
+    livros = _query_do_projeto(campo).all()
+    livros.sort(key=chave_ordenacao_livro)
+
+    # Contagens do resumo (4 caixinhas)
+    total = len(livros)
+    lidos = sum(1 for lv in livros if lv.lido)
+    nao_lidos = sum(1 for lv in livros if not lv.lido)
+    tenho_nao_li = sum(1 for lv in livros if lv.tenho and not lv.lido)
+    nao_tenho = sum(1 for lv in livros if not lv.tenho)
+
+    pct = round(lidos / total * 100) if total > 0 else 0
+
+    # Filtros em cápsula (só pra projetos que não são mundo)
     filtro = request.args.get("filtro", "lido").strip()
     if filtro not in ("lido", "nao_lido", "tenho", "recomendacoes", "todos"):
         filtro = "lido"
 
-    if projeto.tipo != "mundo":
+    livros_filtrados = livros
+    if slug != "mundo":
         if filtro == "lido":
-            itens = [it for it in itens if it.status == "li"]
+            livros_filtrados = [lv for lv in livros if lv.lido]
         elif filtro == "nao_lido":
-            itens = [it for it in itens if it.status != "li"]
+            livros_filtrados = [lv for lv in livros if not lv.lido]
         elif filtro == "tenho":
-            itens = [it for it in itens if it.status == "tenho_nao_li"]
+            livros_filtrados = [lv for lv in livros if lv.tenho and not lv.lido]
         elif filtro == "recomendacoes":
-            itens = [it for it in itens if it.status == "nao_tenho"]
-        # filtro == "todos": não filtra
+            livros_filtrados = [lv for lv in livros if not lv.tenho and not lv.lido]
 
-    # Contagens do resumo SEMPRE refletem o total do projeto
-    total = len(projeto.itens)
-    lidos = sum(1 for it in projeto.itens if it.status == "li")
-    tenho_nao_li = sum(1 for it in projeto.itens if it.status == "tenho_nao_li")
-    nao_tenho = sum(1 for it in projeto.itens if it.status == "nao_tenho")
-
-    pct = round(lidos / total * 100) if total > 0 else 0
-
-    vinculados_msg = request.args.get("vinculados")
-    if vinculados_msg is not None:
-        try:
-            vinculados_msg = int(vinculados_msg)
-        except ValueError:
-            vinculados_msg = None
-
+    # Dados do mapa (só pra mundo)
     dados_mapa = None
     paises_nao_reconhecidos = None
     resumo_mapa = None
     livros_lidos_projeto = None
 
-    if projeto.tipo == "mundo":
-        dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa(projeto)
+    if slug == "mundo":
+        dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa()
         resumo_mapa = resumo_do_mapa(dados_mapa)
         livros_lidos_projeto = _montar_livros_lidos_do_projeto(dados_mapa)
 
+    template_map = {
+        "nobel": "projeto_nobel.html",
+        "mundo": "projeto_mundo.html",
+        "postgrad": "projeto_postgrad.html",
+        "tbr": "projeto_tbr.html",
+    }
+    template = template_map[slug]
+
     return render_template(
-        "projeto.html",
+        template,
         projeto=projeto,
-        itens=itens,
+        slug=slug,
+        livros=livros,
+        livros_filtrados=livros_filtrados,
         total=total,
         lidos=lidos,
+        nao_lidos=nao_lidos,
         tenho_nao_li=tenho_nao_li,
         nao_tenho=nao_tenho,
         pct=pct,
-        status_rotulo=STATUS_ROTULO,
-        vinculados_msg=vinculados_msg,
+        filtro=filtro,
+        subprojetos=SUBPROJETOS_POSTGRAD,
         dados_mapa=dados_mapa,
         paises_nao_reconhecidos=paises_nao_reconhecidos,
         resumo_mapa=resumo_mapa,
         livros_lidos_projeto=livros_lidos_projeto,
-        filtro=filtro,
     )
 
-@app.route("/projetos/<int:projeto_id>/paises")
-def projeto_paises(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
+@app.route("/projetos/<slug>/paises")
+def projeto_paises(slug):
+    if slug != "mundo":
+        return "Só o projeto Lendo o Mundo tem lista de países.", 404
+
+    projeto = PROJETOS_POR_SLUG[slug]
 
     filtro = request.args.get("filtro", "lidos").strip()
     if filtro not in ("lidos", "nao_lidos", "com_recomendacoes", "todos"):
         filtro = "lidos"
 
-    paises = listar_paises_do_projeto(projeto, filtro)
+    paises = listar_paises_do_projeto(filtro)
+    busca_pais = request.args.get("q", "").strip().lower()
+
+    if busca_pais:
+        paises = [
+            p for p in paises
+            if busca_pais in p["nome"].lower() or busca_pais in p["codigo"].lower()
+        ]
 
     return render_template(
         "paises.html",
         projeto=projeto,
+        slug=slug,
         paises=paises,
         filtro=filtro,
+        busca_pais=busca_pais,
     )
 
-@app.route("/projetos/<int:projeto_id>/paises/<codigo>")
-def projeto_pais_detalhe(projeto_id, codigo):
-    projeto = db.get_or_404(Projeto, projeto_id)
+@app.route("/projetos/<slug>/paises/<codigo>")
+def projeto_pais_detalhe(slug, codigo):
+    if slug != "mundo":
+        return "Só o projeto Lendo o Mundo tem página de país.", 404
 
     codigo = (codigo or "").strip().upper()
     if codigo not in PAISES_CANONICOS:
         return f"País '{codigo}' não reconhecido.", 404
 
+    projeto = PROJETOS_POR_SLUG[slug]
     nome = PAISES_CANONICOS[codigo]
 
-    itens_lidos = listar_livros_lidos_do_pais(projeto, codigo)
-    recomendacoes = listar_recomendacoes_do_pais(projeto, codigo)
+    lidos, nao_lidos = listar_livros_do_pais(codigo)
 
     return render_template(
         "pais.html",
         projeto=projeto,
+        slug=slug,
         codigo=codigo,
         nome=nome,
-        livros_lidos=[],
-        itens_lidos=itens_lidos,
-        recomendacoes=recomendacoes,
-        status_rotulo=STATUS_ROTULO,
+        lidos=lidos,
+        nao_lidos=nao_lidos,
     )
-
-@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/nova", methods=["GET", "POST"])
-def recomendacao_nova(projeto_id, codigo):
-    projeto = db.get_or_404(Projeto, projeto_id)
-
-    codigo = (codigo or "").strip().upper()
-    if codigo not in PAISES_CANONICOS:
-        return f"País '{codigo}' não reconhecido.", 404
-
-    nome = PAISES_CANONICOS[codigo]
-
-    if request.method == "POST":
-        dados = _extrair_campos_item_do_form()
-        dados["pais"] = nome
-        dados["pais_codigo"] = codigo
-
-        if not dados["titulo"] or not dados["autor"]:
-            return render_template(
-                "item_novo.html",
-                projeto=projeto,
-                status_item=STATUS_ITEM,
-                status_rotulo=STATUS_ROTULO,
-                valores=dados,
-                erro="Título e autor são obrigatórios.",
-                pais_fixo={"codigo": codigo, "nome": nome},
-            ), 400
-
-        item = ItemProjeto(
-            projeto_id=projeto.id,
-            titulo=dados["titulo"],
-            autor=dados["autor"],
-            subtitulo=dados["subtitulo"],
-            pais=nome,
-            pais_codigo=codigo,
-            ano=dados["ano"],
-            isbn=dados["isbn"],
-            capa_url=dados["capa_url"],
-            observacoes=dados["observacoes"],
-            status=dados["status"],
-        )
-        db.session.add(item)
-        db.session.flush()
-        tentar_vincular_item(item)
-        db.session.commit()
-
-        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
-
-    return render_template(
-        "item_novo.html",
-        projeto=projeto,
-        status_item=STATUS_ITEM,
-        status_rotulo=STATUS_ROTULO,
-        valores={},
-        erro=None,
-        pais_fixo={"codigo": codigo, "nome": nome},
-    )
-
-@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/editar", methods=["GET", "POST"])
-def recomendacao_editar(projeto_id, codigo, item_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-    item = db.get_or_404(ItemProjeto, item_id)
-
-    codigo = (codigo or "").strip().upper()
-    if codigo not in PAISES_CANONICOS:
-        return f"País '{codigo}' não reconhecido.", 404
-
-    if item.projeto_id != projeto.id:
-        return "Este item não pertence a este projeto.", 404
-
-    nome = PAISES_CANONICOS[codigo]
-
-    if request.method == "POST":
-        dados = _extrair_campos_item_do_form()
-        dados["pais"] = nome
-        dados["pais_codigo"] = codigo
-
-        if not dados["titulo"] or not dados["autor"]:
-            return render_template(
-                "item_editar.html",
-                projeto=projeto,
-                item=item,
-                status_item=STATUS_ITEM,
-                status_rotulo=STATUS_ROTULO,
-                erro="Título e autor são obrigatórios.",
-                pais_fixo={"codigo": codigo, "nome": nome},
-            ), 400
-
-        item.titulo = dados["titulo"]
-        item.autor = dados["autor"]
-        item.subtitulo = dados["subtitulo"]
-        item.pais = nome
-        item.pais_codigo = codigo
-        item.ano = dados["ano"]
-        item.isbn = dados["isbn"]
-        item.capa_url = dados["capa_url"]
-        item.observacoes = dados["observacoes"]
-        item.status = dados["status"]
-
-        db.session.flush()
-        tentar_vincular_item(item)
-        db.session.commit()
-        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
-
-    return render_template(
-        "item_editar.html",
-        projeto=projeto,
-        item=item,
-        status_item=STATUS_ITEM,
-        status_rotulo=STATUS_ROTULO,
-        erro=None,
-        pais_fixo={"codigo": codigo, "nome": nome},
-    )
-
-@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/excluir", methods=["GET", "POST"])
-def recomendacao_excluir(projeto_id, codigo, item_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-    item = db.get_or_404(ItemProjeto, item_id)
-
-    codigo = (codigo or "").strip().upper()
-    if codigo not in PAISES_CANONICOS:
-        return f"País '{codigo}' não reconhecido.", 404
-
-    if item.projeto_id != projeto.id:
-        return "Este item não pertence a este projeto.", 404
-
-    if request.method == "POST":
-        db.session.delete(item)
-        db.session.commit()
-        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
-
-    return render_template(
-        "item_excluir.html",
-        projeto=projeto,
-        item=item,
-        status_rotulo=STATUS_ROTULO,
-    )
-
-@app.route("/projetos/<int:projeto_id>/itens/novo", methods=["GET", "POST"])
-def item_novo(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-
-    if request.method == "POST":
-        dados = _extrair_campos_item_do_form()
-
-        if not dados["titulo"] or not dados["autor"]:
-            return render_template(
-                "item_novo.html",
-                projeto=projeto,
-                status_item=STATUS_ITEM,
-                status_rotulo=STATUS_ROTULO,
-                valores=dados,
-                erro="Título e autor são obrigatórios.",
-                pais_fixo=None,
-            ), 400
-
-        item = ItemProjeto(
-            projeto_id=projeto.id,
-            titulo=dados["titulo"],
-            autor=dados["autor"],
-            subtitulo=dados["subtitulo"],
-            pais=dados["pais"],
-            pais_codigo=dados["pais_codigo"],
-            ano=dados["ano"],
-            isbn=dados["isbn"],
-            capa_url=dados["capa_url"],
-            observacoes=dados["observacoes"],
-            status=dados["status"],
-        )
-        db.session.add(item)
-        db.session.flush()
-
-        tentar_vincular_item(item)
-
-        db.session.commit()
-        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
-
-    return render_template(
-        "item_novo.html",
-        projeto=projeto,
-        status_item=STATUS_ITEM,
-        status_rotulo=STATUS_ROTULO,
-        valores={},
-        erro=None,
-        pais_fixo=None,
-    )
-
-@app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/editar", methods=["GET", "POST"])
-def item_editar(projeto_id, item_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-    item = db.get_or_404(ItemProjeto, item_id)
-
-    if item.projeto_id != projeto.id:
-        return "Este item não pertence a este projeto.", 404
-
-    if request.method == "POST":
-        dados = _extrair_campos_item_do_form()
-
-        if not dados["titulo"] or not dados["autor"]:
-            return render_template(
-                "item_editar.html",
-                projeto=projeto,
-                item=item,
-                status_item=STATUS_ITEM,
-                status_rotulo=STATUS_ROTULO,
-                erro="Título e autor são obrigatórios.",
-                pais_fixo=None,
-            ), 400
-
-        item.titulo = dados["titulo"]
-        item.autor = dados["autor"]
-        item.subtitulo = dados["subtitulo"]
-        item.pais = dados["pais"]
-        item.pais_codigo = dados["pais_codigo"]
-        item.ano = dados["ano"]
-        item.isbn = dados["isbn"]
-        item.capa_url = dados["capa_url"]
-        item.observacoes = dados["observacoes"]
-        item.status = dados["status"]
-
-        db.session.flush()
-        tentar_vincular_item(item)
-        db.session.commit()
-        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
-
-    return render_template(
-        "item_editar.html",
-        projeto=projeto,
-        item=item,
-        status_item=STATUS_ITEM,
-        status_rotulo=STATUS_ROTULO,
-        erro=None,
-        pais_fixo=None,
-    )
-
-@app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/excluir", methods=["GET", "POST"])
-def item_excluir(projeto_id, item_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-    item = db.get_or_404(ItemProjeto, item_id)
-
-    if item.projeto_id != projeto.id:
-        return "Este item não pertence a este projeto.", 404
-
-    if request.method == "POST":
-        db.session.delete(item)
-        db.session.commit()
-        return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
-
-    return render_template(
-        "item_excluir.html",
-        projeto=projeto,
-        item=item,
-        status_rotulo=STATUS_ROTULO,
-    )
-
-@app.route("/projetos/<int:projeto_id>/vincular_automaticamente", methods=["POST"])
-def projeto_vincular_automaticamente(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-
-    livros_chaves = _livros_em_memoria()
-
-    vinculados = 0
-    for item in projeto.itens:
-        if item.livro_id is not None:
-            sincronizar_item_com_livro(item)
-            continue
-
-        livro = encontrar_livro_para_item(item, livros_chaves)
-        if livro is not None:
-            vincular_item_a_livro(item, livro)
-            vinculados += 1
-
-    db.session.commit()
-
-    return redirect(url_for("projeto_detalhe", projeto_id=projeto.id, vinculados=vinculados))
-
-@app.route("/projetos/<int:projeto_id>/excluir", methods=["GET", "POST"])
-def projeto_excluir(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-
-    if request.method == "POST":
-        # Apaga o projeto. Os itens vão junto (cascade).
-        # Os livros da DL vinculados ficam intactos — a FK
-        # ON DELETE SET NULL desvincula item_projeto.livro_id.
-        db.session.delete(projeto)
-        db.session.commit()
-        return redirect(url_for("projetos"))
-
-    return render_template("projeto_excluir.html", projeto=projeto)
 
 # ─────────────────────────────────────────────
 # Criação automática das tabelas
