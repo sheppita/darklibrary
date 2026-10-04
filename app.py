@@ -28,7 +28,6 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 
 db = SQLAlchemy(app)
 
-
 # ─────────────────────────────────────────────
 # Constantes
 # ─────────────────────────────────────────────
@@ -60,7 +59,6 @@ STATUS_ROTULO = {
     "tenho_nao_li": "Tenho, não li",
     "li":           "Li",
 }
-
 
 # ─────────────────────────────────────────────
 # Países — lista canônica e apelidos
@@ -159,7 +157,6 @@ PAIS_APELIDO = {
     "moldavia": "MD", "moldova": "MD",
 }
 
-
 # ─────────────────────────────────────────────
 # Modelos
 # ─────────────────────────────────────────────
@@ -179,7 +176,6 @@ class Livro(db.Model):
     def __repr__(self):
         return f"<Livro {self.titulo}>"
 
-
 class Projeto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False, unique=True)
@@ -198,7 +194,6 @@ class Projeto(db.Model):
 
     def __repr__(self):
         return f"<Projeto {self.nome}>"
-
 
 class ItemProjeto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -249,7 +244,6 @@ class ItemProjeto(db.Model):
     def __repr__(self):
         return f"<ItemProjeto {self.titulo} ({self.status})>"
 
-
 # ─────────────────────────────────────────────
 # Funções auxiliares
 # ─────────────────────────────────────────────
@@ -270,7 +264,6 @@ def chave_ordenacao(livro):
     titulo = (livro.titulo or "").lower()
     return (grupo_estante, ordem_cor, titulo)
 
-
 def chave_ordenacao_estante_simples(estante):
     estante = (estante or "").strip().upper()
     m = re.fullmatch(r"([A-Z]+)(\d+)", estante)
@@ -278,12 +271,10 @@ def chave_ordenacao_estante_simples(estante):
         return (0, m.group(1), int(m.group(2)))
     return (1, estante, 0)
 
-
 def chave_ordenacao_item(item):
     if item.ordem is not None:
         return (0, item.ordem, (item.titulo or "").lower())
     return (1, 0, (item.titulo or "").lower())
-
 
 def sql_escape(valor):
     if valor is None:
@@ -293,20 +284,17 @@ def sql_escape(valor):
     texto = str(valor).replace("'", "''")
     return f"'{texto}'"
 
-
 def limpar_texto(s):
     if s is None:
         return None
     s = s.strip()
     return s if s else None
 
-
 def normalizar_isbn(isbn):
     if not isbn:
         return None
     limpo = re.sub(r"[^0-9Xx]", "", isbn)
     return limpo or None
-
 
 def normalizar_texto(s):
     if not s:
@@ -318,7 +306,6 @@ def normalizar_texto(s):
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
-
 def chave_livro(livro):
     return (
         normalizar_isbn(livro.isbn),
@@ -326,69 +313,12 @@ def chave_livro(livro):
         normalizar_texto(livro.autor),
     )
 
-
 def chave_item(item):
     return (
         normalizar_isbn(item.isbn),
         normalizar_texto(item.titulo),
         normalizar_texto(item.autor),
     )
-
-
-def primeiro_pais(pais):
-    if not pais:
-        return pais
-    if " e " in pais:
-        return pais.split(" e ", 1)[0].strip()
-    return pais.strip()
-
-
-def parse_linha_nobel(linha):
-    if linha is None:
-        return {"ok": False, "erro": "linha vazia"}
-
-    linha = linha.strip()
-    if not linha:
-        return {"ok": False, "erro": "linha vazia"}
-
-    partes = [p.strip() for p in linha.split(",")]
-
-    if len(partes) < 2:
-        return {"ok": False, "erro": "esperado pelo menos 'Autor, AAAA'"}
-
-    autor = partes[0]
-    if not autor:
-        return {"ok": False, "erro": "autor vazio"}
-
-    ano_str = partes[1]
-    if not ano_str:
-        return {"ok": False, "erro": "ano vazio"}
-    try:
-        ano = int(ano_str)
-    except ValueError:
-        return {"ok": False, "erro": f"ano inválido: '{ano_str}'"}
-    if ano < 1 or ano > 9999:
-        return {"ok": False, "erro": f"ano fora de faixa: {ano}"}
-
-    pais = None
-    if len(partes) >= 3:
-        pais_bruto = ", ".join(partes[2:]).strip()
-        if pais_bruto:
-            pais = primeiro_pais(pais_bruto)
-
-    if pais:
-        subtitulo = f"{autor} — {pais}, {ano}"
-    else:
-        subtitulo = f"{autor} — {ano}"
-
-    return {
-        "ok": True,
-        "autor": autor,
-        "ano": ano,
-        "pais": pais,
-        "subtitulo": subtitulo,
-    }
-
 
 def _extrair_campos_item_do_form():
     status = request.form.get("status", "").strip()
@@ -425,7 +355,6 @@ def _extrair_campos_item_do_form():
         "status": status,
     }
 
-
 # ─────────────────────────────────────────────
 # Funções de vinculação e sincronização
 # ─────────────────────────────────────────────
@@ -433,7 +362,6 @@ def _extrair_campos_item_do_form():
 def _livros_em_memoria():
     livros = Livro.query.all()
     return [(chave_livro(lv), lv) for lv in livros]
-
 
 def encontrar_livro_para_item(item, livros_chaves):
     isbn_item, titulo_item, autor_item = chave_item(item)
@@ -450,7 +378,6 @@ def encontrar_livro_para_item(item, livros_chaves):
 
     return None
 
-
 def sincronizar_item_com_livro(item):
     if item.livro is None:
         return
@@ -459,12 +386,10 @@ def sincronizar_item_com_livro(item):
     else:
         item.status = "tenho_nao_li"
 
-
 def vincular_item_a_livro(item, livro):
     item.livro_id = livro.id
     item.livro = livro
     sincronizar_item_com_livro(item)
-
 
 def tentar_vincular_item(item):
     if item.livro_id is not None:
@@ -478,7 +403,6 @@ def tentar_vincular_item(item):
 
     vincular_item_a_livro(item, livro)
     return True
-
 
 def tentar_vincular_livro(livro):
     chave_lv = chave_livro(livro)
@@ -501,7 +425,6 @@ def tentar_vincular_livro(livro):
 
     return vinculados
 
-
 def sincronizar_itens_do_livro(livro):
     itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
     afetados = 0
@@ -512,7 +435,6 @@ def sincronizar_itens_do_livro(livro):
             afetados += 1
     return afetados
 
-
 def preparar_exclusao_de_livro(livro):
     itens = ItemProjeto.query.filter(ItemProjeto.livro_id == livro.id).all()
     for item in itens:
@@ -520,13 +442,11 @@ def preparar_exclusao_de_livro(livro):
             item.status = "nao_tenho"
         item.livro_id = None
 
-
 # ─────────────────────────────────────────────
 # Funções de país e mapa
 # ─────────────────────────────────────────────
 
 _PAIS_CANONICO_NORMALIZADO_CACHE = None
-
 
 def _obter_mapa_canonico_normalizado():
     global _PAIS_CANONICO_NORMALIZADO_CACHE
@@ -536,7 +456,6 @@ def _obter_mapa_canonico_normalizado():
             for codigo, nome in PAISES_CANONICOS.items()
         }
     return _PAIS_CANONICO_NORMALIZADO_CACHE
-
 
 def codigo_pais_do_texto(texto):
     if not texto:
@@ -557,7 +476,6 @@ def codigo_pais_do_texto(texto):
         return codigo_upper
 
     return None
-
 
 def montar_dados_do_mapa():
     dados = {}
@@ -604,7 +522,6 @@ def montar_dados_do_mapa():
 
     return dados, nao_reconhecidos
 
-
 def resumo_do_mapa(dados_mapa):
     paises_lidos = len(dados_mapa)
     total_paises = len(PAISES_CANONICOS)
@@ -613,6 +530,30 @@ def resumo_do_mapa(dados_mapa):
         "total_paises": total_paises,
     }
 
+def _montar_livros_lidos_do_projeto(dados_mapa):
+    """
+    Monta a lista de livros lidos que contam para o projeto tipo 'mundo'.
+    Reaproveita os dados do mapa: cada país tem uma lista de livros.
+
+    Retorna uma lista de dicts: {titulo, autor, pais, origem}
+    ordenada por país (nome canônico) e depois por título.
+    """
+    if not dados_mapa:
+        return []
+
+    livros = []
+    for codigo, info in dados_mapa.items():
+        nome_pais = info.get("nome", codigo)
+        for livro in info.get("livros", []):
+            livros.append({
+                "titulo": livro.get("titulo", ""),
+                "autor": livro.get("autor", ""),
+                "pais": nome_pais,
+                "origem": livro.get("origem", ""),
+            })
+
+    livros.sort(key=lambda lv: (lv["pais"].lower(), lv["titulo"].lower()))
+    return livros
 
 def _conjunto_paises_lidos():
     lidos = set()
@@ -634,7 +575,6 @@ def _conjunto_paises_lidos():
 
     return lidos
 
-
 def _conjunto_paises_com_recomendacoes(projeto):
     codigos = set()
     itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
@@ -643,7 +583,6 @@ def _conjunto_paises_com_recomendacoes(projeto):
         if codigo:
             codigos.add(codigo)
     return codigos
-
 
 def listar_paises_do_projeto(projeto, filtro):
     lidos = _conjunto_paises_lidos()
@@ -681,7 +620,6 @@ def listar_paises_do_projeto(projeto, filtro):
 
     return lista
 
-
 def listar_recomendacoes_do_pais(projeto, codigo):
     itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
     resultado = [
@@ -691,8 +629,12 @@ def listar_recomendacoes_do_pais(projeto, codigo):
     resultado.sort(key=chave_ordenacao_item)
     return resultado
 
-
 def listar_livros_lidos_do_pais(codigo):
+    """
+    Retorna (livros_lidos_da_DL, itens_lidos_do_projeto) para um país.
+    Deduplica: se um livro da DL tem um item de projeto vinculado, o item
+    não é mostrado separadamente (o livro da DL já o representa).
+    """
     livros = Livro.query.filter(
         Livro.lido.is_(True),
         Livro.literario.is_(True),
@@ -702,14 +644,18 @@ def listar_livros_lidos_do_pais(codigo):
         if codigo_pais_do_texto(lv.pais) == codigo
     ]
 
+    ids_livros_na_dl = {lv.id for lv in livros_pais}
+
     itens = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
-    itens_pais = [
-        it for it in itens
-        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
-    ]
+    itens_pais = []
+    for it in itens:
+        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) != codigo:
+            continue
+        if it.livro_id is not None and it.livro_id in ids_livros_na_dl:
+            continue
+        itens_pais.append(it)
 
     return livros_pais, itens_pais
-
 
 # ─────────────────────────────────────────────
 # Busca de ISBN
@@ -722,7 +668,6 @@ def url_capa_open_library(isbn):
     if not isbn_limpo:
         return None
     return f"https://covers.openlibrary.org/b/isbn/{isbn_limpo}-L.jpg?default=false"
-
 
 def buscar_google_books(isbn_limpo):
     url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_limpo}"
@@ -752,7 +697,6 @@ def buscar_google_books(isbn_limpo):
 
     return {"titulo": titulo, "autor": autor, "capa": capa}
 
-
 def buscar_open_library(isbn_limpo):
     url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_limpo}&format=json&jscmd=data"
     try:
@@ -777,7 +721,6 @@ def buscar_open_library(isbn_limpo):
 
     return {"titulo": titulo, "autor": autor, "capa": capa}
 
-
 # ─────────────────────────────────────────────
 # Utilidade: validação de next
 # ─────────────────────────────────────────────
@@ -791,7 +734,6 @@ def url_next_valida(url):
     if url.startswith("//"):
         return None
     return url
-
 
 # ─────────────────────────────────────────────
 # Rotas — livros
@@ -898,7 +840,6 @@ def home():
         next_url=next_url,
     )
 
-
 @app.route("/novo", methods=["GET", "POST"])
 def novo():
     item_id_raw = request.args.get("item_id") or request.form.get("item_id")
@@ -961,7 +902,6 @@ def novo():
         next_url=next_url,
     )
 
-
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
 def editar(livro_id):
     livro = db.get_or_404(Livro, livro_id)
@@ -999,7 +939,6 @@ def editar(livro_id):
 
     return render_template("editar.html", livro=livro, cores=CORES_ORDEM, next_url=next_url)
 
-
 @app.route("/excluir/<int:livro_id>", methods=["GET", "POST"])
 def excluir(livro_id):
     livro = db.get_or_404(Livro, livro_id)
@@ -1016,7 +955,6 @@ def excluir(livro_id):
         return redirect(url_for("home"))
 
     return render_template("excluir.html", livro=livro, next_url=next_url)
-
 
 @app.route("/estatisticas")
 def estatisticas():
@@ -1091,7 +1029,6 @@ def estatisticas():
         sem_cor=sem_cor,
         cores_hex=CORES_HEX,
     )
-
 
 @app.route("/backup")
 def backup():
@@ -1221,7 +1158,6 @@ def backup():
         },
     )
 
-
 @app.route("/api/buscar_isbn/<isbn>")
 def buscar_isbn(isbn):
     isbn_limpo = re.sub(r"[^0-9Xx]", "", isbn)
@@ -1254,7 +1190,6 @@ def buscar_isbn(isbn):
         "fonte": fonte,
     })
 
-
 # ─────────────────────────────────────────────
 # Rotas — projetos
 # ─────────────────────────────────────────────
@@ -1276,7 +1211,6 @@ def projetos():
         })
 
     return render_template("projetos.html", projetos=projetos_com_contagem)
-
 
 @app.route("/projetos/<int:projeto_id>")
 def projeto_detalhe(projeto_id):
@@ -1301,9 +1235,12 @@ def projeto_detalhe(projeto_id):
     dados_mapa = None
     paises_nao_reconhecidos = None
     resumo_mapa = None
+    livros_lidos_projeto = None
+
     if projeto.tipo == "mundo":
         dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa()
         resumo_mapa = resumo_do_mapa(dados_mapa)
+        livros_lidos_projeto = _montar_livros_lidos_do_projeto(dados_mapa)
 
     return render_template(
         "projeto.html",
@@ -1319,8 +1256,8 @@ def projeto_detalhe(projeto_id):
         dados_mapa=dados_mapa,
         paises_nao_reconhecidos=paises_nao_reconhecidos,
         resumo_mapa=resumo_mapa,
+        livros_lidos_projeto=livros_lidos_projeto,
     )
-
 
 @app.route("/projetos/<int:projeto_id>/paises")
 def projeto_paises(projeto_id):
@@ -1338,7 +1275,6 @@ def projeto_paises(projeto_id):
         paises=paises,
         filtro=filtro,
     )
-
 
 @app.route("/projetos/<int:projeto_id>/paises/<codigo>")
 def projeto_pais_detalhe(projeto_id, codigo):
@@ -1363,7 +1299,6 @@ def projeto_pais_detalhe(projeto_id, codigo):
         recomendacoes=recomendacoes,
         status_rotulo=STATUS_ROTULO,
     )
-
 
 @app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/nova", methods=["GET", "POST"])
 def recomendacao_nova(projeto_id, codigo):
@@ -1421,7 +1356,6 @@ def recomendacao_nova(projeto_id, codigo):
         pais_fixo={"codigo": codigo, "nome": nome},
     )
 
-
 @app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/editar", methods=["GET", "POST"])
 def recomendacao_editar(projeto_id, codigo, item_id):
     projeto = db.get_or_404(Projeto, projeto_id)
@@ -1478,7 +1412,6 @@ def recomendacao_editar(projeto_id, codigo, item_id):
         pais_fixo={"codigo": codigo, "nome": nome},
     )
 
-
 @app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/excluir", methods=["GET", "POST"])
 def recomendacao_excluir(projeto_id, codigo, item_id):
     projeto = db.get_or_404(Projeto, projeto_id)
@@ -1502,7 +1435,6 @@ def recomendacao_excluir(projeto_id, codigo, item_id):
         item=item,
         status_rotulo=STATUS_ROTULO,
     )
-
 
 @app.route("/projetos/<int:projeto_id>/itens/novo", methods=["GET", "POST"])
 def item_novo(projeto_id):
@@ -1553,7 +1485,6 @@ def item_novo(projeto_id):
         pais_fixo=None,
     )
 
-
 @app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/editar", methods=["GET", "POST"])
 def item_editar(projeto_id, item_id):
     projeto = db.get_or_404(Projeto, projeto_id)
@@ -1602,7 +1533,6 @@ def item_editar(projeto_id, item_id):
         pais_fixo=None,
     )
 
-
 @app.route("/projetos/<int:projeto_id>/itens/<int:item_id>/excluir", methods=["GET", "POST"])
 def item_excluir(projeto_id, item_id):
     projeto = db.get_or_404(Projeto, projeto_id)
@@ -1622,7 +1552,6 @@ def item_excluir(projeto_id, item_id):
         item=item,
         status_rotulo=STATUS_ROTULO,
     )
-
 
 @app.route("/projetos/<int:projeto_id>/vincular_automaticamente", methods=["POST"])
 def projeto_vincular_automaticamente(projeto_id):
@@ -1645,171 +1574,12 @@ def projeto_vincular_automaticamente(projeto_id):
 
     return redirect(url_for("projeto_detalhe", projeto_id=projeto.id, vinculados=vinculados))
 
-
-@app.route("/projetos/<int:projeto_id>/importar", methods=["GET", "POST"])
-def projeto_importar(projeto_id):
-    projeto = db.get_or_404(Projeto, projeto_id)
-
-    if request.method == "POST":
-        acao = request.form.get("acao", "").strip()
-        texto = request.form.get("texto", "")
-
-        linhas = texto.splitlines()
-
-        resultados = []
-        linhas_validas = []
-        linhas_com_erro = []
-
-        for i, linha in enumerate(linhas, start=1):
-            if not linha.strip():
-                continue
-
-            r = parse_linha_nobel(linha)
-            r["numero"] = i
-            r["linha_original"] = linha
-
-            if r["ok"]:
-                linhas_validas.append(r)
-            else:
-                linhas_com_erro.append(r)
-
-            resultados.append(r)
-
-        if acao == "previsualizar":
-            return render_template(
-                "importar.html",
-                projeto=projeto,
-                texto=texto,
-                resultados=resultados,
-                total_ok=len(linhas_validas),
-                total_erro=len(linhas_com_erro),
-                importado=False,
-            )
-
-        if acao == "importar":
-            if linhas_com_erro:
-                return render_template(
-                    "importar.html",
-                    projeto=projeto,
-                    texto=texto,
-                    resultados=resultados,
-                    total_ok=len(linhas_validas),
-                    total_erro=len(linhas_com_erro),
-                    importado=False,
-                    erro_importacao="Há linhas com erro. Corrija antes de importar.",
-                )
-
-            if not linhas_validas:
-                return render_template(
-                    "importar.html",
-                    projeto=projeto,
-                    texto=texto,
-                    resultados=resultados,
-                    total_ok=0,
-                    total_erro=0,
-                    importado=False,
-                    erro_importacao="Nada para importar (nenhuma linha válida).",
-                )
-
-            for r in linhas_validas:
-                pais_texto = r["pais"]
-                pais_codigo = codigo_pais_do_texto(pais_texto) if pais_texto else None
-                item = ItemProjeto(
-                    projeto_id=projeto.id,
-                    titulo="A definir",
-                    autor=r["autor"],
-                    subtitulo=r["subtitulo"],
-                    pais=pais_texto,
-                    pais_codigo=pais_codigo,
-                    ano=r["ano"],
-                    status="nao_tenho",
-                )
-                db.session.add(item)
-
-            db.session.flush()
-
-            livros_chaves = _livros_em_memoria()
-            for item in projeto.itens:
-                if item.livro_id is None:
-                    livro = encontrar_livro_para_item(item, livros_chaves)
-                    if livro is not None:
-                        vincular_item_a_livro(item, livro)
-
-            db.session.commit()
-
-            return redirect(url_for("projeto_detalhe", projeto_id=projeto.id))
-
-    return render_template(
-        "importar.html",
-        projeto=projeto,
-        texto="",
-        resultados=None,
-        total_ok=0,
-        total_erro=0,
-        importado=False,
-    )
-
-
-# ─────────────────────────────────────────────
-# ROTA TEMPORÁRIA — seed de teste
-# ─────────────────────────────────────────────
-
-@app.route("/projetos/_seed_teste")
-def projetos_seed_teste():
-    nome = "Nobel de Literatura (teste)"
-    existente = Projeto.query.filter_by(nome=nome).first()
-    if existente:
-        return redirect(url_for("projeto_detalhe", projeto_id=existente.id))
-
-    p = Projeto(
-        nome=nome,
-        descricao="Projeto fictício para validar o visual. Apagar depois.",
-        tipo="nobel",
-        ativo=True,
-    )
-    db.session.add(p)
-    db.session.flush()
-
-    itens_seed = [
-        {"titulo": "Irmãos Karamázov", "autor": "Fiódor Dostoiévski",
-         "pais": "Rússia", "ano": 1880, "status": "li",
-         "observacoes": "Item de exemplo (lido)."},
-        {"titulo": "Cem Anos de Solidão", "autor": "Gabriel García Márquez",
-         "pais": "Colômbia", "ano": 1967, "status": "li",
-         "observacoes": "Item de exemplo (lido)."},
-        {"titulo": "A Casa dos Espíritos", "autor": "Isabel Allende",
-         "pais": "Chile", "ano": 1982, "status": "tenho_nao_li",
-         "observacoes": "Item de exemplo (tenho, não li)."},
-        {"titulo": "O Homem Sem Qualidades", "autor": "Robert Musil",
-         "pais": "Áustria", "ano": 1943, "status": "nao_tenho",
-         "observacoes": "Item de exemplo (não tenho)."},
-    ]
-
-    for i, dados in enumerate(itens_seed, start=1):
-        it = ItemProjeto(
-            projeto_id=p.id,
-            titulo=dados["titulo"],
-            autor=dados["autor"],
-            pais=dados["pais"],
-            ano=dados["ano"],
-            status=dados["status"],
-            observacoes=dados["observacoes"],
-            ordem=i,
-        )
-        db.session.add(it)
-
-    db.session.commit()
-
-    return redirect(url_for("projeto_detalhe", projeto_id=p.id))
-
-
 # ─────────────────────────────────────────────
 # Criação automática das tabelas
 # ─────────────────────────────────────────────
 
 with app.app_context():
     db.create_all()
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
