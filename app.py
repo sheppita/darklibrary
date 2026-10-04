@@ -1557,6 +1557,20 @@ def projeto_vincular_automaticamente(projeto_id):
 
     return redirect(url_for("projeto_detalhe", projeto_id=projeto.id, vinculados=vinculados))
 
+@app.route("/projetos/<int:projeto_id>/excluir", methods=["GET", "POST"])
+def projeto_excluir(projeto_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    if request.method == "POST":
+        # Apaga o projeto. Os itens vão junto (cascade).
+        # Os livros da DL vinculados ficam intactos — a FK
+        # ON DELETE SET NULL desvincula item_projeto.livro_id.
+        db.session.delete(projeto)
+        db.session.commit()
+        return redirect(url_for("projetos"))
+
+    return render_template("projeto_excluir.html", projeto=projeto)
+
 # ─────────────────────────────────────────────
 # Criação automática das tabelas
 # ─────────────────────────────────────────────
@@ -1566,4 +1580,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
-    

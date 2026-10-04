@@ -9,13 +9,16 @@
 
     <div class="pagina-cabecalho">
         <h1>{{ projeto.nome }}</h1>
+        
         <div class="pagina-cabecalho-acoes">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">+ Adicionar Item</a>
             <form method="POST" action="{{ url_for('projeto_vincular_automaticamente', projeto_id=projeto.id) }}" class="form-inline">
                 <button type="submit" class="botao-secundario botao-pequeno">Vincular Automaticamente</button>
             </form>
+            <a href="{{ url_for('projeto_excluir', projeto_id=projeto.id) }}" class="botao-perigo botao-pequeno">Excluir Projeto</a>
             <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os Projetos</a>
         </div>
+
     </div>
 
     {% if vinculados_msg is not none %}

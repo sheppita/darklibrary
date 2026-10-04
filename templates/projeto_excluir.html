@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — Excluir Projeto{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>Excluir Projeto</h1>
+        <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
+            ← Voltar para {{ projeto.nome }}
+        </a>
+    </div>
+
+    <div class="excluir-caixa">
+
+        <p class="excluir-aviso">
+            Esta ação NÃO PODE ser desfeita. O projeto e todos os seus itens serão apagados.
+        </p>
+
+        <div class="excluir-info">
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Nome:</span>
+                <span class="excluir-valor">{{ projeto.nome }}</span>
+            </div>
+            {% if projeto.descricao %}
+                <div class="excluir-linha">
+                    <span class="excluir-rotulo">Descrição:</span>
+                    <span class="excluir-valor">{{ projeto.descricao }}</span>
+                </div>
+            {% endif %}
+            <div class="excluir-linha">
+                <span class="excluir-rotulo">Itens:</span>
+                <span class="excluir-valor">{{ projeto.itens | length }}</span>
+            </div>
+        </div>
+
+        <p class="projeto-descricao">
+            Os livros da sua estante vinculados a este projeto <strong>não serão apagados</strong>.
+            Eles apenas deixarão de aparecer como pertencentes a este projeto.
+        </p>
+
+        <form method="POST" class="excluir-acoes">
+            <button type="submit" class="botao-perigo">Sim, Excluir</button>
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-cancelar">Cancelar</a>
+        </form>
+
+    </div>
+
+{% endblock %}
