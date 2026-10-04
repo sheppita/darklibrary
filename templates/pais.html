@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — {{ projeto.nome }} — {{ nome }}{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>{{ nome }}</h1>
+        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id) }}" class="link-voltar">
+            ← Todos os países
+        </a>
+    </div>
+
+    <p class="projeto-descricao">
+        Projeto: <strong>{{ projeto.nome }}</strong>
+        &middot; Código: <code>{{ codigo }}</code>
+    </p>
+
+    {# ─────────── Seção 1: livros já lidos ─────────── #}
+    <h2 class="projeto-secao-titulo">Livros já lidos</h2>
+
+    {% if livros_lidos or itens_lidos %}
+
+        <div class="lista-itens">
+            {% for livro in livros_lidos %}
+                <div class="card-item card-item-li">
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">{{ livro.titulo }}</div>
+                        <div class="card-item-autor">{{ livro.autor }}</div>
+                    </div>
+                    <div class="card-item-meta">
+                        <span class="card-item-origem">estante</span>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% for item in itens_lidos %}
+                <div class="card-item card-item-li">
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">{{ item.titulo }}</div>
+                        {% if item.subtitulo %}
+                            <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
+                        {% endif %}
+                        <div class="card-item-autor">{{ item.autor }}</div>
+                    </div>
+                    <div class="card-item-meta">
+                        <span class="card-item-origem">projeto</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Você ainda não leu nenhum livro deste país.</p>
+
+    {% endif %}
+
+    {# ─────────── Seção 2: recomendações ─────────── #}
+    <div class="pais-secao-cabecalho">
+        <h2 class="projeto-secao-titulo">Recomendações neste projeto</h2>
+        <a href="{{ url_for('recomendacao_nova', projeto_id=projeto.id, codigo=codigo) }}"
+           class="botao-secundario botao-pequeno">+ Adicionar recomendação</a>
+    </div>
+
+    {% if recomendacoes %}
+
+        <div class="lista-itens">
+            {% for item in recomendacoes %}
+                <div class="card-item card-item-{{ item.status }}">
+                    <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-principal">
+                        <div class="card-item-titulo">
+                            {{ item.titulo }}
+                            {% if item.livro_id %}
+                                <span class="card-item-vinculo-icone" title="Vinculado à estante">🔗</span>
+                            {% endif %}
+                        </div>
+                        {% if item.subtitulo %}
+                            <div class="card-item-subtitulo">{{ item.subtitulo }}</div>
+                        {% endif %}
+                        <div class="card-item-autor">{{ item.autor }}</div>
+                    </div>
+
+                    <div class="card-item-meta">
+                        {% if item.ano %}<span>{{ item.ano }}</span>{% endif %}
+                        {% if item.isbn %}<span class="card-item-isbn">ISBN {{ item.isbn }}</span>{% endif %}
+                    </div>
+
+                    <div class="card-item-acoes">
+                        <div class="card-item-status card-item-status-{{ item.status }}">
+                            {{ status_rotulo[item.status] }}
+                        </div>
+                        {% if not item.livro_id %}
+                            <a class="card-item-acao"
+                               href="{{ url_for('novo', item_id=item.id) }}"
+                               title="Cadastrar na estante">➕</a>
+                        {% endif %}
+                        <a class="card-item-acao"
+                           href="{{ url_for('recomendacao_editar', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('recomendacao_excluir', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
+                           title="Excluir">🗑</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Nenhuma recomendação cadastrada para este país.</p>
+
+    {% endif %}
+
+{% endblock %}

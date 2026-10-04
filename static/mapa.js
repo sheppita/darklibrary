@@ -81,6 +81,10 @@
 
     function fecharPopup() {
         elPopup.hidden = true;
+        const elLink = document.getElementById("mapa-popup-link-pais");
+        if (elLink) {
+            elLink.hidden = true;
+        }
     }
 
     function abrirPopup(codigo, info) {
@@ -110,6 +114,18 @@
 
             elPopupLista.appendChild(li);
         });
+
+        // Link "Ver detalhes do país →", se a página tiver o dado do projeto
+        const elLink = document.getElementById("mapa-popup-link-pais");
+        if (elLink) {
+            // Monta a URL a partir de um "template" no HTML.
+            // O HTML já tem a URL base sem o código no final.
+            const base = elLink.getAttribute("data-url-base");
+            if (base) {
+                elLink.href = base + codigo;
+                elLink.hidden = false;
+            }
+        }
 
         elPopup.hidden = false;
     }

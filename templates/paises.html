@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dark Library — {{ projeto.nome }} — Países{% endblock %}
+
+{% block conteudo %}
+
+    <div class="pagina-cabecalho">
+        <h1>Países — {{ projeto.nome }}</h1>
+        <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
+            ← Voltar ao projeto
+        </a>
+    </div>
+
+    <p class="projeto-descricao">
+        Todos os países do mundo. Um país fica <strong>verde</strong> quando você
+        lê pelo menos um livro de autor daquele país (na estante ou em qualquer projeto).
+        Clique num país para ver os livros lidos e cadastrar recomendações.
+    </p>
+
+    <div class="filtros-paises">
+        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='lidos') }}"
+           class="filtro-pais {% if filtro == 'lidos' %}filtro-pais-ativo{% endif %}">
+            Lidos
+        </a>
+        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='nao_lidos') }}"
+           class="filtro-pais {% if filtro == 'nao_lidos' %}filtro-pais-ativo{% endif %}">
+            Não lidos
+        </a>
+        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='com_recomendacoes') }}"
+           class="filtro-pais {% if filtro == 'com_recomendacoes' %}filtro-pais-ativo{% endif %}">
+            Com recomendações
+        </a>
+        <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='todos') }}"
+           class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">
+            Todos
+        </a>
+    </div>
+
+    <p class="contador">
+        {{ paises|length }} país(es)
+    </p>
+
+    {% if paises %}
+
+        <div class="lista-paises">
+            {% for p in paises %}
+                <a class="card-pais {% if p.lido %}card-pais-lido{% endif %}"
+                   href="{{ url_for('projeto_pais_detalhe', projeto_id=projeto.id, codigo=p.codigo) }}">
+
+                    <div class="card-pais-nome">
+                        {{ p.nome }}
+                    </div>
+
+                    <div class="card-pais-meta">
+                        {% if p.lido %}
+                            <span class="card-pais-selo" title="Já lido">✓ lido</span>
+                        {% endif %}
+                        {% if p.qtd_recomendacoes > 0 %}
+                            <span class="card-pais-rec">
+                                {{ p.qtd_recomendacoes }} rec.
+                            </span>
+                        {% endif %}
+                        <span class="card-pais-codigo">{{ p.codigo }}</span>
+                    </div>
+
+                </a>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="vazio">Nenhum país neste filtro.</p>
+
+    {% endif %}
+
+{% endblock %}

@@ -1657,3 +1657,181 @@ input:focus, select:focus, textarea:focus {
     overflow-y: auto;
     padding-right: var(--esp-2);
 }
+
+/* ─────────────────────────────────────────────
+   31. Etapa 8b-b — lista de países e página de país
+   ───────────────────────────────────────────── */
+
+/* Filtros de países */
+.filtros-paises {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-2);
+    margin-bottom: var(--esp-4);
+}
+
+.filtro-pais {
+    padding: var(--esp-2) var(--esp-4);
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--cor-texto);
+    text-decoration: none;
+    transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.filtro-pais:hover {
+    background-color: var(--cor-fundo);
+    text-decoration: none;
+}
+
+.filtro-pais-ativo {
+    background-color: var(--cor-texto);
+    color: #ffffff;
+    border-color: var(--cor-texto);
+}
+
+.filtro-pais-ativo:hover {
+    background-color: var(--cor-texto);
+    color: #ffffff;
+}
+
+/* Lista de países */
+.lista-paises {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--esp-3);
+}
+
+@media (min-width: 640px) {
+    .lista-paises {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .lista-paises {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.card-pais {
+    display: block;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-3) var(--esp-4);
+    text-decoration: none;
+    color: var(--cor-texto);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: var(--sombra-suave);
+}
+
+.card-pais:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-pais-lido {
+    border-left: 5px solid #4a7c59;
+}
+
+.card-pais-nome {
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: var(--esp-2);
+}
+
+.card-pais-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--esp-2);
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+}
+
+.card-pais-selo {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+    padding: 1px var(--esp-2);
+    border-radius: 999px;
+}
+
+.card-pais-rec {
+    background-color: #e3f0fa;
+    color: #2a5b8a;
+    font-weight: 600;
+    padding: 1px var(--esp-2);
+    border-radius: 999px;
+}
+
+.card-pais-codigo {
+    margin-left: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+/* Página de país */
+.pais-secao-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--esp-3);
+    margin-top: var(--esp-6);
+    margin-bottom: var(--esp-3);
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: var(--esp-2);
+}
+
+.pais-secao-cabecalho .projeto-secao-titulo {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Selo "estante" / "projeto" nos livros lidos */
+.card-item-origem {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-suave);
+    padding: 1px var(--esp-2);
+    border-radius: 999px;
+}
+
+/* Link "Ver detalhes do país" no popup */
+.mapa-popup-link-pais {
+    display: block;
+    margin-top: var(--esp-3);
+    padding-top: var(--esp-3);
+    border-top: 1px solid var(--cor-borda);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--cor-texto);
+    text-align: right;
+    text-decoration: none;
+}
+
+.mapa-popup-link-pais:hover {
+    text-decoration: underline;
+}
+
+.mapa-popup-link-pais[hidden] {
+    display: none;
+}
+
+/* Botões no cabeçalho do mapa */
+.mapa-acoes {
+    margin-top: var(--esp-3);
+    display: flex;
+    justify-content: flex-end;
+}

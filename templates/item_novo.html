@@ -51,12 +51,17 @@
                    placeholder="Ex.: laureado Nobel 1901">
         </div>
 
-        <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>
-                <input type="text" id="pais" name="pais" maxlength="80"
-                       value="{{ valores.pais or '' }}"
-                       placeholder="Ex.: Rússia">
+                {% if pais_fixo %}
+                    <input type="text" id="pais" name="pais" maxlength="80"
+                           value="{{ pais_fixo.nome }}" readonly>
+                    <input type="hidden" name="pais_codigo" value="{{ pais_fixo.codigo }}">
+                {% else %}
+                    <input type="text" id="pais" name="pais" maxlength="80"
+                           value="{{ valores.pais or '' }}"
+                           placeholder="Ex.: Rússia">
+                {% endif %}
             </div>
 
             <div class="campo">

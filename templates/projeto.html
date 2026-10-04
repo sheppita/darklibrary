@@ -54,6 +54,13 @@
                     <button type="button" id="mapa-popup-fechar" class="mapa-popup-fechar" aria-label="Fechar">×</button>
                 </div>
                 <ul id="mapa-popup-lista" class="mapa-popup-lista"></ul>
+                <a id="mapa-popup-link-pais"
+                   class="mapa-popup-link-pais"
+                   data-url-base="{{ url_for('projeto_pais_detalhe', projeto_id=projeto.id, codigo='') }}"
+                   href="#"
+                   hidden>
+                    Ver detalhes do país →
+                </a>
             </div>
 
             {% if paises_nao_reconhecidos %}
@@ -77,6 +84,13 @@
                     </ul>
                 </details>
             {% endif %}
+
+            <div class="mapa-acoes">
+                <a href="{{ url_for('projeto_paises', projeto_id=projeto.id) }}"
+                   class="botao-secundario">
+                    Ver todos os países →
+                </a>
+            </div>
 
         </div>
     {% endif %}

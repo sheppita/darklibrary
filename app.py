@@ -213,6 +213,7 @@ class ItemProjeto(db.Model):
     autor = db.Column(db.String(150), nullable=False)
     subtitulo = db.Column(db.String(200))
     pais = db.Column(db.String(80), index=True)
+    pais_codigo = db.Column(db.String(2), index=True)
     ano = db.Column(db.Integer)
     isbn = db.Column(db.String(20))
     capa_url = db.Column(db.String(500))
@@ -389,6 +390,42 @@ def parse_linha_nobel(linha):
     }
 
 
+def _extrair_campos_item_do_form():
+    status = request.form.get("status", "").strip()
+    if status not in STATUS_ITEM:
+        status = "nao_tenho"
+
+    ano_raw = request.form.get("ano", "").strip()
+    ano = None
+    if ano_raw:
+        try:
+            ano = int(ano_raw)
+        except ValueError:
+            ano = None
+
+    isbn = limpar_texto(request.form.get("isbn"))
+    capa_url = limpar_texto(request.form.get("capa_url"))
+
+    if not capa_url and isbn:
+        capa_url = url_capa_open_library(isbn)
+
+    pais_texto = limpar_texto(request.form.get("pais"))
+    pais_codigo = codigo_pais_do_texto(pais_texto) if pais_texto else None
+
+    return {
+        "titulo": (request.form.get("titulo", "") or "").strip(),
+        "autor": (request.form.get("autor", "") or "").strip(),
+        "subtitulo": limpar_texto(request.form.get("subtitulo")),
+        "pais": pais_texto,
+        "pais_codigo": pais_codigo,
+        "ano": ano,
+        "isbn": isbn,
+        "capa_url": capa_url,
+        "observacoes": limpar_texto(request.form.get("observacoes")),
+        "status": status,
+    }
+
+
 # ─────────────────────────────────────────────
 # Funções de vinculação e sincronização
 # ─────────────────────────────────────────────
@@ -554,7 +591,7 @@ def montar_dados_do_mapa():
 
     itens_lidos = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
     for it in itens_lidos:
-        codigo = codigo_pais_do_texto(it.pais)
+        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
         if codigo:
             adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor, "projeto")
         else:
@@ -575,6 +612,103 @@ def resumo_do_mapa(dados_mapa):
         "paises_lidos": paises_lidos,
         "total_paises": total_paises,
     }
+
+
+def _conjunto_paises_lidos():
+    lidos = set()
+
+    livros = Livro.query.filter(
+        Livro.lido.is_(True),
+        Livro.literario.is_(True),
+    ).all()
+    for lv in livros:
+        codigo = codigo_pais_do_texto(lv.pais)
+        if codigo:
+            lidos.add(codigo)
+
+    itens = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
+    for it in itens:
+        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+        if codigo:
+            lidos.add(codigo)
+
+    return lidos
+
+
+def _conjunto_paises_com_recomendacoes(projeto):
+    codigos = set()
+    itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
+    for it in itens:
+        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+        if codigo:
+            codigos.add(codigo)
+    return codigos
+
+
+def listar_paises_do_projeto(projeto, filtro):
+    lidos = _conjunto_paises_lidos()
+    com_rec = _conjunto_paises_com_recomendacoes(projeto)
+
+    itens_projeto = ItemProjeto.query.filter(
+        ItemProjeto.projeto_id == projeto.id
+    ).all()
+
+    contagem_rec = {}
+    for it in itens_projeto:
+        codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
+        if codigo:
+            contagem_rec[codigo] = contagem_rec.get(codigo, 0) + 1
+
+    lista = []
+    for codigo in sorted(
+        PAISES_CANONICOS.keys(),
+        key=lambda c: normalizar_texto(PAISES_CANONICOS[c]),
+    ):
+        lista.append({
+            "codigo": codigo,
+            "nome": PAISES_CANONICOS[codigo],
+            "lido": codigo in lidos,
+            "com_recomendacoes": codigo in com_rec,
+            "qtd_recomendacoes": contagem_rec.get(codigo, 0),
+        })
+
+    if filtro == "lidos":
+        lista = [p for p in lista if p["lido"]]
+    elif filtro == "nao_lidos":
+        lista = [p for p in lista if not p["lido"]]
+    elif filtro == "com_recomendacoes":
+        lista = [p for p in lista if p["com_recomendacoes"]]
+
+    return lista
+
+
+def listar_recomendacoes_do_pais(projeto, codigo):
+    itens = ItemProjeto.query.filter(ItemProjeto.projeto_id == projeto.id).all()
+    resultado = [
+        it for it in itens
+        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
+    ]
+    resultado.sort(key=chave_ordenacao_item)
+    return resultado
+
+
+def listar_livros_lidos_do_pais(codigo):
+    livros = Livro.query.filter(
+        Livro.lido.is_(True),
+        Livro.literario.is_(True),
+    ).all()
+    livros_pais = [
+        lv for lv in livros
+        if codigo_pais_do_texto(lv.pais) == codigo
+    ]
+
+    itens = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
+    itens_pais = [
+        it for it in itens
+        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
+    ]
+
+    return livros_pais, itens_pais
 
 
 # ─────────────────────────────────────────────
@@ -645,14 +779,10 @@ def buscar_open_library(isbn_limpo):
 
 
 # ─────────────────────────────────────────────
-# Utilidade: validação de next (anti open redirect)
+# Utilidade: validação de next
 # ─────────────────────────────────────────────
 
 def url_next_valida(url):
-    """
-    Só aceita URLs relativas (começando com '/'), para evitar
-    redirecionamento para sites externos (open redirect).
-    """
     if not url:
         return None
     url = url.strip()
@@ -747,8 +877,6 @@ def home():
         key=lambda s: normalizar_texto(s),
     )
 
-    # Monta a URL atual (com filtros) para passar aos links de editar.
-    # Isso permite que o usuário volte exatamente para o mesmo estado.
     args_atuais = request.args.to_dict(flat=True)
     next_url = request.path
     if args_atuais:
@@ -1050,6 +1178,7 @@ def backup():
                 sql_escape(it.autor),
                 sql_escape(it.subtitulo),
                 sql_escape(it.pais),
+                sql_escape(it.pais_codigo),
                 sql_escape(it.ano),
                 sql_escape(it.isbn),
                 sql_escape(it.capa_url),
@@ -1061,7 +1190,7 @@ def backup():
             ])
             linhas.append(
                 "INSERT INTO item_projeto "
-                "(id, projeto_id, titulo, autor, subtitulo, pais, ano, isbn, capa_url, observacoes, status, livro_id, ordem, criado_em) "
+                "(id, projeto_id, titulo, autor, subtitulo, pais, pais_codigo, ano, isbn, capa_url, observacoes, status, livro_id, ordem, criado_em) "
                 f"VALUES ({valores});"
             )
     linhas.append("")
@@ -1193,36 +1322,186 @@ def projeto_detalhe(projeto_id):
     )
 
 
-def _extrair_campos_item_do_form():
-    status = request.form.get("status", "").strip()
-    if status not in STATUS_ITEM:
-        status = "nao_tenho"
+@app.route("/projetos/<int:projeto_id>/paises")
+def projeto_paises(projeto_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
 
-    ano_raw = request.form.get("ano", "").strip()
-    ano = None
-    if ano_raw:
-        try:
-            ano = int(ano_raw)
-        except ValueError:
-            ano = None
+    filtro = request.args.get("filtro", "lidos").strip()
+    if filtro not in ("lidos", "nao_lidos", "com_recomendacoes", "todos"):
+        filtro = "lidos"
 
-    isbn = limpar_texto(request.form.get("isbn"))
-    capa_url = limpar_texto(request.form.get("capa_url"))
+    paises = listar_paises_do_projeto(projeto, filtro)
 
-    if not capa_url and isbn:
-        capa_url = url_capa_open_library(isbn)
+    return render_template(
+        "paises.html",
+        projeto=projeto,
+        paises=paises,
+        filtro=filtro,
+    )
 
-    return {
-        "titulo": (request.form.get("titulo", "") or "").strip(),
-        "autor": (request.form.get("autor", "") or "").strip(),
-        "subtitulo": limpar_texto(request.form.get("subtitulo")),
-        "pais": limpar_texto(request.form.get("pais")),
-        "ano": ano,
-        "isbn": isbn,
-        "capa_url": capa_url,
-        "observacoes": limpar_texto(request.form.get("observacoes")),
-        "status": status,
-    }
+
+@app.route("/projetos/<int:projeto_id>/paises/<codigo>")
+def projeto_pais_detalhe(projeto_id, codigo):
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    codigo = (codigo or "").strip().upper()
+    if codigo not in PAISES_CANONICOS:
+        return f"País '{codigo}' não reconhecido.", 404
+
+    nome = PAISES_CANONICOS[codigo]
+
+    livros_lidos, itens_lidos = listar_livros_lidos_do_pais(codigo)
+    recomendacoes = listar_recomendacoes_do_pais(projeto, codigo)
+
+    return render_template(
+        "pais.html",
+        projeto=projeto,
+        codigo=codigo,
+        nome=nome,
+        livros_lidos=livros_lidos,
+        itens_lidos=itens_lidos,
+        recomendacoes=recomendacoes,
+        status_rotulo=STATUS_ROTULO,
+    )
+
+
+@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/nova", methods=["GET", "POST"])
+def recomendacao_nova(projeto_id, codigo):
+    projeto = db.get_or_404(Projeto, projeto_id)
+
+    codigo = (codigo or "").strip().upper()
+    if codigo not in PAISES_CANONICOS:
+        return f"País '{codigo}' não reconhecido.", 404
+
+    nome = PAISES_CANONICOS[codigo]
+
+    if request.method == "POST":
+        dados = _extrair_campos_item_do_form()
+        dados["pais"] = nome
+        dados["pais_codigo"] = codigo
+
+        if not dados["titulo"] or not dados["autor"]:
+            return render_template(
+                "item_novo.html",
+                projeto=projeto,
+                status_item=STATUS_ITEM,
+                status_rotulo=STATUS_ROTULO,
+                valores=dados,
+                erro="Título e autor são obrigatórios.",
+                pais_fixo={"codigo": codigo, "nome": nome},
+            ), 400
+
+        item = ItemProjeto(
+            projeto_id=projeto.id,
+            titulo=dados["titulo"],
+            autor=dados["autor"],
+            subtitulo=dados["subtitulo"],
+            pais=nome,
+            pais_codigo=codigo,
+            ano=dados["ano"],
+            isbn=dados["isbn"],
+            capa_url=dados["capa_url"],
+            observacoes=dados["observacoes"],
+            status=dados["status"],
+        )
+        db.session.add(item)
+        db.session.flush()
+        tentar_vincular_item(item)
+        db.session.commit()
+
+        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
+
+    return render_template(
+        "item_novo.html",
+        projeto=projeto,
+        status_item=STATUS_ITEM,
+        status_rotulo=STATUS_ROTULO,
+        valores={},
+        erro=None,
+        pais_fixo={"codigo": codigo, "nome": nome},
+    )
+
+
+@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/editar", methods=["GET", "POST"])
+def recomendacao_editar(projeto_id, codigo, item_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+    item = db.get_or_404(ItemProjeto, item_id)
+
+    codigo = (codigo or "").strip().upper()
+    if codigo not in PAISES_CANONICOS:
+        return f"País '{codigo}' não reconhecido.", 404
+
+    if item.projeto_id != projeto.id:
+        return "Este item não pertence a este projeto.", 404
+
+    nome = PAISES_CANONICOS[codigo]
+
+    if request.method == "POST":
+        dados = _extrair_campos_item_do_form()
+        dados["pais"] = nome
+        dados["pais_codigo"] = codigo
+
+        if not dados["titulo"] or not dados["autor"]:
+            return render_template(
+                "item_editar.html",
+                projeto=projeto,
+                item=item,
+                status_item=STATUS_ITEM,
+                status_rotulo=STATUS_ROTULO,
+                erro="Título e autor são obrigatórios.",
+                pais_fixo={"codigo": codigo, "nome": nome},
+            ), 400
+
+        item.titulo = dados["titulo"]
+        item.autor = dados["autor"]
+        item.subtitulo = dados["subtitulo"]
+        item.pais = nome
+        item.pais_codigo = codigo
+        item.ano = dados["ano"]
+        item.isbn = dados["isbn"]
+        item.capa_url = dados["capa_url"]
+        item.observacoes = dados["observacoes"]
+        item.status = dados["status"]
+
+        db.session.flush()
+        tentar_vincular_item(item)
+        db.session.commit()
+        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
+
+    return render_template(
+        "item_editar.html",
+        projeto=projeto,
+        item=item,
+        status_item=STATUS_ITEM,
+        status_rotulo=STATUS_ROTULO,
+        erro=None,
+        pais_fixo={"codigo": codigo, "nome": nome},
+    )
+
+
+@app.route("/projetos/<int:projeto_id>/paises/<codigo>/recomendacoes/<int:item_id>/excluir", methods=["GET", "POST"])
+def recomendacao_excluir(projeto_id, codigo, item_id):
+    projeto = db.get_or_404(Projeto, projeto_id)
+    item = db.get_or_404(ItemProjeto, item_id)
+
+    codigo = (codigo or "").strip().upper()
+    if codigo not in PAISES_CANONICOS:
+        return f"País '{codigo}' não reconhecido.", 404
+
+    if item.projeto_id != projeto.id:
+        return "Este item não pertence a este projeto.", 404
+
+    if request.method == "POST":
+        db.session.delete(item)
+        db.session.commit()
+        return redirect(url_for("projeto_pais_detalhe", projeto_id=projeto.id, codigo=codigo))
+
+    return render_template(
+        "item_excluir.html",
+        projeto=projeto,
+        item=item,
+        status_rotulo=STATUS_ROTULO,
+    )
 
 
 @app.route("/projetos/<int:projeto_id>/itens/novo", methods=["GET", "POST"])
@@ -1240,6 +1519,7 @@ def item_novo(projeto_id):
                 status_rotulo=STATUS_ROTULO,
                 valores=dados,
                 erro="Título e autor são obrigatórios.",
+                pais_fixo=None,
             ), 400
 
         item = ItemProjeto(
@@ -1248,6 +1528,7 @@ def item_novo(projeto_id):
             autor=dados["autor"],
             subtitulo=dados["subtitulo"],
             pais=dados["pais"],
+            pais_codigo=dados["pais_codigo"],
             ano=dados["ano"],
             isbn=dados["isbn"],
             capa_url=dados["capa_url"],
@@ -1269,6 +1550,7 @@ def item_novo(projeto_id):
         status_rotulo=STATUS_ROTULO,
         valores={},
         erro=None,
+        pais_fixo=None,
     )
 
 
@@ -1291,12 +1573,14 @@ def item_editar(projeto_id, item_id):
                 status_item=STATUS_ITEM,
                 status_rotulo=STATUS_ROTULO,
                 erro="Título e autor são obrigatórios.",
+                pais_fixo=None,
             ), 400
 
         item.titulo = dados["titulo"]
         item.autor = dados["autor"]
         item.subtitulo = dados["subtitulo"]
         item.pais = dados["pais"]
+        item.pais_codigo = dados["pais_codigo"]
         item.ano = dados["ano"]
         item.isbn = dados["isbn"]
         item.capa_url = dados["capa_url"]
@@ -1315,6 +1599,7 @@ def item_editar(projeto_id, item_id):
         status_item=STATUS_ITEM,
         status_rotulo=STATUS_ROTULO,
         erro=None,
+        pais_fixo=None,
     )
 
 
@@ -1427,12 +1712,15 @@ def projeto_importar(projeto_id):
                 )
 
             for r in linhas_validas:
+                pais_texto = r["pais"]
+                pais_codigo = codigo_pais_do_texto(pais_texto) if pais_texto else None
                 item = ItemProjeto(
                     projeto_id=projeto.id,
                     titulo="A definir",
                     autor=r["autor"],
                     subtitulo=r["subtitulo"],
-                    pais=r["pais"],
+                    pais=pais_texto,
+                    pais_codigo=pais_codigo,
                     ano=r["ano"],
                     status="nao_tenho",
                 )
