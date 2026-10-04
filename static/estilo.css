@@ -1635,3 +1635,25 @@ input:focus, select:focus, textarea:focus {
 .mapa-aviso-lista li {
     padding: 2px 0;
 }
+
+/* ─────────────────────────────────────────────
+   29. Etapa 8b-a — selo de item de projeto
+   ───────────────────────────────────────────── */
+
+.card-selo-literario {
+    font-size: 0.75rem;
+    margin-right: var(--esp-1);
+    vertical-align: middle;
+    opacity: 0.9;
+    cursor: help;
+}
+
+/* ─────────────────────────────────────────────
+   30. Etapa 8b-b — altura limitada nos quadros de estatísticas
+   ───────────────────────────────────────────── */
+
+.stats-bloco .stats-lista {
+    max-height: 22em;
+    overflow-y: auto;
+    padding-right: var(--esp-2);
+}

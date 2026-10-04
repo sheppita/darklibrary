@@ -63,7 +63,7 @@ STATUS_ROTULO = {
 
 
 # ─────────────────────────────────────────────
-# Países — lista canônica e apelidos (Etapa 8a)
+# Países — lista canônica e apelidos
 # ─────────────────────────────────────────────
 
 PAISES_CANONICOS = {
@@ -174,6 +174,7 @@ class Livro(db.Model):
     isbn = db.Column(db.String(20))
     lido = db.Column(db.Boolean, default=False)
     capa_url = db.Column(db.String(500))
+    literario = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f"<Livro {self.titulo}>"
@@ -389,7 +390,7 @@ def parse_linha_nobel(linha):
 
 
 # ─────────────────────────────────────────────
-# Funções de vinculação e sincronização (Etapa 5)
+# Funções de vinculação e sincronização
 # ─────────────────────────────────────────────
 
 def _livros_em_memoria():
@@ -484,7 +485,7 @@ def preparar_exclusao_de_livro(livro):
 
 
 # ─────────────────────────────────────────────
-# Funções de país e mapa (Etapa 8a)
+# Funções de país e mapa
 # ─────────────────────────────────────────────
 
 _PAIS_CANONICO_NORMALIZADO_CACHE = None
@@ -535,7 +536,10 @@ def montar_dados_do_mapa():
         })
         dados[codigo]["total"] += 1
 
-    livros_lidos = Livro.query.filter(Livro.lido.is_(True)).all()
+    livros_lidos = Livro.query.filter(
+        Livro.lido.is_(True),
+        Livro.literario.is_(True),
+    ).all()
     for lv in livros_lidos:
         codigo = codigo_pais_do_texto(lv.pais)
         if codigo:
@@ -565,11 +569,6 @@ def montar_dados_do_mapa():
 
 
 def resumo_do_mapa(dados_mapa):
-    """
-    Recebe o dict devolvido por montar_dados_do_mapa() e devolve um
-    resumo {paises_lidos, total_paises} para exibir na página do
-    projeto Lendo o Mundo.
-    """
     paises_lidos = len(dados_mapa)
     total_paises = len(PAISES_CANONICOS)
     return {
@@ -579,7 +578,7 @@ def resumo_do_mapa(dados_mapa):
 
 
 # ─────────────────────────────────────────────
-# Busca de ISBN (Google Books / Open Library)
+# Busca de ISBN
 # ─────────────────────────────────────────────
 
 def url_capa_open_library(isbn):
@@ -646,6 +645,25 @@ def buscar_open_library(isbn_limpo):
 
 
 # ─────────────────────────────────────────────
+# Utilidade: validação de next (anti open redirect)
+# ─────────────────────────────────────────────
+
+def url_next_valida(url):
+    """
+    Só aceita URLs relativas (começando com '/'), para evitar
+    redirecionamento para sites externos (open redirect).
+    """
+    if not url:
+        return None
+    url = url.strip()
+    if not url.startswith("/"):
+        return None
+    if url.startswith("//"):
+        return None
+    return url
+
+
+# ─────────────────────────────────────────────
 # Rotas — livros
 # ─────────────────────────────────────────────
 
@@ -655,6 +673,7 @@ def home():
     filtro_estante = request.args.get("estante", "").strip().upper()
     filtro_cor = request.args.get("cor", "").strip()
     filtro_status = request.args.get("status", "").strip()
+    filtro_pais = request.args.get("pais", "").strip()
 
     query = Livro.query
 
@@ -672,6 +691,9 @@ def home():
 
     if filtro_cor:
         query = query.filter(Livro.cor_lombada == filtro_cor)
+
+    if filtro_pais:
+        query = query.filter(Livro.pais == filtro_pais)
 
     if filtro_status == "lido":
         query = query.filter(Livro.lido.is_(True))
@@ -720,6 +742,19 @@ def home():
         key=chave_ordenacao_estante_simples,
     )
 
+    paises_disponiveis = sorted(
+        [p for (p,) in db.session.query(Livro.pais).distinct().all() if p],
+        key=lambda s: normalizar_texto(s),
+    )
+
+    # Monta a URL atual (com filtros) para passar aos links de editar.
+    # Isso permite que o usuário volte exatamente para o mesmo estado.
+    args_atuais = request.args.to_dict(flat=True)
+    next_url = request.path
+    if args_atuais:
+        from urllib.parse import urlencode
+        next_url = f"{request.path}?{urlencode(args_atuais)}"
+
     return render_template(
         "lista.html",
         grupos=grupos_com_gradiente,
@@ -728,8 +763,11 @@ def home():
         filtro_estante=filtro_estante,
         filtro_cor=filtro_cor,
         filtro_status=filtro_status,
+        filtro_pais=filtro_pais,
         estantes=estantes_disponiveis,
+        paises=paises_disponiveis,
         cores=CORES_ORDEM,
+        next_url=next_url,
     )
 
 
@@ -742,6 +780,8 @@ def novo():
             item_origem = db.session.get(ItemProjeto, int(item_id_raw))
         except (ValueError, TypeError):
             item_origem = None
+
+    next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
 
     if request.method == "POST":
         isbn = request.form.get("isbn", "").strip() or None
@@ -756,6 +796,7 @@ def novo():
             isbn=isbn,
             lido=("lido" in request.form),
             capa_url=capa_form or url_capa_open_library(isbn),
+            literario=("literario" in request.form),
         )
         db.session.add(livro)
         db.session.flush()
@@ -769,6 +810,8 @@ def novo():
 
         if item_origem is not None:
             return redirect(url_for("projeto_detalhe", projeto_id=item_origem.projeto_id))
+        if next_url:
+            return redirect(next_url)
         return redirect(url_for("home"))
 
     if item_origem is not None:
@@ -787,12 +830,15 @@ def novo():
         cores=CORES_ORDEM,
         valores=valores,
         item_origem=item_origem,
+        next_url=next_url,
     )
 
 
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
 def editar(livro_id):
     livro = db.get_or_404(Livro, livro_id)
+
+    next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
 
     if request.method == "POST":
         isbn = request.form.get("isbn", "").strip() or None
@@ -808,6 +854,7 @@ def editar(livro_id):
         livro.isbn = isbn
         livro.lido = ("lido" in request.form)
         livro.capa_url = capa_form or url_capa_open_library(isbn)
+        livro.literario = ("literario" in request.form)
 
         db.session.flush()
 
@@ -817,22 +864,30 @@ def editar(livro_id):
         tentar_vincular_livro(livro)
 
         db.session.commit()
+
+        if next_url:
+            return redirect(next_url)
         return redirect(url_for("home"))
 
-    return render_template("editar.html", livro=livro, cores=CORES_ORDEM)
+    return render_template("editar.html", livro=livro, cores=CORES_ORDEM, next_url=next_url)
 
 
 @app.route("/excluir/<int:livro_id>", methods=["GET", "POST"])
 def excluir(livro_id):
     livro = db.get_or_404(Livro, livro_id)
 
+    next_url = url_next_valida(request.args.get("next") or request.form.get("next"))
+
     if request.method == "POST":
         preparar_exclusao_de_livro(livro)
         db.session.delete(livro)
         db.session.commit()
+
+        if next_url:
+            return redirect(next_url)
         return redirect(url_for("home"))
 
-    return render_template("excluir.html", livro=livro)
+    return render_template("excluir.html", livro=livro, next_url=next_url)
 
 
 @app.route("/estatisticas")
@@ -845,6 +900,16 @@ def estatisticas():
         pct_lidos = round(total_lidos / total * 100)
     else:
         pct_lidos = 0
+
+    total_literarios = Livro.query.filter(Livro.literario.is_(True)).count()
+    total_nao_literarios = total - total_literarios
+
+    total_autores_distintos = (
+        db.session.query(db.func.count(db.func.distinct(Livro.autor))).scalar() or 0
+    )
+    total_paises_distintos = (
+        db.session.query(db.func.count(db.func.distinct(Livro.pais))).scalar() or 0
+    )
 
     por_estante_raw = (
         db.session.query(Livro.estante, db.func.count(Livro.id))
@@ -887,6 +952,10 @@ def estatisticas():
         total_lidos=total_lidos,
         total_nao_lidos=total_nao_lidos,
         pct_lidos=pct_lidos,
+        total_literarios=total_literarios,
+        total_nao_literarios=total_nao_literarios,
+        total_autores_distintos=total_autores_distintos,
+        total_paises_distintos=total_paises_distintos,
         por_estante=por_estante,
         top_autores=top_autores,
         por_pais=por_pais,
@@ -942,9 +1011,10 @@ def backup():
                 sql_escape(livro.isbn),
                 sql_escape(livro.lido),
                 sql_escape(livro.capa_url),
+                sql_escape(livro.literario),
             ])
             linhas.append(
-                "INSERT INTO livro (id, titulo, autor, pais, cor_lombada, estante, isbn, lido, capa_url) "
+                "INSERT INTO livro (id, titulo, autor, pais, cor_lombada, estante, isbn, lido, capa_url, literario) "
                 f"VALUES ({valores});"
             )
     linhas.append("")

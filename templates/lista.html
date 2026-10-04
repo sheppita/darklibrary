@@ -23,6 +23,16 @@
             </div>
 
             <div class="campo">
+                <label for="pais">País</label>
+                <select id="pais" name="pais">
+                    <option value="">— Todos —</option>
+                    {% for p in paises %}
+                        <option value="{{ p }}" {% if p == filtro_pais %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo">
                 <label for="cor">Cor da lombada</label>
                 <select id="cor" name="cor">
                     <option value="">Todas</option>
@@ -77,7 +87,11 @@
                         {% endif %}
 
                         <div class="card-conteudo">
-                            <div class="card-titulo">{{ livro.titulo }}</div>
+                            <div class="card-titulo">
+                                 {% if livro.literario %}<span class="card-selo-literario" title="Item de Projeto">🖤</span>{% endif %}
+                                {{ livro.titulo }}
+                            </div>
+
                             <div class="card-autor">{{ livro.autor }}</div>
                             <div class="card-meta">
                                 {% if livro.cor_lombada %}
@@ -89,8 +103,12 @@
                                     <span class="card-meta-item card-meta-nao-lido">⏳ Não lido</span>
                                 {% endif %}
                                 <span class="card-acoes">
-                                    <a href="{{ url_for('editar', livro_id=livro.id) }}" class="card-acao" title="Editar">✎</a>
-                                    <a href="{{ url_for('excluir', livro_id=livro.id) }}" class="card-acao card-acao-perigo" title="Excluir">🗑</a>
+                                    <a class="card-acao" 
+                                        href="{{ url_for('editar', livro_id=livro.id, next=next_url) }}"
+                                        title="Editar">✎</a>
+                                    <a class="card-acao card-acao-perigo"
+                                        href="{{ url_for('excluir', livro_id=livro.id, next=next_url) }}"
+                                        title="Excluir">🗑</a>
                                 </span>
                             </div>
                         </div>

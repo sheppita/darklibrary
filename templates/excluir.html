@@ -39,8 +39,15 @@
         </div>
 
         <form method="POST" class="excluir-acoes">
+            {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+            {% endif %}
             <button type="submit" class="botao-perigo">Sim, excluir</button>
-            <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% if next_url %}
+                <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% endif %}
         </form>
 
     </div>

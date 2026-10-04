@@ -31,7 +31,7 @@
                 <div class="stats-barra-preenchida" style="width: {{ pct_lidos }}%;"></div>
             </div>
             <div class="stats-barra-legenda">
-                {{ pct_lidos }}% lido &middot; {{ 100 - pct_lidos }}% por ler
+                {{ pct_lidos }}% lido · {{ 100 - pct_lidos }}% por ler
             </div>
         </div>
     {% endif %}
@@ -57,7 +57,7 @@
         {# Top autores #}
         {% if top_autores %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Top autores</h2>
+            <h2 class="stats-bloco-titulo">Top Autores ({{ total_autores_distintos }})</h2>
             <ul class="stats-lista">
                 {% for autor, n in top_autores %}
                     <li>
@@ -72,7 +72,7 @@
         {# Por país #}
         {% if por_pais %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Por país</h2>
+            <h2 class="stats-bloco-titulo">Por País ({{ total_paises_distintos }})</h2>
             <ul class="stats-lista">
                 {% for pais, n in por_pais %}
                     <li>
@@ -106,6 +106,21 @@
                         <span class="stats-n">{{ sem_cor }}</span>
                     </li>
                 {% endif %}
+            </ul>
+        </div>
+
+        {# Itens de projeto #}
+        <div class="stats-bloco">
+            <h2 class="stats-bloco-titulo">Itens de projeto</h2>
+            <ul class="stats-lista">
+                <li>
+                    <span>Item de Projeto?</span>
+                    <span class="stats-n">{{ total_literarios }}</span>
+                </li>
+                <li>
+                    <span>Não é item de projeto</span>
+                    <span class="stats-n">{{ total_nao_literarios }}</span>
+                </li>
             </ul>
         </div>
 
