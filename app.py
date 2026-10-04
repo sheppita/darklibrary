@@ -173,6 +173,17 @@ class Livro(db.Model):
     capa_url = db.Column(db.String(500))
     literario = db.Column(db.Boolean, default=False)
 
+    # ── Campos novos da Etapa 20 (Reforma) ──
+    tenho = db.Column(db.Boolean, default=True, nullable=False)
+    projeto_nobel = db.Column(db.Boolean, default=False, nullable=False)
+    projeto_mundo = db.Column(db.Boolean, default=False, nullable=False)
+    projeto_postgrad = db.Column(db.Boolean, default=False, nullable=False)
+    projeto_tbr = db.Column(db.Boolean, default=False, nullable=False)
+    postgrad_subprojeto = db.Column(db.String(20))
+    subtitulo = db.Column(db.String(200))
+    ano = db.Column(db.Integer)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
     def __repr__(self):
         return f"<Livro {self.titulo}>"
 
@@ -539,6 +550,7 @@ def _montar_livros_lidos_do_projeto(dados_mapa):
                 "autor": livro.get("autor", ""),
                 "pais": nome_pais,
                 "origem": livro.get("origem", ""),
+                "capa_url": livro.get("capa_url", ""),
             })
 
     livros.sort(key=lambda lv: (lv["pais"].lower(), lv["titulo"].lower()))
