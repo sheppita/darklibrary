@@ -12,7 +12,7 @@
             <form method="POST" action="{{ url_for('projeto_vincular_automaticamente', projeto_id=projeto.id) }}" class="form-inline">
                 <button type="submit" class="botao-secundario botao-pequeno">Vincular automaticamente</button>
             </form>
-            <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os projetos</a>
+            <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os Projetos</a>
         </div>
     </div>
 
@@ -35,7 +35,7 @@
         {% if dados_mapa is not none %}
         <div class="mapa-wrapper">
 
-            <h2 class="projeto-secao-titulo">Mapa do mundo</h2>
+            <h2 class="projeto-secao-titulo">Mapa do Mundo</h2>
 
             <p class="mapa-legenda">
                 Países coloridos = você já leu pelo menos um livro daquele país.
@@ -44,7 +44,7 @@
 
             <div class="mapa-container">
                 <div id="mapa-svg" class="mapa-svg" data-dados='{{ dados_mapa | tojson }}'>
-                    <p class="mapa-carregando">Carregando mapa…</p>
+                    <p class="mapa-carregando">Carregando Mapa…</p>
                 </div>
             </div>
 
@@ -113,15 +113,15 @@
         <div class="projeto-resumo">
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ resumo_mapa.paises_lidos }}</span>
-                <span class="projeto-resumo-rotulo">Países lidos</span>
+                <span class="projeto-resumo-rotulo">Países Lidos</span>
             </div>
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ resumo_mapa.total_paises }}</span>
-                <span class="projeto-resumo-rotulo">Total de países</span>
+                <span class="projeto-resumo-rotulo">Total de Países</span>
             </div>
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ pct_mapa if resumo_mapa.total_paises > 0 else 0 }}%</span>
-                <span class="projeto-resumo-rotulo">Cobertura</span>
+                <span class="projeto-resumo-rotulo">Status</span>
             </div>
         </div>
 
@@ -142,15 +142,15 @@
         <div class="projeto-resumo">
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ lidos }}</span>
-                <span class="projeto-resumo-rotulo">Lidos</span>
+                <span class="projeto-resumo-rotulo">Lido</span>
             </div>
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
-                <span class="projeto-resumo-rotulo">Tenho, não li</span>
+                <span class="projeto-resumo-rotulo">Tenho, Não Li</span>
             </div>
             <div class="projeto-resumo-item">
                 <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
-                <span class="projeto-resumo-rotulo">Não tenho</span>
+                <span class="projeto-resumo-rotulo">Não Tenho</span>
             </div>
         </div>
 
@@ -158,7 +158,7 @@
 
     {% if itens %}
 
-        <h2 class="projeto-secao-titulo">Itens do projeto</h2>
+        <h2 class="projeto-secao-titulo">Itens de Projeto</h2>
 
         <div class="lista-itens">
             {% for item in itens %}
@@ -199,7 +199,7 @@
                            title="Editar">✎</a>
                         <a class="card-item-acao card-item-acao-perigo"
                            href="{{ url_for('item_excluir', projeto_id=projeto.id, item_id=item.id) }}"
-                           title="Excluir">🗑</a>
+                           title="Excluir">❌</a>
                     </div>
 
                 </div>
@@ -208,15 +208,15 @@
 
     {% else %}
 
-        <p class="vazio">Este projeto ainda não tem itens.</p>
+        <p class="vazio">Este Projeto não tem Itens.</p>
 
         <p class="vazio" style="margin-top: 0;">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="link-voltar">
-                Adicionar o primeiro item →
+                Adicionar o Primeiro Item →
             </a>
             &nbsp;·&nbsp;
             <a href="{{ url_for('projeto_importar', projeto_id=projeto.id) }}" class="link-voltar">
-                Importar em massa →
+                Importar em Massa →
             </a>
         </p>
 

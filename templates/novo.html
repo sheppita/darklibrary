@@ -5,7 +5,7 @@
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Novo livro</h1>
+        <h1>Novo Livro</h1>
         {% if item_origem %}
             <a href="{{ url_for('projeto_detalhe', projeto_id=item_origem.projeto_id) }}" class="link-voltar">← Voltar</a>
         {% else %}
@@ -41,7 +41,7 @@
         </div>
 
         <div class="campo">
-            <label for="capa_url">URL da capa (opcional)</label>
+            <label for="capa_url">URL da Capa (Opcional)</label>
             <input type="text" id="capa_url" name="capa_url" maxlength="500"
                    value="{{ valores.capa_url or '' }}"
                    placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem">
@@ -77,7 +77,7 @@
         </div>
 
         <div class="campo">
-            <label for="cor_lombada">Cor da lombada</label>
+            <label for="cor_lombada">Cor da Lombada</label>
             <select id="cor_lombada" name="cor_lombada">
                 <option value="">— Selecione —</option>
                 {% for cor in cores %}
@@ -88,7 +88,7 @@
 
         <div class="campo-checkbox">
             <input type="checkbox" id="lido" name="lido">
-            <label for="lido">Já li este livro</label>
+            <label for="lido">Lido?</label>
         </div>
 
         <div class="campo-checkbox">
@@ -110,8 +110,8 @@
     {# ─────────── Overlay do scanner (escondido por padrão) ─────────── #}
     <div id="scanner-overlay" class="scanner-overlay" hidden>
         <div class="scanner-conteudo">
-            <h2>Escaneie o código de barras</h2>
-            <p class="scanner-dica">Aponte a câmera para o código de barras do livro (na contracapa).</p>
+            <h2>Escaneie o Código de Barras</h2>
+            <p class="scanner-dica">Aponte a câmera para o código de barras do livro.</p>
 
         <div class="scanner-video-wrap">
                 <video id="scanner-video" autoplay playsinline muted></video>

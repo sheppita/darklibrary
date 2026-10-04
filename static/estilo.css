@@ -8,9 +8,9 @@
 
 :root {
     /* Cores principais */
-    --cor-fundo:        #f7f5f0;
-    --cor-superficie:   #ffffff;
-    --cor-texto:        #1a1a1a;
+    --cor-fundo:        #e7e1d1;
+    --cor-superficie:   #f5f4f1;
+    --cor-texto:        #000000;
     --cor-texto-suave:  #6b6b6b;
     --cor-borda:        #e5e1d8;
 
@@ -24,16 +24,16 @@
     --cor-perigo:       #c62828;
 
     /* Cores da lombada (para usar em JS/CSS mais tarde) */
-    --lombada-branco:   #f0ede6;
-    --lombada-verde:    #4a7c59;
-    --lombada-azul:     #3d5a80;
-    --lombada-rosa:     #d88ba6;
-    --lombada-marrom:   #7a5c3e;
-    --lombada-vermelho: #b33a3a;
-    --lombada-laranja:  #d97736;
-    --lombada-amarelo:  #e0b73c;
+    --lombada-branco:   #ffffff;
+    --lombada-verde:    #208d41;
+    --lombada-azul:     #238ea8;
+    --lombada-rosa:     #db7e9e;
+    --lombada-marrom:   #5a4128;
+    --lombada-vermelho: #d62626;
+    --lombada-laranja:  #dd6c20;
+    --lombada-amarelo:  #e6b41e;
     --lombada-cinza:    #9a9a9a;
-    --lombada-preto:    #2a2a2a;
+    --lombada-preto:    #0a0a0a;
     --lombada-multi:    #e8dfc9; /* bege, como combinado */
 
     /* Tipografia */
@@ -52,7 +52,6 @@
     /* Outros */
     --raio: 8px;
     --sombra-suave: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
-    --altura-cabecalho: 56px;
 }
 
 /* ─────────────────────────────────────────────
@@ -70,7 +69,7 @@ html, body {
 
 body {
     font-family: var(--fonte-corpo);
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.5;
     color: var(--cor-texto);
     background-color: var(--cor-fundo);
@@ -85,7 +84,7 @@ h1, h2, h3, h4 {
     color: var(--cor-texto);
 }
 
-h1 { font-size: 1.75rem; }
+h1 { font-size: 1.50rem; }
 h2 { font-size: 1.25rem; }
 
 p { margin: 0 0 var(--esp-4) 0; }
@@ -119,7 +118,7 @@ button:hover { opacity: 0.85; }
 
 input, select, textarea {
     font-family: inherit;
-    font-size: 16px; /* 16px evita zoom automático no iOS */
+    font-size: 14px; /* 16px evita zoom automático no iOS */
     color: var(--cor-texto);
     background-color: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
@@ -169,7 +168,7 @@ input:focus, select:focus, textarea:focus {
 
 .menu a {
     color: var(--cor-texto);
-    font-size: 0.95rem;
+    font-size: 1.00rem;
     font-weight: 500;
 }
 
@@ -254,13 +253,13 @@ input:focus, select:focus, textarea:focus {
 
 @media (min-width: 1200px) {
     .lista-livros {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
-@media (min-width: 1500px) {
+@media (min-width: 1600px) {
     .lista-livros {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(6, 1fr);
     }
 }
 
@@ -341,14 +340,14 @@ input:focus, select:focus, textarea:focus {
 
 .card-titulo {
     font-family: var(--fonte-titulo);
-    font-size: 1.05rem;
+    font-size: 1.00rem;
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.00;
     color: var(--cor-texto);
 }
 
 .card-autor {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--cor-texto-suave);
 }
 
@@ -358,7 +357,7 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     flex-wrap: wrap;
     gap: var(--esp-2);
-    font-size: 0.8rem;
+    font-size: 0.6rem;
 }
 
 /* ─────────────────────────────────────────────
@@ -700,8 +699,8 @@ input:focus, select:focus, textarea:focus {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: var(--raio);
     background-color: var(--cor-fundo);
     border: 1px solid var(--cor-borda);

@@ -5,7 +5,7 @@
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Excluir item</h1>
+        <h1>Excluir Item</h1>
         <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
             ← Voltar para {{ projeto.nome }}
         </a>
@@ -14,7 +14,7 @@
     <div class="excluir-caixa">
 
         <p class="excluir-aviso">
-            Esta ação não pode ser desfeita. O item será removido do projeto
+            Esta ação NÃO PODE ser desfeita. O item será removido do projeto!
             <strong>{{ projeto.nome }}</strong>.
         </p>
 
@@ -46,7 +46,7 @@
         </div>
 
         <form method="POST" class="excluir-acoes">
-            <button type="submit" class="botao-perigo">Excluir definitivamente</button>
+            <button type="submit" class="botao-perigo">Excluir Definitivamente</button>
             <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-cancelar">Cancelar</a>
         </form>
 

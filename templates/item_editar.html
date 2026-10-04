@@ -5,7 +5,7 @@
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Editar item</h1>
+        <h1>Editar Item</h1>
         <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
             ← Voltar para {{ projeto.nome }}
         </a>
@@ -18,7 +18,7 @@
     <form method="POST" class="form-cadastro">
 
         <div class="campo">
-            <label for="isbn">ISBN (opcional)</label>
+            <label for="isbn">ISBN (Opcional)</label>
             <div class="campo-com-botao">
                 <input type="text" id="isbn" name="isbn" maxlength="20" inputmode="numeric"
                        value="{{ item.isbn or '' }}"
@@ -41,18 +41,23 @@
         </div>
 
         <div class="campo">
-            <label for="subtitulo">Subtítulo (opcional)</label>
+            <label for="subtitulo">Subtítulo (Opcional)</label>
             <input type="text" id="subtitulo" name="subtitulo" maxlength="200"
                    value="{{ item.subtitulo or '' }}"
                    placeholder="Ex.: laureado Nobel 1901">
         </div>
 
-        <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>
-                <input type="text" id="pais" name="pais" maxlength="80"
-                       value="{{ item.pais or '' }}"
-                       placeholder="Ex.: Rússia">
+                {% if pais_fixo %}
+                    <input type="text" id="pais" name="pais" maxlength="80"
+                           value="{{ pais_fixo.nome }}" readonly>
+                    <input type="hidden" name="pais_codigo" value="{{ pais_fixo.codigo }}">
+                {% else %}
+                    <input type="text" id="pais" name="pais" maxlength="80"
+                           value="{{ item.pais or '' }}"
+                           placeholder="Ex.: Rússia">
+                {% endif %}
             </div>
 
             <div class="campo">
@@ -75,20 +80,20 @@
         </div>
 
         <div class="campo">
-            <label for="capa_url">URL da capa (opcional)</label>
+            <label for="capa_url">URL da Capa (Opcional)</label>
             <input type="text" id="capa_url" name="capa_url" maxlength="500"
                    value="{{ item.capa_url or '' }}"
                    placeholder="Deixe vazio para buscar automático pelo ISBN, ou cole uma URL">
         </div>
 
         <div class="campo">
-            <label for="observacoes">Observações (opcional)</label>
+            <label for="observacoes">Observações (Opcional)</label>
             <textarea id="observacoes" name="observacoes" rows="3"
-                      placeholder="Notas pessoais sobre este item">{{ item.observacoes or '' }}</textarea>
+                      placeholder="Notas sobre este item">{{ item.observacoes or '' }}</textarea>
         </div>
 
         <div class="acoes-form">
-            <button type="submit">Salvar alterações</button>
+            <button type="submit">Salvar Alterações</button>
             <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-cancelar">Cancelar</a>
         </div>
 

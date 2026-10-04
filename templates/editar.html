@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Editar livro{% endblock %}
+{% block titulo %}Dark Library — Editar Livro{% endblock %}
 
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Editar livro</h1>
+        <h1>Editar Livro</h1>
         <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
     </div>
 
@@ -27,12 +27,12 @@
         </div>
 
         <div class="campo">
-            <label for="capa_url">URL da capa (opcional)</label>
+            <label for="capa_url">URL da Capa (Opcional)</label>
             <input type="text" id="capa_url" name="capa_url" maxlength="500"
                    value="{{ livro.capa_url or '' }}"
-                   placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem">
+                   placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem.">
             <div id="preview-capa" class="preview-capa" {% if not livro.capa_url %}hidden{% endif %}>
-                <img id="preview-capa-img" src="{{ livro.capa_url or '' }}" alt="Prévia da capa">
+                <img id="preview-capa-img" src="{{ livro.capa_url or '' }}" alt="Prévia da Capa">
             </div>
         </div>
 
@@ -63,7 +63,7 @@
         </div>
 
         <div class="campo">
-            <label for="cor_lombada">Cor da lombada</label>
+            <label for="cor_lombada">Lombada</label>
             <select id="cor_lombada" name="cor_lombada">
                 <option value="">— Selecione —</option>
                 {% for cor in cores %}
@@ -74,7 +74,7 @@
 
         <div class="campo-checkbox">
             <input type="checkbox" id="lido" name="lido" {% if livro.lido %}checked{% endif %}>
-            <label for="lido">Já li este livro</label>
+            <label for="lido">Lido</label>
         </div>
 
         <div class="campo-checkbox">
@@ -83,7 +83,7 @@
         </div>
 
         <div class="acoes-form">
-            <button type="submit">Salvar alterações</button>
+            <button type="submit">Salvar Alterações</button>
             {% if next_url %}
                  <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
             {% else %}

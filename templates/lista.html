@@ -7,7 +7,7 @@
     <form method="GET" action="{{ url_for('home') }}" class="form-filtros">
 
         <div class="campo">
-            <label for="q">Buscar por título ou autor</label>
+            <label for="q">Buscar por Título ou Autor</label>
             <input type="text" id="q" name="q" value="{{ busca }}" placeholder="Ex.: machado">
         </div>
 
@@ -33,7 +33,7 @@
             </div>
 
             <div class="campo">
-                <label for="cor">Cor da lombada</label>
+                <label for="cor">Cor da Lombada</label>
                 <select id="cor" name="cor">
                     <option value="">Todas</option>
                     {% for c in cores %}
@@ -53,8 +53,8 @@
         </div>
 
         <div class="acoes-filtros">
-            <button type="submit">Filtrar</button>
-            <a href="{{ url_for('home') }}" class="link-limpar">Limpar filtros</a>
+            <button type="submit">FILTRAR</button>
+            <a href="{{ url_for('home') }}" class="link-limpar">Limpar Filtros</a>
         </div>
 
     </form>
@@ -108,7 +108,7 @@
                                         title="Editar">✎</a>
                                     <a class="card-acao card-acao-perigo"
                                         href="{{ url_for('excluir', livro_id=livro.id, next=next_url) }}"
-                                        title="Excluir">🗑</a>
+                                        title="Excluir">❌</a>
                                 </span>
                             </div>
                         </div>
@@ -119,8 +119,8 @@
         {% endfor %}
 
     {% else %}
-        <p class="vazio">Nenhum livro encontrado com esses critérios.</p>
-        <p class="vazio"><a href="{{ url_for('home') }}">Limpar filtros</a></p>
+        <p class="vazio">Nenhum Livro Encontrado com esses Critérios.</p>
+        <p class="vazio"><a href="{{ url_for('home') }}">Limpar Filtros</a></p>
     {% endif %}
 
 {% endblock %}

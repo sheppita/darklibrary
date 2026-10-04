@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Excluir livro{% endblock %}
+{% block titulo %}Dark Library — Excluir Livro{% endblock %}
 
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Excluir livro</h1>
+        <h1>Excluir Livro</h1>
         <a href="{{ url_for('home') }}" class="link-voltar">← Voltar</a>
     </div>
 
     <div class="excluir-caixa">
 
         <p class="excluir-aviso">
-            Tem certeza que quer excluir este livro? Esta ação não pode ser desfeita.
+            Tem certeza que quer excluir este livro? Esta ação NÃO PODE ser desfeita!
         </p>
 
         <div class="excluir-info">
@@ -42,7 +42,7 @@
             {% if next_url %}
                 <input type="hidden" name="next" value="{{ next_url }}">
             {% endif %}
-            <button type="submit" class="botao-perigo">Sim, excluir</button>
+            <button type="submit" class="botao-perigo">Sim, Excluir</button>
             {% if next_url %}
                 <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
             {% else %}

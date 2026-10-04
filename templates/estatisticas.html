@@ -12,7 +12,7 @@
     <div class="stats-resumo">
         <div class="stat-card">
             <div class="stat-numero">{{ total }}</div>
-            <div class="stat-rotulo">Livro(s) no total</div>
+            <div class="stat-rotulo">Livro(s) no Total</div>
         </div>
         <div class="stat-card">
             <div class="stat-numero">{{ total_lidos }}</div>
@@ -20,7 +20,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-numero">{{ total_nao_lidos }}</div>
-            <div class="stat-rotulo">Não lido(s)</div>
+            <div class="stat-rotulo">Não Lido(s)</div>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
                 <div class="stats-barra-preenchida" style="width: {{ pct_lidos }}%;"></div>
             </div>
             <div class="stats-barra-legenda">
-                {{ pct_lidos }}% lido · {{ 100 - pct_lidos }}% por ler
+                {{ pct_lidos }}% Lido · {{ 100 - pct_lidos }}% Por Ler
             </div>
         </div>
     {% endif %}
@@ -42,7 +42,7 @@
         {# Por estante #}
         {% if por_estante %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Por estante</h2>
+            <h2 class="stats-bloco-titulo">Estantes</h2>
             <ul class="stats-lista">
                 {% for estante, n in por_estante %}
                     <li>
@@ -57,7 +57,7 @@
         {# Top autores #}
         {% if top_autores %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Top Autores ({{ total_autores_distintos }})</h2>
+            <h2 class="stats-bloco-titulo">Autores ({{ total_autores_distintos }})</h2>
             <ul class="stats-lista">
                 {% for autor, n in top_autores %}
                     <li>
@@ -72,7 +72,7 @@
         {# Por país #}
         {% if por_pais %}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Por País ({{ total_paises_distintos }})</h2>
+            <h2 class="stats-bloco-titulo">Países ({{ total_paises_distintos }})</h2>
             <ul class="stats-lista">
                 {% for pais, n in por_pais %}
                     <li>
@@ -86,7 +86,7 @@
 
         {# Por cor #}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Por cor de lombada</h2>
+            <h2 class="stats-bloco-titulo">Cores de Lombada</h2>
             <ul class="stats-lista">
                 {% for cor, n in por_cor %}
                     <li>
@@ -111,7 +111,7 @@
 
         {# Itens de projeto #}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Itens de projeto</h2>
+            <h2 class="stats-bloco-titulo">Infos para Projetos</h2>
             <ul class="stats-lista">
                 <li>
                     <span>Item de Projeto?</span>
