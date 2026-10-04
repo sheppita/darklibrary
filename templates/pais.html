@@ -25,6 +25,13 @@
             {% for livro in livros_lidos %}
                 <div class="card-item card-item-li">
                     <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if livro.capa_url %}
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
+
                     <div class="card-item-principal">
                         <div class="card-item-titulo">{{ livro.titulo }}</div>
                         <div class="card-item-autor">{{ livro.autor }}</div>
@@ -38,6 +45,13 @@
             {% for item in itens_lidos %}
                 <div class="card-item card-item-li">
                     <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if item.capa_url %}
+                            <img src="{{ item.capa_url }}" alt="Capa de {{ item.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
+
                     <div class="card-item-principal">
                         <div class="card-item-titulo">{{ item.titulo }}</div>
                         {% if item.subtitulo %}
@@ -71,6 +85,12 @@
             {% for item in recomendacoes %}
                 <div class="card-item card-item-{{ item.status }}">
                     <div class="card-item-tarja" aria-hidden="true"></div>
+
+                    <div class="card-item-capa">
+                        {% if item.capa_url %}
+                            <img src="{{ item.capa_url }}" alt="Capa de {{ item.titulo }}" loading="lazy">
+                        {% endif %}
+                    </div>
 
                     <div class="card-item-principal">
                         <div class="card-item-titulo">

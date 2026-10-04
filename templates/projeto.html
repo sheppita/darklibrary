@@ -9,7 +9,6 @@
 
     <div class="pagina-cabecalho">
         <h1>{{ projeto.nome }}</h1>
-        
         <div class="pagina-cabecalho-acoes">
             <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="botao-secundario botao-pequeno">+ Adicionar Item</a>
             <form method="POST" action="{{ url_for('projeto_vincular_automaticamente', projeto_id=projeto.id) }}" class="form-inline">
@@ -18,7 +17,6 @@
             <a href="{{ url_for('projeto_excluir', projeto_id=projeto.id) }}" class="botao-perigo botao-pequeno">Excluir Projeto</a>
             <a href="{{ url_for('projetos') }}" class="link-voltar">← Todos os Projetos</a>
         </div>
-
     </div>
 
     {% if vinculados_msg is not none %}
@@ -174,6 +172,12 @@
                     <div class="card-item card-item-li">
                         <div class="card-item-tarja" aria-hidden="true"></div>
 
+                        <div class="card-item-capa">
+                            {% if livro.capa_url %}
+                                <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                            {% endif %}
+                        </div>
+
                         <div class="card-item-principal">
                             <div class="card-item-titulo">{{ livro.titulo }}</div>
                             <div class="card-item-autor">{{ livro.autor }}</div>
@@ -195,7 +199,31 @@
 
     {% else %}
 
-        {# Projeto NORMAL: mostra "Itens de Projeto" como antes #}
+        {# Projeto NORMAL: filtros em cápsula + lista de itens #}
+
+        <div class="filtros-paises">
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='lido') }}"
+               class="filtro-pais {% if filtro == 'lido' %}filtro-pais-ativo{% endif %}">
+                Lido
+            </a>
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='nao_lido') }}"
+               class="filtro-pais {% if filtro == 'nao_lido' %}filtro-pais-ativo{% endif %}">
+                Não Lido
+            </a>
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='tenho') }}"
+               class="filtro-pais {% if filtro == 'tenho' %}filtro-pais-ativo{% endif %}">
+                Tenho
+            </a>
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='recomendacoes') }}"
+               class="filtro-pais {% if filtro == 'recomendacoes' %}filtro-pais-ativo{% endif %}">
+                Recomendações
+            </a>
+            <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='todos') }}"
+               class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">
+                Todos
+            </a>
+        </div>
+
         {% if itens %}
 
             <h2 class="projeto-secao-titulo">Itens de Projeto</h2>
@@ -205,6 +233,12 @@
                     <div class="card-item card-item-{{ item.status }}">
 
                         <div class="card-item-tarja" aria-hidden="true"></div>
+
+                        <div class="card-item-capa">
+                            {% if item.capa_url %}
+                                <img src="{{ item.capa_url }}" alt="Capa de {{ item.titulo }}" loading="lazy">
+                            {% endif %}
+                        </div>
 
                         <div class="card-item-principal">
                             <div class="card-item-titulo">
@@ -248,13 +282,21 @@
 
         {% else %}
 
-            <p class="vazio">Este Projeto Não Tem Itens.</p>
-
-            <p class="vazio" style="margin-top: 0;">
-                <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="link-voltar">
-                    Adicionar o Primeiro Item →
-                </a>
-            </p>
+            {% if filtro == 'todos' %}
+                <p class="vazio">Este Projeto Não Tem Itens.</p>
+                <p class="vazio" style="margin-top: 0;">
+                    <a href="{{ url_for('item_novo', projeto_id=projeto.id) }}" class="link-voltar">
+                        Adicionar o Primeiro Item →
+                    </a>
+                </p>
+            {% else %}
+                <p class="vazio">Nenhum Item Neste Filtro.</p>
+                <p class="vazio" style="margin-top: 0;">
+                    <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id, filtro='todos') }}" class="link-voltar">
+                        Ver Todos os Itens →
+                    </a>
+                </p>
+            {% endif %}
 
         {% endif %}
 

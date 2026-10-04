@@ -272,9 +272,8 @@ def chave_ordenacao_estante_simples(estante):
     return (1, estante, 0)
 
 def chave_ordenacao_item(item):
-    if item.ordem is not None:
-        return (0, item.ordem, (item.titulo or "").lower())
-    return (1, 0, (item.titulo or "").lower())
+    ano = item.ano if item.ano is not None else 0
+    return (-ano, (item.titulo or "").lower())
 
 def sql_escape(valor):
     if valor is None:
@@ -485,13 +484,14 @@ def montar_dados_do_mapa(projeto):
     dados = {}
     nao_reconhecidos = {}
 
-    def adicionar(codigo, nome, titulo, autor):
+    def adicionar(codigo, nome, titulo, autor, capa_url):
         if codigo not in dados:
             dados[codigo] = {"nome": nome, "livros": [], "total": 0}
         dados[codigo]["livros"].append({
             "titulo": titulo or "(sem título)",
             "autor": autor or "",
             "origem": "projeto",
+            "capa_url": capa_url or "",
         })
         dados[codigo]["total"] += 1
 
@@ -503,7 +503,7 @@ def montar_dados_do_mapa(projeto):
     for it in itens_lidos:
         codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
         if codigo:
-            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor)
+            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor, it.capa_url)
         else:
             chave = (it.pais or "").strip() or "(sem país)"
             nao_reconhecidos.setdefault(chave, []).append({
@@ -1201,10 +1201,27 @@ def projeto_detalhe(projeto_id):
 
     itens = sorted(projeto.itens, key=chave_ordenacao_item)
 
-    total = len(itens)
-    lidos = sum(1 for it in itens if it.status == "li")
-    tenho_nao_li = sum(1 for it in itens if it.status == "tenho_nao_li")
-    nao_tenho = sum(1 for it in itens if it.status == "nao_tenho")
+    # Filtros em cápsula (só para projetos que NÃO são tipo 'mundo')
+    filtro = request.args.get("filtro", "lido").strip()
+    if filtro not in ("lido", "nao_lido", "tenho", "recomendacoes", "todos"):
+        filtro = "lido"
+
+    if projeto.tipo != "mundo":
+        if filtro == "lido":
+            itens = [it for it in itens if it.status == "li"]
+        elif filtro == "nao_lido":
+            itens = [it for it in itens if it.status != "li"]
+        elif filtro == "tenho":
+            itens = [it for it in itens if it.status == "tenho_nao_li"]
+        elif filtro == "recomendacoes":
+            itens = [it for it in itens if it.status == "nao_tenho"]
+        # filtro == "todos": não filtra
+
+    # Contagens do resumo SEMPRE refletem o total do projeto
+    total = len(projeto.itens)
+    lidos = sum(1 for it in projeto.itens if it.status == "li")
+    tenho_nao_li = sum(1 for it in projeto.itens if it.status == "tenho_nao_li")
+    nao_tenho = sum(1 for it in projeto.itens if it.status == "nao_tenho")
 
     pct = round(lidos / total * 100) if total > 0 else 0
 
@@ -1240,6 +1257,7 @@ def projeto_detalhe(projeto_id):
         paises_nao_reconhecidos=paises_nao_reconhecidos,
         resumo_mapa=resumo_mapa,
         livros_lidos_projeto=livros_lidos_projeto,
+        filtro=filtro,
     )
 
 @app.route("/projetos/<int:projeto_id>/paises")
