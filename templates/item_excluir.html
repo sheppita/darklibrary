@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Excluir item{% endblock %}
+{% block titulo %}Dark Library — Excluir Item{% endblock %}
 
 {% block conteudo %}
 
@@ -14,7 +14,7 @@
     <div class="excluir-caixa">
 
         <p class="excluir-aviso">
-            Esta ação NÃO PODE ser desfeita. O item será removido do projeto!
+            Esta ação NÃO PODE ser desfeita. O item será removido do projeto
             <strong>{{ projeto.nome }}</strong>.
         </p>
 
@@ -46,7 +46,7 @@
         </div>
 
         <form method="POST" class="excluir-acoes">
-            <button type="submit" class="botao-perigo">Excluir Definitivamente</button>
+            <button type="submit" class="botao-perigo">Sim, Excluir</button>
             <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-cancelar">Cancelar</a>
         </form>
 

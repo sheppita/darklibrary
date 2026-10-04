@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Editar item em {{ projeto.nome }}{% endblock %}
+{% block titulo %}Dark Library — Editar Item em {{ projeto.nome }}{% endblock %}
 
 {% block conteudo %}
 
@@ -47,6 +47,7 @@
                    placeholder="Ex.: laureado Nobel 1901">
         </div>
 
+        <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>
                 {% if pais_fixo %}

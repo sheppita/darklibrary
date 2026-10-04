@@ -34,7 +34,7 @@
     --lombada-amarelo:  #e6b41e;
     --lombada-cinza:    #9a9a9a;
     --lombada-preto:    #0a0a0a;
-    --lombada-multi:    #e8dfc9; /* bege, como combinado */
+    --lombada-multi:    #e8dfc9;
 
     /* Tipografia */
     --fonte-titulo: 'Lora', Georgia, serif;
@@ -118,7 +118,7 @@ button:hover { opacity: 0.85; }
 
 input, select, textarea {
     font-family: inherit;
-    font-size: 14px; /* 16px evita zoom automático no iOS */
+    font-size: 14px;
     color: var(--cor-texto);
     background-color: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
@@ -200,6 +200,47 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
+   6. Navegação rápida (botões ↑↓) — A11
+   ───────────────────────────────────────────── */
+
+.navegacao-rapida {
+    position: fixed;
+    bottom: var(--esp-5);
+    right: var(--esp-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+    z-index: 800;
+}
+
+.botao-navegacao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--cor-superficie);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.botao-navegacao:hover {
+    background-color: var(--cor-texto);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+}
+
+.botao-navegacao:active {
+    transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────
    7. Cabeçalho de estante
    ───────────────────────────────────────────── */
 
@@ -208,7 +249,7 @@ input:focus, select:focus, textarea:focus {
 
     margin-top: var(--esp-6);
     margin-bottom: var(--esp-3);
-    padding: var(--esp-3) var(--esp-3);
+    padding: var(--esp-3) 0;
     border-radius: var(--raio);
     background-image: var(--gradiente-estante);
     font-size: 1rem;
@@ -226,6 +267,8 @@ input:focus, select:focus, textarea:focus {
     padding: var(--esp-1) var(--esp-3);
     border-radius: var(--raio);
     font-size: 1rem;
+    /* ★ AJUSTE: afasta o texto da borda esquerda sem quebrar a tarja */
+    margin-left: var(--esp-3);
 }
 
 /* ─────────────────────────────────────────────
@@ -280,7 +323,6 @@ input:focus, select:focus, textarea:focus {
     flex-direction: column;
     overflow: hidden;
     padding: 0;
-    /* Camada interna sutil que reforça a tarja mesmo quando a cor é clara */
     position: relative;
 }
 
@@ -305,7 +347,6 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Bloco da capa */
 .card-capa {
     background-color: #ece8de;
     display: flex;
@@ -328,7 +369,6 @@ input:focus, select:focus, textarea:focus {
     object-fit: contain;
 }
 
-/* Conteúdo textual */
 .card-conteudo {
     padding: var(--esp-4);
     display: flex;
@@ -342,7 +382,8 @@ input:focus, select:focus, textarea:focus {
     font-family: var(--fonte-titulo);
     font-size: 1.00rem;
     font-weight: 600;
-    line-height: 1.00;
+    /* ★ AJUSTE A25: line-height de 1.00 pra 1.2 */
+    line-height: 1.2;
     color: var(--cor-texto);
 }
 
@@ -421,7 +462,7 @@ input:focus, select:focus, textarea:focus {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--esp-4);
-    margin-bottom: 0; /* os .campo internos já têm margin */
+    margin-bottom: 0;
 }
 
 @media (min-width: 640px) {
@@ -472,6 +513,7 @@ input:focus, select:focus, textarea:focus {
     color: var(--cor-texto);
     text-decoration: none;
 }
+
 /* ─────────────────────────────────────────────
    12. Formulário de filtros (na home)
    ───────────────────────────────────────────── */
@@ -545,6 +587,7 @@ input:focus, select:focus, textarea:focus {
     text-align: center;
     padding: var(--esp-6) 0;
 }
+
 /* ─────────────────────────────────────────────
    13. Página de Estatísticas
    ───────────────────────────────────────────── */
@@ -587,8 +630,6 @@ input:focus, select:focus, textarea:focus {
     letter-spacing: 0.05em;
 }
 
-/* Barra de progresso */
-
 .stats-barra-wrap {
     margin-bottom: var(--esp-6);
 }
@@ -613,8 +654,6 @@ input:focus, select:focus, textarea:focus {
     margin-top: var(--esp-2);
     text-align: right;
 }
-
-/* Grid de blocos */
 
 .stats-grid {
     display: grid;
@@ -685,12 +724,13 @@ input:focus, select:focus, textarea:focus {
     border-radius: 50%;
     flex-shrink: 0;
 }
+
 /* ─────────────────────────────────────────────
    14. Botões de ação no card (editar / excluir)
    ───────────────────────────────────────────── */
 
 .card-acoes {
-    margin-left: auto; /* empurra para a direita dentro do card-meta */
+    margin-left: auto;
     display: inline-flex;
     gap: var(--esp-1);
 }
@@ -706,6 +746,8 @@ input:focus, select:focus, textarea:focus {
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto-suave);
     font-size: 0.95rem;
+    /* ★ AJUSTE A17: font-weight pra engrossar o ✕ (e o ✎) */
+    font-weight: 700;
     text-decoration: none;
     transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
@@ -722,6 +764,7 @@ input:focus, select:focus, textarea:focus {
     border-color: var(--cor-perigo);
     color: #ffffff;
 }
+
 /* ─────────────────────────────────────────────
    15. Tela de exclusão
    ───────────────────────────────────────────── */
@@ -737,7 +780,6 @@ input:focus, select:focus, textarea:focus {
 
 .excluir-aviso {
     font-size: 1rem;
-    color: var(--cor-texto);
     background-color: #fdecea;
     border: 1px solid #f5c6cb;
     color: #721c24;
@@ -793,6 +835,7 @@ input:focus, select:focus, textarea:focus {
     background-color: #a01f1f;
     opacity: 1;
 }
+
 /* ─────────────────────────────────────────────
    16. Campo com botão (ISBN lookup)
    ───────────────────────────────────────────── */
@@ -805,7 +848,7 @@ input:focus, select:focus, textarea:focus {
 
 .campo-com-botao input {
     flex: 1;
-    min-width: 0; /* importante para flex não estourar */
+    min-width: 0;
 }
 
 .botao-secundario {
@@ -852,6 +895,7 @@ input:focus, select:focus, textarea:focus {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
 /* ─────────────────────────────────────────────
    17. Preview da capa no formulário
    ───────────────────────────────────────────── */
@@ -865,12 +909,10 @@ input:focus, select:focus, textarea:focus {
     display: inline-block;
 }
 
-/* Quando o atributo `hidden` está presente, esconde mesmo que display esteja definido. */
 .preview-capa[hidden] {
     display: none;
 }
 
-/* Se o <img> está sem src ou com src vazio, esconde ele (evita ícone quebrado). */
 .preview-capa img:not([src]),
 .preview-capa img[src=""] {
     display: none;
@@ -904,7 +946,6 @@ input:focus, select:focus, textarea:focus {
     padding: var(--esp-4);
 }
 
-/* Esconde mesmo com display: flex definido. */
 .scanner-overlay[hidden] {
     display: none;
 }
@@ -960,7 +1001,7 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
     gap: var(--esp-3);
 }
-/* Variações de cor da mensagem do scanner */
+
 .scanner-mensagem-erro {
     background-color: #fdecea;
     color: #721c24;
@@ -972,6 +1013,7 @@ input:focus, select:focus, textarea:focus {
     color: #2e7d32;
     border-color: #c8e6c9;
 }
+
 /* ─────────────────────────────────────────────
    20. Meus Projetos — lista
    ───────────────────────────────────────────── */
@@ -1117,7 +1159,6 @@ input:focus, select:focus, textarea:focus {
     min-height: 56px;
 }
 
-/* Tarja de cor à esquerda, cor conforme o status */
 .card-item-tarja {
     flex: 0 0 6px;
     align-self: stretch;
@@ -1137,10 +1178,9 @@ input:focus, select:focus, textarea:focus {
     background-color: #b8b0a0;
 }
 
-/* Bloco título + autor, ocupa o espaço flexível */
 .card-item-principal {
     flex: 1 1 auto;
-    min-width: 0; /* permite o título truncar com ellipsis */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -1166,7 +1206,6 @@ input:focus, select:focus, textarea:focus {
     white-space: nowrap;
 }
 
-/* Meta: país · ano · ISBN */
 .card-item-meta {
     flex: 0 0 auto;
     display: flex;
@@ -1181,7 +1220,6 @@ input:focus, select:focus, textarea:focus {
     opacity: 0.85;
 }
 
-/* Ações: status + editar + excluir, à direita */
 .card-item-acoes {
     flex: 0 0 auto;
     display: inline-flex;
@@ -1189,7 +1227,6 @@ input:focus, select:focus, textarea:focus {
     gap: var(--esp-1);
 }
 
-/* Badge de status */
 .card-item-status {
     font-size: 0.7rem;
     font-weight: 600;
@@ -1217,7 +1254,6 @@ input:focus, select:focus, textarea:focus {
     color: #7a7568;
 }
 
-/* Botão pequeno ✎/🗑 (mesmo estilo dos card-acao de livro) */
 .card-item-acao {
     display: inline-flex;
     align-items: center;
@@ -1229,6 +1265,8 @@ input:focus, select:focus, textarea:focus {
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto-suave);
     font-size: 0.85rem;
+    /* ★ AJUSTE A17: font-weight pra engrossar o ✕ (e o ✎) */
+    font-weight: 700;
     text-decoration: none;
     transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
@@ -1286,7 +1324,6 @@ input:focus, select:focus, textarea:focus {
 
     .card-item-principal {
         flex: 1 1 calc(100% - 30px);
-        /* ocupa o resto da linha depois da tarja */
         padding: var(--esp-2) var(--esp-2) var(--esp-1) 0;
     }
 
@@ -1301,6 +1338,7 @@ input:focus, select:focus, textarea:focus {
         padding-right: 0;
     }
 }
+
 /* ─────────────────────────────────────────────
    25. Etapa 4 — importação em massa
    ───────────────────────────────────────────── */
@@ -1315,110 +1353,6 @@ input:focus, select:focus, textarea:focus {
     white-space: nowrap;
 }
 
-/* Formulário de importação */
-.form-importar {
-    max-width: 800px;
-}
-
-.form-importar textarea {
-    width: 100%;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.9rem;
-    line-height: 1.4;
-    resize: vertical;
-    min-height: 220px;
-}
-
-.aviso-importar {
-    background-color: #fff8e1;
-    color: #8a6d00;
-    border: 1px solid #ffe082;
-    border-radius: var(--raio);
-    padding: var(--esp-3) var(--esp-4);
-    font-size: 0.9rem;
-    margin-bottom: var(--esp-4);
-}
-
-.botao-perigo-verde {
-    background-color: #2e7d32;
-    color: #ffffff;
-}
-
-.botao-perigo-verde:hover {
-    background-color: #1f5a23;
-    opacity: 1;
-}
-
-.texto-erro {
-    color: #b33a3a;
-    font-weight: 600;
-}
-
-/* Tabela de pré-visualização */
-.tabela-importar-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    background-color: var(--cor-superficie);
-    box-shadow: var(--sombra-suave);
-}
-
-.tabela-importar {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-}
-
-.tabela-importar thead th {
-    text-align: left;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--cor-texto-suave);
-    padding: var(--esp-2) var(--esp-3);
-    border-bottom: 1px solid var(--cor-borda);
-    background-color: var(--cor-fundo);
-    white-space: nowrap;
-}
-
-.tabela-importar tbody td {
-    padding: var(--esp-2) var(--esp-3);
-    border-bottom: 1px solid var(--cor-borda);
-    vertical-align: top;
-}
-
-.tabela-importar tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.tabela-importar .linha-erro {
-    background-color: #fdecea;
-}
-
-.celula-original {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.82rem;
-    color: var(--cor-texto-suave);
-    max-width: 320px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.celula-erro {
-    color: #721c24;
-    font-weight: 500;
-}
-
-@media (max-width: 640px) {
-    .celula-original {
-        max-width: 160px;
-    }
-
-    .tabela-importar {
-        font-size: 0.82rem;
-    }
-}
 /* ─────────────────────────────────────────────
    26. Etapa 5 — vinculação
    ───────────────────────────────────────────── */
@@ -1426,10 +1360,6 @@ input:focus, select:focus, textarea:focus {
 .form-inline {
     display: inline;
     margin: 0;
-}
-
-.form-inline button {
-    /* Nada de especial, herda do .botao-secundario */
 }
 
 .mensagem-sucesso-form {
@@ -1448,6 +1378,7 @@ input:focus, select:focus, textarea:focus {
     opacity: 0.75;
     cursor: help;
 }
+
 /* ─────────────────────────────────────────────
    27. Etapa 6 — cadastrar na estante a partir de item
    ───────────────────────────────────────────── */
@@ -1461,6 +1392,7 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: var(--esp-5);
     font-size: 0.95rem;
 }
+
 /* ─────────────────────────────────────────────
    28. Etapa 8a — mapa do mundo
    ───────────────────────────────────────────── */
@@ -1503,7 +1435,6 @@ input:focus, select:focus, textarea:focus {
     color: #b33a3a;
 }
 
-/* Popup do país */
 .mapa-popup {
     position: fixed;
     top: 50%;
@@ -1602,7 +1533,6 @@ input:focus, select:focus, textarea:focus {
     margin-top: var(--esp-1);
 }
 
-/* Aviso de países não reconhecidos */
 .mapa-aviso {
     background-color: #fff8e1;
     border: 1px solid #ffe082;
@@ -1661,7 +1591,6 @@ input:focus, select:focus, textarea:focus {
    31. Etapa 8b-b — lista de países e página de país
    ───────────────────────────────────────────── */
 
-/* Filtros de países */
 .filtros-paises {
     display: flex;
     flex-wrap: wrap;
@@ -1696,7 +1625,6 @@ input:focus, select:focus, textarea:focus {
     color: #ffffff;
 }
 
-/* Lista de países */
 .lista-paises {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1777,7 +1705,6 @@ input:focus, select:focus, textarea:focus {
     opacity: 0.7;
 }
 
-/* Página de país */
 .pais-secao-cabecalho {
     display: flex;
     align-items: center;
@@ -1795,7 +1722,6 @@ input:focus, select:focus, textarea:focus {
     border: none;
 }
 
-/* Selo "estante" / "projeto" nos livros lidos */
 .card-item-origem {
     display: inline-block;
     font-size: 0.7rem;
@@ -1807,7 +1733,6 @@ input:focus, select:focus, textarea:focus {
     border-radius: 999px;
 }
 
-/* Link "Ver detalhes do país" no popup */
 .mapa-popup-link-pais {
     display: block;
     margin-top: var(--esp-3);
@@ -1828,9 +1753,49 @@ input:focus, select:focus, textarea:focus {
     display: none;
 }
 
-/* Botões no cabeçalho do mapa */
 .mapa-acoes {
     margin-top: var(--esp-3);
     display: flex;
     justify-content: flex-end;
+}
+
+/* ─────────────────────────────────────────────
+   32. Botões de navegação rápida (↑↓) — A11
+   ───────────────────────────────────────────── */
+
+.navegacao-rapida {
+    position: fixed;
+    bottom: var(--esp-5);
+    right: var(--esp-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+    z-index: 800;
+}
+
+.botao-navegacao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--cor-superficie);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.botao-navegacao:hover {
+    background-color: var(--cor-texto);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+}
+
+.botao-navegacao:active {
+    transform: translateY(0);
 }

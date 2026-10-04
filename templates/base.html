@@ -37,5 +37,38 @@
         <p>Dark Library — Biblioteca Pessoal</p>
     </footer>
 
+    {# ─────────── Botões de navegação rápida (A11) ─────────── #}
+    <div class="navegacao-rapida" aria-label="Navegação rápida">
+        <button type="button" id="btn-ir-topo" class="botao-navegacao" aria-label="Ir para o Topo" title="Ir para o Topo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        </button>
+        <button type="button" id="btn-ir-fundo" class="botao-navegacao" aria-label="Ir para o Fundo" title="Ir para o Fundo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const btnTopo = document.getElementById("btn-ir-topo");
+            const btnFundo = document.getElementById("btn-ir-fundo");
+
+            if (btnTopo) {
+                btnTopo.addEventListener("click", function () {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                });
+            }
+
+            if (btnFundo) {
+                btnFundo.addEventListener("click", function () {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                });
+            }
+        });
+    </script>
+
 </body>
 </html>

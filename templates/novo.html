@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Novo livro{% endblock %}
+{% block titulo %}Dark Library — Novo Livro{% endblock %}
 
 {% block conteudo %}
 
@@ -46,7 +46,7 @@
                    value="{{ valores.capa_url or '' }}"
                    placeholder="Deixe vazio para buscar automático, ou cole uma URL de imagem">
             <div id="preview-capa" class="preview-capa" {% if not valores.capa_url %}hidden{% endif %}>
-                <img id="preview-capa-img" src="{{ valores.capa_url or '' }}" alt="Prévia da capa">
+                <img id="preview-capa-img" src="{{ valores.capa_url or '' }}" alt="Prévia da Capa">
             </div>
         </div>
 
@@ -77,7 +77,7 @@
         </div>
 
         <div class="campo">
-            <label for="cor_lombada">Cor da Lombada</label>
+            <label for="cor_lombada">Lombada</label>
             <select id="cor_lombada" name="cor_lombada">
                 <option value="">— Selecione —</option>
                 {% for cor in cores %}
@@ -88,7 +88,7 @@
 
         <div class="campo-checkbox">
             <input type="checkbox" id="lido" name="lido">
-            <label for="lido">Lido?</label>
+            <label for="lido">Lido</label>
         </div>
 
         <div class="campo-checkbox">
@@ -113,10 +113,10 @@
             <h2>Escaneie o Código de Barras</h2>
             <p class="scanner-dica">Aponte a câmera para o código de barras do livro.</p>
 
-        <div class="scanner-video-wrap">
+            <div class="scanner-video-wrap">
                 <video id="scanner-video" autoplay playsinline muted></video>
-         </div>
-        <canvas id="scanner-canvas" style="display: none;"></canvas>
+            </div>
+            <canvas id="scanner-canvas" style="display: none;"></canvas>
 
             <div id="scanner-mensagem" class="scanner-mensagem" hidden></div>
 
@@ -126,10 +126,10 @@
         </div>
     </div>
 
-       {# ─────────── Biblioteca ZXing (via CDN) ─────────── #}
-              <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+    {# ─────────── Biblioteca ZXing (via CDN) ─────────── #}
+    <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 
-             <script>
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
             // ═══════════ Parte 1: buscar ISBN ═══════════
             const botao = document.getElementById("btn-buscar-isbn");
@@ -242,7 +242,7 @@
                 mensagemScanner.hidden = false;
             }
 
-                        async function pararTudo() {
+            async function pararTudo() {
                 if (window.__scannerIntervalo) {
                     clearInterval(window.__scannerIntervalo);
                     window.__scannerIntervalo = null;
@@ -266,7 +266,7 @@
                 mensagemScanner.hidden = true;
             }
 
-                        async function iniciarScanner() {
+            async function iniciarScanner() {
                 overlay.hidden = false;
                 mensagemScanner.hidden = true;
 
@@ -344,7 +344,7 @@
                                 inputIsbn.value = textoLido;
                                 buscarIsbn();
                             }
-                                                } catch (e) {
+                        } catch (e) {
                             // ignora
                         }
                     }, 400);

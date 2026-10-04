@@ -46,7 +46,7 @@
             <ul class="stats-lista">
                 {% for estante, n in por_estante %}
                     <li>
-                        <span>{{ estante or "Sem estante" }}</span>
+                        <span>{{ estante or "Sem Estante" }}</span>
                         <span class="stats-n">{{ n }}</span>
                     </li>
                 {% endfor %}
@@ -76,7 +76,7 @@
             <ul class="stats-lista">
                 {% for pais, n in por_pais %}
                     <li>
-                        <span>{{ pais or "(sem país)" }}</span>
+                        <span>{{ pais or "(Sem País)" }}</span>
                         <span class="stats-n">{{ n }}</span>
                     </li>
                 {% endfor %}
@@ -101,7 +101,7 @@
                     <li>
                         <span class="stats-cor-wrap">
                             <span class="stats-cor" style="background-color: transparent; border: 1px dashed #bbb;"></span>
-                            Sem cor
+                            Sem Cor
                         </span>
                         <span class="stats-n">{{ sem_cor }}</span>
                     </li>
@@ -111,14 +111,14 @@
 
         {# Itens de projeto #}
         <div class="stats-bloco">
-            <h2 class="stats-bloco-titulo">Infos para Projetos</h2>
+            <h2 class="stats-bloco-titulo">Itens de Projeto</h2>
             <ul class="stats-lista">
                 <li>
                     <span>Item de Projeto?</span>
                     <span class="stats-n">{{ total_literarios }}</span>
                 </li>
                 <li>
-                    <span>Não é item de projeto</span>
+                    <span>Não é Item de Projeto</span>
                     <span class="stats-n">{{ total_nao_literarios }}</span>
                 </li>
             </ul>

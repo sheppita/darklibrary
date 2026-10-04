@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Meus Projetos{% endblock %}
+{% block titulo %}Dark Library — Projetos{% endblock %}
 
 {% block conteudo %}
 
     <div class="pagina-cabecalho">
-        <h1>Meus Projetos</h1>
+        <h1>Projetos</h1>
     </div>
 
     {% if projetos %}
 
         <p class="contador">
-            {{ projetos|length }} projeto(s)
+            {{ projetos|length }} Projeto(s)
         </p>
 
         <div class="lista-projetos">
@@ -35,7 +35,7 @@
                             <div class="stats-barra-preenchida" style="width: {{ entrada.pct }}%;"></div>
                         </div>
                         <div class="card-projeto-legenda">
-                            <span>{{ entrada.lidos }} de {{ entrada.total }} lidos</span>
+                            <span>{{ entrada.lidos }} de {{ entrada.total }} Lidos</span>
                             <span>{{ entrada.pct }}%</span>
                         </div>
                     </div>
@@ -47,13 +47,7 @@
     {% else %}
 
         <p class="vazio">
-            Você ainda não tem nenhum projeto cadastrado.
-        </p>
-
-        <p class="vazio" style="margin-top: 0;">
-            <a href="{{ url_for('projetos_seed_teste') }}" class="link-voltar">
-                Criar um projeto de teste para ver como fica →
-            </a>
+            Você Ainda Não Tem Nenhum Projeto Cadastrado.
         </p>
 
     {% endif %}

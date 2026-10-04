@@ -7,7 +7,7 @@
     <div class="pagina-cabecalho">
         <h1>Países — {{ projeto.nome }}</h1>
         <a href="{{ url_for('projeto_detalhe', projeto_id=projeto.id) }}" class="link-voltar">
-            ← Voltar ao projeto
+            ← Voltar ao Projeto
         </a>
     </div>
 
@@ -24,11 +24,11 @@
         </a>
         <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='nao_lidos') }}"
            class="filtro-pais {% if filtro == 'nao_lidos' %}filtro-pais-ativo{% endif %}">
-            Não lidos
+            Não Lidos
         </a>
         <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='com_recomendacoes') }}"
            class="filtro-pais {% if filtro == 'com_recomendacoes' %}filtro-pais-ativo{% endif %}">
-            Com recomendações
+            Com Recomendações
         </a>
         <a href="{{ url_for('projeto_paises', projeto_id=projeto.id, filtro='todos') }}"
            class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">
@@ -37,7 +37,7 @@
     </div>
 
     <p class="contador">
-        {{ paises|length }} país(es)
+        {{ paises|length }} País(es)
     </p>
 
     {% if paises %}
@@ -53,11 +53,11 @@
 
                     <div class="card-pais-meta">
                         {% if p.lido %}
-                            <span class="card-pais-selo" title="Já lido">✓ lido</span>
+                            <span class="card-pais-selo" title="Já Lido">✓ Lido</span>
                         {% endif %}
                         {% if p.qtd_recomendacoes > 0 %}
                             <span class="card-pais-rec">
-                                {{ p.qtd_recomendacoes }} rec.
+                                {{ p.qtd_recomendacoes }} Rec.
                             </span>
                         {% endif %}
                         <span class="card-pais-codigo">{{ p.codigo }}</span>
@@ -69,7 +69,7 @@
 
     {% else %}
 
-        <p class="vazio">Nenhum país neste filtro.</p>
+        <p class="vazio">Nenhum País Neste Filtro.</p>
 
     {% endif %}
 

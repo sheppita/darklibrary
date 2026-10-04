@@ -7,7 +7,7 @@
     <div class="pagina-cabecalho">
         <h1>{{ nome }}</h1>
         <a href="{{ url_for('projeto_paises', projeto_id=projeto.id) }}" class="link-voltar">
-            ← Todos os países
+            ← Todos os Países
         </a>
     </div>
 
@@ -17,7 +17,7 @@
     </p>
 
     {# ─────────── Seção 1: livros já lidos ─────────── #}
-    <h2 class="projeto-secao-titulo">Livros já lidos</h2>
+    <h2 class="projeto-secao-titulo">Livros Já Lidos</h2>
 
     {% if livros_lidos or itens_lidos %}
 
@@ -30,7 +30,7 @@
                         <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
                     <div class="card-item-meta">
-                        <span class="card-item-origem">estante</span>
+                        <span class="card-item-origem">Estante</span>
                     </div>
                 </div>
             {% endfor %}
@@ -46,7 +46,7 @@
                         <div class="card-item-autor">{{ item.autor }}</div>
                     </div>
                     <div class="card-item-meta">
-                        <span class="card-item-origem">projeto</span>
+                        <span class="card-item-origem">Projeto</span>
                     </div>
                 </div>
             {% endfor %}
@@ -54,15 +54,15 @@
 
     {% else %}
 
-        <p class="vazio">Você ainda não leu nenhum livro deste país.</p>
+        <p class="vazio">Você Ainda Não Leu Nenhum Livro Deste País.</p>
 
     {% endif %}
 
     {# ─────────── Seção 2: recomendações ─────────── #}
     <div class="pais-secao-cabecalho">
-        <h2 class="projeto-secao-titulo">Recomendações neste projeto</h2>
+        <h2 class="projeto-secao-titulo">Recomendações Neste Projeto</h2>
         <a href="{{ url_for('recomendacao_nova', projeto_id=projeto.id, codigo=codigo) }}"
-           class="botao-secundario botao-pequeno">+ Adicionar recomendação</a>
+           class="botao-secundario botao-pequeno">+ Adicionar Recomendação</a>
     </div>
 
     {% if recomendacoes %}
@@ -76,7 +76,7 @@
                         <div class="card-item-titulo">
                             {{ item.titulo }}
                             {% if item.livro_id %}
-                                <span class="card-item-vinculo-icone" title="Vinculado à estante">🔗</span>
+                                <span class="card-item-vinculo-icone" title="Vinculado à Estante">🔗</span>
                             {% endif %}
                         </div>
                         {% if item.subtitulo %}
@@ -97,14 +97,14 @@
                         {% if not item.livro_id %}
                             <a class="card-item-acao"
                                href="{{ url_for('novo', item_id=item.id) }}"
-                               title="Cadastrar na estante">➕</a>
+                               title="Cadastrar na Estante">➕</a>
                         {% endif %}
                         <a class="card-item-acao"
                            href="{{ url_for('recomendacao_editar', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
                            title="Editar">✎</a>
                         <a class="card-item-acao card-item-acao-perigo"
                            href="{{ url_for('recomendacao_excluir', projeto_id=projeto.id, codigo=codigo, item_id=item.id) }}"
-                           title="Excluir">🗑</a>
+                           title="Excluir">✕</a>
                     </div>
                 </div>
             {% endfor %}
@@ -112,7 +112,7 @@
 
     {% else %}
 
-        <p class="vazio">Nenhuma recomendação cadastrada para este país.</p>
+        <p class="vazio">Nenhuma Recomendação Cadastrada Para Este País.</p>
 
     {% endif %}
 

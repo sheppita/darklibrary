@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}Dark Library — Novo item em {{ projeto.nome }}{% endblock %}
+{% block titulo %}Dark Library — Novo Item em {{ projeto.nome }}{% endblock %}
 
 {% block conteudo %}
 
@@ -51,6 +51,7 @@
                    placeholder="Ex.: laureado Nobel 1901">
         </div>
 
+        <div class="campo-linha">
             <div class="campo">
                 <label for="pais">País</label>
                 {% if pais_fixo %}
@@ -93,7 +94,7 @@
         <div class="campo">
             <label for="observacoes">Observações (Opcional)</label>
             <textarea id="observacoes" name="observacoes" rows="3"
-                      placeholder="Notas pessoais sobre este item">{{ valores.observacoes or '' }}</textarea>
+                      placeholder="Notas sobre este item">{{ valores.observacoes or '' }}</textarea>
         </div>
 
         <div class="acoes-form">
