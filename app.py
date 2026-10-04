@@ -477,41 +477,33 @@ def codigo_pais_do_texto(texto):
 
     return None
 
-def montar_dados_do_mapa():
+def montar_dados_do_mapa(projeto):
+    """
+    Monta os dados do mapa para o projeto tipo 'mundo'.
+    Considera APENAS itens do projeto com status='li'.
+    """
     dados = {}
     nao_reconhecidos = {}
 
-    def adicionar(codigo, nome, titulo, autor, origem):
+    def adicionar(codigo, nome, titulo, autor):
         if codigo not in dados:
             dados[codigo] = {"nome": nome, "livros": [], "total": 0}
         dados[codigo]["livros"].append({
             "titulo": titulo or "(sem título)",
             "autor": autor or "",
-            "origem": origem,
+            "origem": "projeto",
         })
         dados[codigo]["total"] += 1
 
-    livros_lidos = Livro.query.filter(
-        Livro.lido.is_(True),
-        Livro.literario.is_(True),
+    itens_lidos = ItemProjeto.query.filter(
+        ItemProjeto.projeto_id == projeto.id,
+        ItemProjeto.status == "li",
     ).all()
-    for lv in livros_lidos:
-        codigo = codigo_pais_do_texto(lv.pais)
-        if codigo:
-            adicionar(codigo, PAISES_CANONICOS[codigo], lv.titulo, lv.autor, "DL")
-        else:
-            chave = (lv.pais or "").strip() or "(sem país)"
-            nao_reconhecidos.setdefault(chave, []).append({
-                "titulo": lv.titulo or "(sem título)",
-                "autor": lv.autor or "",
-                "origem": "DL",
-            })
 
-    itens_lidos = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
     for it in itens_lidos:
         codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
         if codigo:
-            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor, "projeto")
+            adicionar(codigo, PAISES_CANONICOS[codigo], it.titulo, it.autor)
         else:
             chave = (it.pais or "").strip() or "(sem país)"
             nao_reconhecidos.setdefault(chave, []).append({
@@ -532,11 +524,8 @@ def resumo_do_mapa(dados_mapa):
 
 def _montar_livros_lidos_do_projeto(dados_mapa):
     """
-    Monta a lista de livros lidos que contam para o projeto tipo 'mundo'.
-    Reaproveita os dados do mapa: cada país tem uma lista de livros.
-
-    Retorna uma lista de dicts: {titulo, autor, pais, origem}
-    ordenada por país (nome canônico) e depois por título.
+    Monta a lista de livros lidos do projeto tipo 'mundo',
+    a partir do dicionário montado por montar_dados_do_mapa().
     """
     if not dados_mapa:
         return []
@@ -555,25 +544,21 @@ def _montar_livros_lidos_do_projeto(dados_mapa):
     livros.sort(key=lambda lv: (lv["pais"].lower(), lv["titulo"].lower()))
     return livros
 
-def _conjunto_paises_lidos():
-    lidos = set()
-
-    livros = Livro.query.filter(
-        Livro.lido.is_(True),
-        Livro.literario.is_(True),
+def _conjunto_paises_lidos(projeto):
+    """
+    Retorna o conjunto de códigos ISO-2 de países com pelo menos um
+    item do projeto Lendo o Mundo com status='li'.
+    """
+    codigos = set()
+    itens = ItemProjeto.query.filter(
+        ItemProjeto.projeto_id == projeto.id,
+        ItemProjeto.status == "li",
     ).all()
-    for lv in livros:
-        codigo = codigo_pais_do_texto(lv.pais)
-        if codigo:
-            lidos.add(codigo)
-
-    itens = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
     for it in itens:
         codigo = it.pais_codigo or codigo_pais_do_texto(it.pais)
         if codigo:
-            lidos.add(codigo)
-
-    return lidos
+            codigos.add(codigo)
+    return codigos
 
 def _conjunto_paises_com_recomendacoes(projeto):
     codigos = set()
@@ -585,7 +570,7 @@ def _conjunto_paises_com_recomendacoes(projeto):
     return codigos
 
 def listar_paises_do_projeto(projeto, filtro):
-    lidos = _conjunto_paises_lidos()
+    lidos = _conjunto_paises_lidos(projeto)
     com_rec = _conjunto_paises_com_recomendacoes(projeto)
 
     itens_projeto = ItemProjeto.query.filter(
@@ -629,33 +614,22 @@ def listar_recomendacoes_do_pais(projeto, codigo):
     resultado.sort(key=chave_ordenacao_item)
     return resultado
 
-def listar_livros_lidos_do_pais(codigo):
+def listar_livros_lidos_do_pais(projeto, codigo):
     """
-    Retorna (livros_lidos_da_DL, itens_lidos_do_projeto) para um país.
-    Deduplica: se um livro da DL tem um item de projeto vinculado, o item
-    não é mostrado separadamente (o livro da DL já o representa).
+    Retorna itens do projeto Lendo o Mundo com status='li' para o país.
+    Apenas itens do projeto são considerados (não mais livros da DL).
     """
-    livros = Livro.query.filter(
-        Livro.lido.is_(True),
-        Livro.literario.is_(True),
+    itens = ItemProjeto.query.filter(
+        ItemProjeto.projeto_id == projeto.id,
+        ItemProjeto.status == "li",
     ).all()
-    livros_pais = [
-        lv for lv in livros
-        if codigo_pais_do_texto(lv.pais) == codigo
+
+    itens_pais = [
+        it for it in itens
+        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) == codigo
     ]
 
-    ids_livros_na_dl = {lv.id for lv in livros_pais}
-
-    itens = ItemProjeto.query.filter(ItemProjeto.status == "li").all()
-    itens_pais = []
-    for it in itens:
-        if (it.pais_codigo or codigo_pais_do_texto(it.pais)) != codigo:
-            continue
-        if it.livro_id is not None and it.livro_id in ids_livros_na_dl:
-            continue
-        itens_pais.append(it)
-
-    return livros_pais, itens_pais
+    return itens_pais
 
 # ─────────────────────────────────────────────
 # Busca de ISBN
@@ -1200,14 +1174,23 @@ def projetos():
 
     projetos_com_contagem = []
     for p in lista:
-        total = len(p.itens)
-        lidos = sum(1 for it in p.itens if it.status == "li")
+        if p.tipo == "mundo":
+            # Cobertura de países para projetos tipo 'mundo'
+            dados_mapa, _ = montar_dados_do_mapa(p)
+            resumo = resumo_do_mapa(dados_mapa)
+            total = resumo["total_paises"]
+            lidos = resumo["paises_lidos"]
+        else:
+            total = len(p.itens)
+            lidos = sum(1 for it in p.itens if it.status == "li")
+
         pct = round(lidos / total * 100) if total > 0 else 0
         projetos_com_contagem.append({
             "projeto": p,
             "total": total,
             "lidos": lidos,
             "pct": pct,
+            "tipo_mundo": p.tipo == "mundo",
         })
 
     return render_template("projetos.html", projetos=projetos_com_contagem)
@@ -1238,7 +1221,7 @@ def projeto_detalhe(projeto_id):
     livros_lidos_projeto = None
 
     if projeto.tipo == "mundo":
-        dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa()
+        dados_mapa, paises_nao_reconhecidos = montar_dados_do_mapa(projeto)
         resumo_mapa = resumo_do_mapa(dados_mapa)
         livros_lidos_projeto = _montar_livros_lidos_do_projeto(dados_mapa)
 
@@ -1286,7 +1269,7 @@ def projeto_pais_detalhe(projeto_id, codigo):
 
     nome = PAISES_CANONICOS[codigo]
 
-    livros_lidos, itens_lidos = listar_livros_lidos_do_pais(codigo)
+    itens_lidos = listar_livros_lidos_do_pais(projeto, codigo)
     recomendacoes = listar_recomendacoes_do_pais(projeto, codigo)
 
     return render_template(
@@ -1294,7 +1277,7 @@ def projeto_pais_detalhe(projeto_id, codigo):
         projeto=projeto,
         codigo=codigo,
         nome=nome,
-        livros_lidos=livros_lidos,
+        livros_lidos=[],
         itens_lidos=itens_lidos,
         recomendacoes=recomendacoes,
         status_rotulo=STATUS_ROTULO,
@@ -1583,3 +1566,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
+    

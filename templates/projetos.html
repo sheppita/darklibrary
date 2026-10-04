@@ -35,7 +35,11 @@
                             <div class="stats-barra-preenchida" style="width: {{ entrada.pct }}%;"></div>
                         </div>
                         <div class="card-projeto-legenda">
-                            <span>{{ entrada.lidos }} de {{ entrada.total }} Lidos</span>
+                            {% if entrada.tipo_mundo %}
+                                <span>{{ entrada.lidos }} de {{ entrada.total }} Países</span>
+                            {% else %}
+                                <span>{{ entrada.lidos }} de {{ entrada.total }} Lidos</span>
+                            {% endif %}
                             <span>{{ entrada.pct }}%</span>
                         </div>
                     </div>
