@@ -77,12 +77,16 @@
                 {% for livro in livros %}
                     <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
 
-                        <div class="card-capa">
-                            <img src="{{ livro.capa_final }}"
-                                 alt="Capa de {{ livro.titulo }}"
-                                 loading="lazy"
-                                 onerror="this.parentElement.style.display='none';">
-                        </div>
+                        {% if livro.capa_final %}
+                            <div class="card-capa">
+                                <img src="{{ livro.capa_final }}"
+                                     alt="Capa de {{ livro.titulo }}"
+                                     loading="lazy"
+                                     onerror="this.parentElement.classList.add('card-capa-vazia'); this.style.display='none';">
+                            </div>
+                        {% else %}
+                            <div class="card-capa card-capa-vazia"></div>
+                        {% endif %}
 
                         <div class="card-conteudo">
                             <div class="card-titulo">

@@ -14,20 +14,9 @@
         </div>
     </div>
 
-    {% if projeto.descricao %}
-        <p class="projeto-descricao">{{ projeto.descricao }}</p>
-    {% endif %}
-
     {# ─────────── MAPA ─────────── #}
     {% if dados_mapa is not none %}
         <div class="mapa-wrapper">
-
-            <h2 class="projeto-secao-titulo">Mapa do Mundo</h2>
-
-            <p class="mapa-legenda">
-                Países coloridos = você já leu pelo menos um livro daquele país.
-                Clique num país para ver os livros.
-            </p>
 
             <div class="mapa-container">
                 <div id="mapa-svg" class="mapa-svg" data-dados='{{ dados_mapa | tojson }}'>
@@ -75,19 +64,8 @@
         </div>
     {% endif %}
 
-    {# ─────────── Resumo do mapa ─────────── #}
+    {# ─────────── Resumo do mapa (contadores + barra) ─────────── #}
     {% if resumo_mapa is not none %}
-
-        {% if resumo_mapa.total_paises > 0 %}
-            <div class="stats-barra-wrap">
-                <div class="stats-barra">
-                    <div class="stats-barra-preenchida" style="width: {{ pct_mapa }}%;"></div>
-                </div>
-                <div class="stats-barra-legenda">
-                    {{ resumo_mapa.paises_lidos }} de {{ resumo_mapa.total_paises }} Países Lidos · {{ pct_mapa }}%
-                </div>
-            </div>
-        {% endif %}
 
         <div class="projeto-resumo">
             <div class="projeto-resumo-item">
@@ -104,6 +82,17 @@
             </div>
         </div>
 
+        {% if resumo_mapa.total_paises > 0 %}
+            <div class="barra-progresso-wrap">
+                <div class="barra-progresso">
+                    <div class="barra-progresso-preenchida" style="width: {{ pct_mapa }}%;"></div>
+                </div>
+                <div class="barra-progresso-legenda">
+                    {{ resumo_mapa.paises_lidos }} de {{ resumo_mapa.total_paises }} Países Lidos · {{ pct_mapa }}%
+                </div>
+            </div>
+        {% endif %}
+
     {% endif %}
 
     {# ─────────── Lidos Deste Projeto ─────────── #}
@@ -118,7 +107,8 @@
 
                     <div class="card-item-capa">
                         {% if livro.capa_url %}
-                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy"
+                                 onerror="this.style.display='none';">
                         {% endif %}
                     </div>
 

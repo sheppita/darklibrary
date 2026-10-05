@@ -28,7 +28,8 @@
 
                     <div class="card-item-capa">
                         {% if livro.capa_url %}
-                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy"
+                                 onerror="this.style.display='none';">
                         {% endif %}
                     </div>
 
@@ -78,7 +79,8 @@
 
                     <div class="card-item-capa">
                         {% if livro.capa_url %}
-                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy"
+                                 onerror="this.style.display='none';">
                         {% endif %}
                     </div>
 

@@ -11,22 +11,6 @@
         </div>
     </div>
 
-    {% if projeto.descricao %}
-        <p class="projeto-descricao">{{ projeto.descricao }}</p>
-    {% endif %}
-
-    {# ─────────── Barra de progresso ─────────── #}
-    {% if total > 0 %}
-        <div class="stats-barra-wrap">
-            <div class="stats-barra">
-                <div class="stats-barra-preenchida" style="width: {{ pct }}%;"></div>
-            </div>
-            <div class="stats-barra-legenda">
-                {{ lidos }} de {{ total }} Lidos · {{ pct }}%
-            </div>
-        </div>
-    {% endif %}
-
     {# ─────────── Resumo (2 caixinhas) ─────────── #}
     <div class="projeto-resumo projeto-resumo-2">
         <div class="projeto-resumo-item">
@@ -38,6 +22,18 @@
             <span class="projeto-resumo-rotulo">Já Lido(s)</span>
         </div>
     </div>
+
+    {# ─────────── Barra de progresso ─────────── #}
+    {% if total > 0 %}
+        <div class="barra-progresso-wrap">
+            <div class="barra-progresso">
+                <div class="barra-progresso-preenchida" style="width: {{ pct }}%;"></div>
+            </div>
+            <div class="barra-progresso-legenda">
+                {{ lidos }} de {{ total }} Lidos · {{ pct }}%
+            </div>
+        </div>
+    {% endif %}
 
     {# ─────────── Lista de livros ─────────── #}
     {% if livros_filtrados %}
@@ -52,7 +48,8 @@
 
                     <div class="card-item-capa">
                         {% if livro.capa_url %}
-                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy">
+                            <img src="{{ livro.capa_url }}" alt="Capa de {{ livro.titulo }}" loading="lazy"
+                                 onerror="this.style.display='none';">
                         {% endif %}
                     </div>
 

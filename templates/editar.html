@@ -13,9 +13,36 @@
         <div class="mensagem-erro-form">{{ erro }}</div>
     {% endif %}
 
-    <form method="POST" class="form-cadastro">
+    {% if modo_duplicado and duplicados %}
+        <div class="aviso-duplicado">
+            <h3 class="aviso-duplicado-titulo">⚠ Este Livro Ficou Parecido com Outro do Acervo</h3>
+            <p class="aviso-duplicado-texto">
+                Depois da edição, ele ficou com o mesmo título e autor de:
+            </p>
+
+            <ul class="aviso-duplicado-lista">
+                {% for d in duplicados %}
+                    <li class="aviso-duplicado-item">
+                        <strong>{{ d.titulo }}</strong>
+                        {% if d.ano %} ({{ d.ano }}){% endif %}
+                        — {{ d.autor }}
+                        {% if d.pais %} · {{ d.pais }}{% endif %}
+                        {% if d.tenho and d.estante %} · Estante {{ d.estante }}{% endif %}
+                        {% if d.lido %} · <em>Lido</em>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <p class="aviso-duplicado-pergunta">
+                Você quer salvar as alterações mesmo assim?
+            </p>
+        </div>
+    {% endif %}
+
+    <form method="POST" class="form-cadastro" id="form-cadastro">
 
         <input type="hidden" name="next" value="{{ next_url or '' }}">
+        <input type="hidden" name="forcar_salvar" id="forcar-salvar" value="0">
 
         {# ═══════════════ BLOCO 1 — DADOS DO LIVRO ═══════════════ #}
         <div class="bloco-form">
@@ -49,10 +76,10 @@
                 </div>
 
                 <div class="campo">
-                    <label for="capa_url">URL da Capa <span class="obrigatorio">*</span></label>
-                    <input type="text" id="capa_url" name="capa_url" required maxlength="500"
+                    <label for="capa_url">URL da Capa</label>
+                    <input type="text" id="capa_url" name="capa_url" maxlength="500"
                            value="{{ valores.capa_url or '' }}"
-                           placeholder="https://...">
+                           placeholder="https://... (opcional)">
                 </div>
             </div>
 
@@ -167,8 +194,13 @@
 
         {# ═══════════════ AÇÕES ═══════════════ #}
         <div class="acoes-form">
-            <button type="submit">Salvar Alterações</button>
-            <a href="{{ next_url or url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% if modo_duplicado and duplicados %}
+                <button type="button" id="btn-salvar-mesmo-assim" class="botao-perigo">Salvar Mesmo Assim</button>
+                <a href="{{ next_url or url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% else %}
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ next_url or url_for('home') }}" class="link-cancelar">Cancelar</a>
+            {% endif %}
         </div>
 
     </form>
@@ -198,6 +230,18 @@
             inputCapa.addEventListener("input", function () {
                 mostrarPreview(inputCapa.value.trim());
             });
+
+            // ═══════════ Botão "Salvar Mesmo Assim" ═══════════
+            const btnForcar = document.getElementById("btn-salvar-mesmo-assim");
+            const campoForcar = document.getElementById("forcar-salvar");
+            const formCadastro = document.getElementById("form-cadastro");
+
+            if (btnForcar && campoForcar && formCadastro) {
+                btnForcar.addEventListener("click", function () {
+                    campoForcar.value = "1";
+                    formCadastro.submit();
+                });
+            }
 
             // ═══════════ Radio Tenho → esconde Lombada/Estante ═══════════
             const radiosTenho = document.querySelectorAll('input[name="tenho"]');

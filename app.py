@@ -205,7 +205,7 @@ class Livro(db.Model):
     autor = db.Column(db.String(150), nullable=False)
     pais = db.Column(db.String(80), nullable=False)
     ano = db.Column(db.Integer)
-    capa_url = db.Column(db.String(500), nullable=False)
+    capa_url = db.Column(db.String(500), nullable=True)
 
     tenho = db.Column(db.Boolean, default=True, nullable=False)
     lido = db.Column(db.Boolean, default=False, nullable=False)
@@ -348,8 +348,6 @@ def _validar_campos_livro(dados):
         return "Autor é obrigatório."
     if not dados["pais"]:
         return "País é obrigatório."
-    if not dados["capa_url"]:
-        return "URL da Capa é obrigatória."
     if dados["tenho"]:
         if not dados["cor_lombada"]:
             return "Lombada é obrigatória quando você tem o livro."
@@ -359,6 +357,45 @@ def _validar_campos_livro(dados):
         if dados["projeto_nobel"] or dados["projeto_mundo"] or dados["projeto_postgrad"]:
             return "TBR é exclusivo: não pode ser marcado junto com outros projetos."
     return None
+
+def _buscar_livros_duplicados(titulo, autor, ignorar_id=None):
+    """
+    Retorna lista de livros com mesmo título + autor (normalizados).
+    Se ignorar_id for passado, pula esse livro (caso da edição).
+    """
+    titulo_norm = normalizar_texto(titulo)
+    autor_norm = normalizar_texto(autor)
+
+    if not titulo_norm or not autor_norm:
+        return []
+
+    query = Livro.query
+    if ignorar_id is not None:
+        query = query.filter(Livro.id != ignorar_id)
+
+    candidatos = []
+    for livro in query.all():
+        if (normalizar_texto(livro.titulo) == titulo_norm
+                and normalizar_texto(livro.autor) == autor_norm):
+            candidatos.append(livro)
+    return candidatos
+
+def _serializar_duplicados(livros):
+    """Transforma os livros duplicados em dicts simples pro template."""
+    return [
+        {
+            "id": lv.id,
+            "titulo": lv.titulo,
+            "autor": lv.autor,
+            "pais": lv.pais,
+            "ano": lv.ano,
+            "estante": lv.estante or "",
+            "cor_lombada": lv.cor_lombada or "",
+            "tenho": lv.tenho,
+            "lido": lv.lido,
+        }
+        for lv in livros
+    ]
 
 # ─────────────────────────────────────────────
 # Funções de país e mapa
@@ -672,7 +709,27 @@ def novo():
                 next_url=next_url,
                 projetos=PROJETOS_DISPONIVEIS,
                 subprojetos=SUBPROJETOS_POSTGRAD,
+                duplicados=None,
+                modo_duplicado=False,
             ), 400
+
+        forcar = request.form.get("forcar_salvar") == "1"
+        duplicados = []
+        if not forcar:
+            duplicados = _buscar_livros_duplicados(dados["titulo"], dados["autor"])
+
+        if duplicados and not forcar:
+            return render_template(
+                "novo.html",
+                cores=CORES_ORDEM,
+                valores=dados,
+                erro=None,
+                next_url=next_url,
+                projetos=PROJETOS_DISPONIVEIS,
+                subprojetos=SUBPROJETOS_POSTGRAD,
+                duplicados=_serializar_duplicados(duplicados),
+                modo_duplicado=True,
+            ), 200
 
         livro = Livro(**dados)
         db.session.add(livro)
@@ -698,6 +755,8 @@ def novo():
         next_url=next_url,
         projetos=PROJETOS_DISPONIVEIS,
         subprojetos=SUBPROJETOS_POSTGRAD,
+        duplicados=None,
+        modo_duplicado=False,
     )
 
 @app.route("/editar/<int:livro_id>", methods=["GET", "POST"])
@@ -718,7 +777,30 @@ def editar(livro_id):
                 next_url=next_url,
                 projetos=PROJETOS_DISPONIVEIS,
                 subprojetos=SUBPROJETOS_POSTGRAD,
+                duplicados=None,
+                modo_duplicado=False,
             ), 400
+
+        forcar = request.form.get("forcar_salvar") == "1"
+        duplicados = []
+        if not forcar:
+            duplicados = _buscar_livros_duplicados(
+                dados["titulo"], dados["autor"], ignorar_id=livro.id
+            )
+
+        if duplicados and not forcar:
+            return render_template(
+                "editar.html",
+                livro=livro,
+                valores=dados,
+                cores=CORES_ORDEM,
+                erro=None,
+                next_url=next_url,
+                projetos=PROJETOS_DISPONIVEIS,
+                subprojetos=SUBPROJETOS_POSTGRAD,
+                duplicados=_serializar_duplicados(duplicados),
+                modo_duplicado=True,
+            ), 200
 
         for campo, valor in dados.items():
             setattr(livro, campo, valor)
@@ -755,6 +837,8 @@ def editar(livro_id):
         next_url=next_url,
         projetos=PROJETOS_DISPONIVEIS,
         subprojetos=SUBPROJETOS_POSTGRAD,
+        duplicados=None,
+        modo_duplicado=False,
     )
 
 @app.route("/excluir/<int:livro_id>", methods=["GET", "POST"])

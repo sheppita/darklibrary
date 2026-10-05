@@ -1421,6 +1421,7 @@ input:focus, select:focus, textarea:focus {
 .filtros-paises {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--esp-2);
     margin-bottom: var(--esp-4);
 }
@@ -1867,4 +1868,101 @@ input:focus, select:focus, textarea:focus {
 
 .card-item-li .card-item-meta:last-child {
     margin-left: auto;
+}
+/* ─────────────────────────────────────────────
+   47. Aviso de duplicado (no /novo e /editar)
+   ───────────────────────────────────────────── */
+
+.aviso-duplicado {
+    background-color: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: var(--raio);
+    padding: var(--esp-4) var(--esp-5);
+    margin-bottom: var(--esp-5);
+}
+
+.aviso-duplicado-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #8a6d00;
+    margin: 0 0 var(--esp-3) 0;
+    padding-bottom: var(--esp-2);
+    border-bottom: 1px solid #ffe082;
+}
+
+.aviso-duplicado-texto {
+    font-size: 0.9rem;
+    color: #8a6d00;
+    margin: 0 0 var(--esp-3) 0;
+}
+
+.aviso-duplicado-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--esp-3) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+}
+
+.aviso-duplicado-item {
+    font-size: 0.9rem;
+    color: var(--cor-texto);
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--esp-2) var(--esp-3);
+    line-height: 1.4;
+}
+
+.aviso-duplicado-pergunta {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #8a6d00;
+    margin: 0;
+}
+
+/* ─────────────────────────────────────────────
+   48. Barra de progresso com borda (projetos)
+   ───────────────────────────────────────────── */
+
+.barra-progresso {
+    background-color: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px;
+    height: 12px;
+    overflow: hidden;
+    padding: 2px;
+}
+
+.barra-progresso-preenchida {
+    background-color: var(--cor-texto);
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.barra-progresso-wrap {
+    margin-bottom: var(--esp-6);
+}
+
+.barra-progresso-legenda {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-top: var(--esp-2);
+    text-align: right;
+}
+
+/* ─────────────────────────────────────────────
+   49. Fallback de capa (retângulo bege)
+   ───────────────────────────────────────────── */
+
+.card-capa-vazia {
+    background-color: #ece8de;
+    /* mesma cor do .card-capa original */
+}
+
+.card-capa-vazia img {
+    display: none;
 }
