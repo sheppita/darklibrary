@@ -1,8 +1,9 @@
 import os
 import re
 import unicodedata
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
+from datetime import datetime, UTC
+from urllib.parse import urlencode
+from flask import Flask, render_template, request, redirect, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -12,6 +13,12 @@ app = Flask(__name__)
 # ─────────────────────────────────────────────
 
 database_url = os.environ.get("DATABASE_URL", "")
+
+if not database_url:
+    raise RuntimeError(
+        "DATABASE_URL não configurada. "
+        "Defina a variável de ambiente antes de rodar o app."
+    )
 
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
@@ -215,7 +222,7 @@ class Livro(db.Model):
 
     subtitulo = db.Column(db.String(200))
 
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    criado_em = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     def __repr__(self):
         return f"<Livro {self.titulo}>"
@@ -466,7 +473,10 @@ def _conjunto_paises_lidos():
 def listar_paises_do_projeto(filtro):
     lidos = _conjunto_paises_lidos()
 
-    livros_mundo = Livro.query.filter(Livro.projeto_mundo.is_(True)).all()
+    livros_mundo = Livro.query.filter(
+        Livro.projeto_mundo.is_(True),
+        Livro.lido.is_(False),
+    ).all()
     com_rec = set()
     contagem_rec = {}
     for lv in livros_mundo:
@@ -627,7 +637,6 @@ def home():
     args_atuais = request.args.to_dict(flat=True)
     next_url = request.path
     if args_atuais:
-        from urllib.parse import urlencode
         next_url = f"{request.path}?{urlencode(args_atuais)}"
 
     return render_template(

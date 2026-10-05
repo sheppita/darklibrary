@@ -267,7 +267,6 @@ input:focus, select:focus, textarea:focus {
     padding: var(--esp-1) var(--esp-3);
     border-radius: var(--raio);
     font-size: 1rem;
-    /* ★ AJUSTE: afasta o texto da borda esquerda sem quebrar a tarja */
     margin-left: var(--esp-3);
 }
 
@@ -382,7 +381,6 @@ input:focus, select:focus, textarea:focus {
     font-family: var(--fonte-titulo);
     font-size: 1.00rem;
     font-weight: 600;
-    /* ★ AJUSTE A25: line-height de 1.00 pra 1.2 */
     line-height: 1.2;
     color: var(--cor-texto);
 }
@@ -428,15 +426,6 @@ input:focus, select:focus, textarea:focus {
 .link-voltar:hover {
     color: var(--cor-texto);
     text-decoration: none;
-}
-
-.form-cadastro {
-    max-width: 640px;
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-5);
-    box-shadow: var(--sombra-suave);
 }
 
 .campo {
@@ -746,7 +735,6 @@ input:focus, select:focus, textarea:focus {
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto-suave);
     font-size: 0.95rem;
-    /* ★ AJUSTE A17: font-weight pra engrossar o ✕ (e o ✎) */
     font-weight: 700;
     text-decoration: none;
     transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
@@ -837,19 +825,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   16. Campo com botão (ISBN lookup)
+   16. Botão secundário
    ───────────────────────────────────────────── */
-
-.campo-com-botao {
-    display: flex;
-    gap: var(--esp-2);
-    align-items: stretch;
-}
-
-.campo-com-botao input {
-    flex: 1;
-    min-width: 0;
-}
 
 .botao-secundario {
     background-color: transparent;
@@ -869,31 +846,6 @@ input:focus, select:focus, textarea:focus {
 .botao-secundario:disabled {
     opacity: 0.6;
     cursor: wait;
-}
-
-.mensagem-isbn {
-    margin-top: var(--esp-2);
-    padding: var(--esp-2) var(--esp-3);
-    border-radius: var(--raio);
-    font-size: 0.9rem;
-}
-
-.mensagem-isbn-sucesso {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-}
-
-.mensagem-isbn-aviso {
-    background-color: #fff8e1;
-    color: #8a6d00;
-    border: 1px solid #ffe082;
-}
-
-.mensagem-isbn-erro {
-    background-color: #fdecea;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
 }
 
 /* ─────────────────────────────────────────────
@@ -926,92 +878,6 @@ input:focus, select:focus, textarea:focus {
     display: block;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* ─────────────────────────────────────────────
-   19. Scanner (overlay da câmera)
-   ───────────────────────────────────────────── */
-
-.scanner-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.85);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--esp-4);
-}
-
-.scanner-overlay[hidden] {
-    display: none;
-}
-
-.scanner-conteudo {
-    background-color: var(--cor-superficie);
-    border-radius: var(--raio);
-    padding: var(--esp-5);
-    max-width: 480px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-.scanner-conteudo h2 {
-    margin: 0 0 var(--esp-2) 0;
-    font-size: 1.15rem;
-}
-
-.scanner-dica {
-    font-size: 0.85rem;
-    color: var(--cor-texto-suave);
-    margin: 0 0 var(--esp-4) 0;
-}
-
-.scanner-video-wrap {
-    background-color: #000000;
-    border-radius: var(--raio);
-    overflow: hidden;
-    aspect-ratio: 4 / 3;
-    margin-bottom: var(--esp-4);
-}
-
-.scanner-video-wrap video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.scanner-mensagem {
-    background-color: #fff8e1;
-    color: #8a6d00;
-    border: 1px solid #ffe082;
-    border-radius: var(--raio);
-    padding: var(--esp-2) var(--esp-3);
-    margin-bottom: var(--esp-4);
-    font-size: 0.9rem;
-}
-
-.scanner-acoes {
-    display: flex;
-    justify-content: center;
-    gap: var(--esp-3);
-}
-
-.scanner-mensagem-erro {
-    background-color: #fdecea;
-    color: #721c24;
-    border-color: #f5c6cb;
-}
-
-.scanner-mensagem-sucesso {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border-color: #c8e6c9;
 }
 
 /* ─────────────────────────────────────────────
@@ -1234,11 +1100,6 @@ input:focus, select:focus, textarea:focus {
     white-space: nowrap;
 }
 
-.card-item-isbn {
-    font-size: 0.75rem;
-    opacity: 0.85;
-}
-
 .card-item-acoes {
     flex: 0 0 auto;
     display: inline-flex;
@@ -1284,7 +1145,6 @@ input:focus, select:focus, textarea:focus {
     border: 1px solid var(--cor-borda);
     color: var(--cor-texto-suave);
     font-size: 0.85rem;
-    /* ★ AJUSTE A17: font-weight pra engrossar o ✕ (e o ✎) */
     font-weight: 700;
     text-decoration: none;
     transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
@@ -1359,7 +1219,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   25. Etapa 4 — importação em massa
+   25. Subtítulo nos cards de item
    ───────────────────────────────────────────── */
 
 .card-item-subtitulo {
@@ -1373,47 +1233,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   26. Etapa 5 — vinculação
-   ───────────────────────────────────────────── */
-
-.form-inline {
-    display: inline;
-    margin: 0;
-}
-
-.mensagem-sucesso-form {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-    border-radius: var(--raio);
-    padding: var(--esp-3) var(--esp-4);
-    margin-bottom: var(--esp-5);
-    font-size: 0.95rem;
-}
-
-.card-item-vinculo-icone {
-    font-size: 0.85rem;
-    margin-left: var(--esp-1);
-    opacity: 0.75;
-    cursor: help;
-}
-
-/* ─────────────────────────────────────────────
-   27. Etapa 6 — cadastrar na estante a partir de item
-   ───────────────────────────────────────────── */
-
-.aviso-item-origem {
-    background-color: #e3f0fa;
-    color: #2a5b8a;
-    border: 1px solid #b8d4e8;
-    border-radius: var(--raio);
-    padding: var(--esp-3) var(--esp-4);
-    margin-bottom: var(--esp-5);
-    font-size: 0.95rem;
-}
-
-/* ─────────────────────────────────────────────
-   28. Etapa 8a — mapa do mundo
+   28. Mapa do mundo
    ───────────────────────────────────────────── */
 
 .mapa-wrapper {
@@ -1585,19 +1405,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   29. Etapa 8b-a — selo de item de projeto
-   ───────────────────────────────────────────── */
-
-.card-selo-literario {
-    font-size: 0.75rem;
-    margin-right: var(--esp-1);
-    vertical-align: middle;
-    opacity: 0.9;
-    cursor: help;
-}
-
-/* ─────────────────────────────────────────────
-   30. Etapa 8b-b — altura limitada nos quadros de estatísticas
+   30. Altura limitada nos quadros de estatísticas
    ───────────────────────────────────────────── */
 
 .stats-bloco .stats-lista {
@@ -1607,7 +1415,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   31. Etapa 8b-b — lista de países e página de país
+   31. Lista de países e página de país
    ───────────────────────────────────────────── */
 
 .filtros-paises {
@@ -1741,17 +1549,6 @@ input:focus, select:focus, textarea:focus {
     border: none;
 }
 
-.card-item-origem {
-    display: inline-block;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-suave);
-    padding: 1px var(--esp-2);
-    border-radius: 999px;
-}
-
 .mapa-popup-link-pais {
     display: block;
     margin-top: var(--esp-3);
@@ -1776,47 +1573,6 @@ input:focus, select:focus, textarea:focus {
     margin-top: var(--esp-3);
     display: flex;
     justify-content: flex-end;
-}
-
-/* ─────────────────────────────────────────────
-   32. Botões de navegação rápida (↑↓) — A11
-   ───────────────────────────────────────────── */
-
-.navegacao-rapida {
-    position: fixed;
-    bottom: var(--esp-5);
-    right: var(--esp-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--esp-2);
-    z-index: 800;
-}
-
-.botao-navegacao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border-radius: 50%;
-    background-color: var(--cor-superficie);
-    color: var(--cor-texto);
-    border: 1px solid var(--cor-borda);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 4px 16px rgba(0, 0, 0, 0.06);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
-}
-
-.botao-navegacao:hover {
-    background-color: var(--cor-texto);
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    opacity: 1;
-}
-
-.botao-navegacao:active {
-    transform: translateY(0);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2041,7 +1797,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   42. Ajuste do form-cadastro (remove max-width antigo)
+   42. Ajuste do form-cadastro
    ───────────────────────────────────────────── */
 
 .form-cadastro {
@@ -2111,29 +1867,4 @@ input:focus, select:focus, textarea:focus {
 
 .card-item-li .card-item-meta:last-child {
     margin-left: auto;
-}
-
-/* ─────────────────────────────────────────────
-   47. Ajuste do filtro de subprojeto (PostGrad)
-   Reaproveita .filtros-paises, mas com um respiro extra
-   ───────────────────────────────────────────── */
-
-.projeto-postgrad .filtros-paises {
-    margin-bottom: var(--esp-3);
-}
-
-/* ─────────────────────────────────────────────
-   48. Esconde o input file (se algum dia existir)
-   ───────────────────────────────────────────── */
-
-input[type="file"] {
-    display: none;
-}
-
-/* ─────────────────────────────────────────────
-   49. Badge de status do card-item quando projeto é postgrad
-   ───────────────────────────────────────────── */
-
-.card-item-titulo .badge-subprojeto {
-    margin-left: var(--esp-2);
 }

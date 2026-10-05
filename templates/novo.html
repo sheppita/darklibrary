@@ -15,9 +15,7 @@
 
     <form method="POST" class="form-cadastro">
 
-        {% if next_url %}
-            <input type="hidden" name="next" value="{{ next_url }}">
-        {% endif %}
+        <input type="hidden" name="next" value="{{ next_url or '' }}">
 
         {# ═══════════════ BLOCO 1 — DADOS DO LIVRO ═══════════════ #}
         <div class="bloco-form">
@@ -165,16 +163,12 @@
                     ⓘ TBR é exclusivo: se marcar TBR, não pode marcar outros projetos (e vice-versa).
                 </p>
             </div>
-        </fieldset>
+        </div>
 
         {# ═══════════════ AÇÕES ═══════════════ #}
         <div class="acoes-form">
             <button type="submit">Salvar Livro</button>
-            {% if next_url %}
-                <a href="{{ next_url }}" class="link-cancelar">Cancelar</a>
-            {% else %}
-                <a href="{{ url_for('home') }}" class="link-cancelar">Cancelar</a>
-            {% endif %}
+            <a href="{{ next_url or url_for('home') }}" class="link-cancelar">Cancelar</a>
         </div>
 
     </form>
@@ -278,9 +272,6 @@
             checkMundo.addEventListener("change", atualizarTbr);
             checkPostgrad.addEventListener("change", atualizarTbr);
             atualizarTbr();
-
-            // ═══════════ Atualizar bloco de estante quando muda PostGrad ═══════════
-            checkPostgrad.addEventListener("change", atualizarBlocoSubprojeto);
         });
     </script>
 

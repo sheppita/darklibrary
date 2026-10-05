@@ -71,7 +71,7 @@
 
                     <div class="card-item-acoes">
                         <div class="card-item-status card-item-status-{{ 'li' if livro.lido else 'nao_tenho' }}">
-                            {% if livro.lido %}Li{% else %}Não Lido{% endif %}
+                            {% if livro.lido %}Lido{% else %}Não Lido{% endif %}
                         </div>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"

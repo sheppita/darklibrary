@@ -8,7 +8,7 @@
 
         <div class="campo">
             <label for="q">Buscar por Título ou Autor</label>
-            <input type="text" id="q" name="q" value="{{ busca }}" placeholder="Ex.: Machado">
+            <input type="text" id="q" name="q" value="{{ busca or '' }}" placeholder="Ex.: Machado">
         </div>
 
         <div class="campo-linha">
@@ -25,7 +25,7 @@
             <div class="campo">
                 <label for="pais">País</label>
                 <select id="pais" name="pais">
-                    <option value="">— Todos —</option>
+                    <option value="">Todos</option>
                     {% for p in paises %}
                         <option value="{{ p }}" {% if p == filtro_pais %}selected{% endif %}>{{ p }}</option>
                     {% endfor %}
@@ -77,14 +77,12 @@
                 {% for livro in livros %}
                     <li class="card-livro" style="--cor-lombada: {{ livro.cor_hex }};">
 
-                        {% if livro.capa_final %}
-                            <div class="card-capa">
-                                <img src="{{ livro.capa_final }}"
-                                     alt="Capa de {{ livro.titulo }}"
-                                     loading="lazy"
-                                     onerror="this.parentElement.style.display='none';">
-                            </div>
-                        {% endif %}
+                        <div class="card-capa">
+                            <img src="{{ livro.capa_final }}"
+                                 alt="Capa de {{ livro.titulo }}"
+                                 loading="lazy"
+                                 onerror="this.parentElement.style.display='none';">
+                        </div>
 
                         <div class="card-conteudo">
                             <div class="card-titulo">
@@ -94,9 +92,6 @@
 
                             <div class="card-autor">{{ livro.autor }}</div>
                             <div class="card-meta">
-                                {% if livro.cor_lombada %}
-                                    <span class="card-meta-item">{{ livro.cor_lombada }}</span>
-                                {% endif %}
                                 {% if livro.lido %}
                                     <span class="card-meta-item card-meta-lido">✅ Lido</span>
                                 {% else %}
