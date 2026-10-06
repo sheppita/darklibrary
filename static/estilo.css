@@ -1929,17 +1929,17 @@ input:focus, select:focus, textarea:focus {
 
 .barra-progresso {
     background-color: var(--cor-fundo);
-    border: 1px solid var(--cor-borda);
+    border: 1px solid #b8b0a0;   /* ← cor de borda mais escura, visível */
     border-radius: 999px;
-    height: 12px;
+    height: 14px;                 /* ← um pouco mais alta */
     overflow: hidden;
-    padding: 2px;
+    padding: 0;                   /* ← tira o padding, deixa o filho preencher */
 }
 
 .barra-progresso-preenchida {
     background-color: var(--cor-texto);
     height: 100%;
-    border-radius: 999px;
+    border-radius: 999px;        /* ← arredonda o filho também */
     transition: width 0.3s ease;
 }
 
