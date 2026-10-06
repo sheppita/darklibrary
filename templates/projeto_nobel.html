@@ -22,16 +22,16 @@
             <span class="projeto-resumo-rotulo">Tenho</span>
         </div>
         <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ lidos }}</span>
-            <span class="projeto-resumo-rotulo">Já Li</span>
-        </div>
-        <div class="projeto-resumo-item">
             <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
             <span class="projeto-resumo-rotulo">Não Tenho</span>
         </div>
         <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lidos</span>
+        </div>
+        <div class="projeto-resumo-item">
             <span class="projeto-resumo-numero">{{ nao_lidos }}</span>
-            <span class="projeto-resumo-rotulo">Não Li</span>
+            <span class="projeto-resumo-rotulo">Não Lidos</span>
         </div>
     </div>
 
@@ -50,9 +50,9 @@
     {# ─────────── Filtros em cápsula ─────────── #}
     <div class="filtros-paises">
         <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='lido') }}"
-           class="filtro-pais {% if filtro == 'lido' %}filtro-pais-ativo{% endif %}">Lido</a>
+           class="filtro-pais {% if filtro == 'lido' %}filtro-pais-ativo{% endif %}">Lidos</a>
         <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='nao_lido') }}"
-           class="filtro-pais {% if filtro == 'nao_lido' %}filtro-pais-ativo{% endif %}">Não Lido</a>
+           class="filtro-pais {% if filtro == 'nao_lido' %}filtro-pais-ativo{% endif %}">Não Lidos</a>
         <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='tenho') }}"
            class="filtro-pais {% if filtro == 'tenho' %}filtro-pais-ativo{% endif %}">Tenho</a>
         <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='recomendacoes') }}"

@@ -27,17 +27,23 @@
                     {% endif %}
 
                     <div class="card-projeto-progresso">
-                        <div class="stats-barra">
-                            <div class="stats-barra-preenchida" style="width: {{ p.pct }}%;"></div>
-                        </div>
-                        <div class="card-projeto-legenda">
-                            {% if p.tipo_mundo %}
-                                <span>{{ p.lidos }} de {{ p.total }} Países</span>
-                            {% else %}
-                                <span>{{ p.lidos }} de {{ p.total }} Lidos</span>
-                            {% endif %}
-                            <span>{{ p.pct }}%</span>
-                        </div>
+                        {% if p.tipo_tbr %}
+                            <div class="card-projeto-legenda">
+                                <span>{{ p.total }} Livros Para Ler</span>
+                            </div>
+                        {% else %}
+                            <div class="stats-barra">
+                                <div class="stats-barra-preenchida" style="width: {{ p.pct }}%;"></div>
+                            </div>
+                            <div class="card-projeto-legenda">
+                                {% if p.tipo_mundo %}
+                                    <span>{{ p.lidos }} de {{ p.total }} Países</span>
+                                {% else %}
+                                    <span>{{ p.lidos }} de {{ p.total }} Lidos</span>
+                                {% endif %}
+                                <span>{{ p.pct }}%</span>
+                            </div>
+                        {% endif %}
                     </div>
 
                 </a>

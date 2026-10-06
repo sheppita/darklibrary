@@ -11,16 +11,22 @@
         </a>
     </div>
 
-    <p class="projeto-descricao">
-        Todos os países do mundo. Um país fica <strong>verde</strong> quando você
-        lê pelo menos um livro de autor daquele país.
-    </p>
+    {# ─────────── Resumo (2 caixinhas) ─────────── #}
+    <div class="projeto-resumo projeto-resumo-2">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_paises_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lidos</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_paises_canonicos }}</span>
+            <span class="projeto-resumo-rotulo">Total</span>
+        </div>
+    </div>
 
-    {# ─────────── Busca por país ─────────── #}
+    {# ─────────── Busca por país (client-side) ─────────── #}
     <div class="campo">
         <input type="text" id="busca-pais"
                placeholder="Buscar por Nome ou Código..."
-               value="{{ busca_pais or '' }}"
                autocomplete="off">
     </div>
 

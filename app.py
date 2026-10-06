@@ -471,13 +471,18 @@ def montar_dados_do_mapa():
     return dados, nao_reconhecidos
 
 def resumo_do_mapa(dados_mapa):
+    """Resumo do mapa. Total sempre usa a lista canônica (249)."""
     return {
         "paises_lidos": len(dados_mapa),
         "total_paises": len(PAISES_CANONICOS),
     }
 
 def _montar_livros_lidos_do_projeto(dados_mapa):
-    """Achata os livros do mapa numa lista ordenada por país/título."""
+    """Achata os livros do mapa numa lista ordenada por país/título.
+
+    Cada item inclui tenho e lido, pra que os badges possam ser
+    renderizados no template.
+    """
     if not dados_mapa:
         return []
     livros = []
@@ -490,6 +495,8 @@ def _montar_livros_lidos_do_projeto(dados_mapa):
                 "pais": nome_pais,
                 "origem": livro.get("origem", ""),
                 "capa_url": livro.get("capa_url", ""),
+                "tenho": True,
+                "lido": True,
             })
     livros.sort(key=lambda lv: (lv["pais"].lower(), lv["titulo"].lower()))
     return livros
@@ -563,12 +570,17 @@ def _query_do_projeto(campo):
     return Livro.query.filter(getattr(Livro, campo).is_(True))
 
 def _contar_por_status(livros):
-    """Dado uma lista de livros, retorna dict com as 4 contagens."""
+    """Dado uma lista de livros, retorna dict com as 5 contagens.
+
+    Obs.: posse e leitura são dimensões diferentes; os números
+    NÃO são mutuamente exclusivos.
+    """
     return {
+        "total": len(livros),
+        "tenho": sum(1 for lv in livros if lv.tenho),
+        "nao_tenho": sum(1 for lv in livros if not lv.tenho),
         "lidos": sum(1 for lv in livros if lv.lido),
         "nao_lidos": sum(1 for lv in livros if not lv.lido),
-        "tenho_nao_li": sum(1 for lv in livros if lv.tenho and not lv.lido),
-        "nao_tenho": sum(1 for lv in livros if not lv.tenho),
     }
 
 # ─────────────────────────────────────────────
@@ -857,13 +869,18 @@ def excluir(livro_id):
 
 @app.route("/estatisticas")
 def estatisticas():
-    total = Livro.query.filter(Livro.tenho.is_(True)).count()
-    total_lidos = Livro.query.filter(Livro.tenho.is_(True), Livro.lido.is_(True)).count()
-    total_nao_lidos = total - total_lidos
+    # Topo: TODOS os livros do sistema (físicos + não físicos)
+    total = Livro.query.count()
+    tenho = Livro.query.filter(Livro.tenho.is_(True)).count()
+    nao_tenho = Livro.query.filter(Livro.tenho.is_(False)).count()
+    total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
+    total_nao_lidos = Livro.query.filter(Livro.lido.is_(False)).count()
 
     pct_lidos = round(total_lidos / total * 100) if total > 0 else 0
 
+    # Blocos internos: só biblioteca física (tenho=True)
     total_com_projeto = Livro.query.filter(
+        Livro.tenho.is_(True),
         db.or_(
             Livro.projeto_nobel.is_(True),
             Livro.projeto_mundo.is_(True),
@@ -871,7 +888,7 @@ def estatisticas():
             Livro.projeto_tbr.is_(True),
         )
     ).count()
-    total_sem_projeto = Livro.query.count() - total_com_projeto
+    total_sem_projeto = tenho - total_com_projeto
 
     total_autores_distintos = (
         db.session.query(db.func.count(db.func.distinct(Livro.autor)))
@@ -926,6 +943,8 @@ def estatisticas():
     return render_template(
         "estatisticas.html",
         total=total,
+        tenho=tenho,
+        nao_tenho=nao_tenho,
         total_lidos=total_lidos,
         total_nao_lidos=total_nao_lidos,
         pct_lidos=pct_lidos,
@@ -943,29 +962,29 @@ def estatisticas():
 
 @app.route("/lidos")
 def lidos():
-    filtro = request.args.get("filtro", "lidos").strip()
-    if filtro not in ("lidos", "lidos_tenho", "lidos_nao_tenho", "nao_lidos_nao_tenho"):
-        filtro = "lidos"
+    filtro = request.args.get("filtro", "todos").strip()
+    if filtro not in ("todos", "tenho", "nao_tenho"):
+        filtro = "todos"
 
-    query = Livro.query
+    # Base: todos os livros lidos
+    query = Livro.query.filter(Livro.lido.is_(True))
 
-    if filtro == "lidos":
-        query = query.filter(Livro.lido.is_(True))
-    elif filtro == "lidos_tenho":
-        query = query.filter(Livro.lido.is_(True), Livro.tenho.is_(True))
-    elif filtro == "lidos_nao_tenho":
-        query = query.filter(Livro.lido.is_(True), Livro.tenho.is_(False))
-    elif filtro == "nao_lidos_nao_tenho":
-        query = query.filter(Livro.lido.is_(False), Livro.tenho.is_(False))
+    if filtro == "tenho":
+        query = query.filter(Livro.tenho.is_(True))
+    elif filtro == "nao_tenho":
+        query = query.filter(Livro.tenho.is_(False))
 
     livros = query.all()
     livros.sort(key=chave_ordenacao_livro)
 
-    # Contagens
+    # Contagens (sempre sobre lidos)
     total_lidos = Livro.query.filter(Livro.lido.is_(True)).count()
-    total_lidos_tenho = Livro.query.filter(Livro.lido.is_(True), Livro.tenho.is_(True)).count()
-    total_lidos_nao_tenho = Livro.query.filter(Livro.lido.is_(True), Livro.tenho.is_(False)).count()
-    total_nao_lidos_nao_tenho = Livro.query.filter(Livro.lido.is_(False), Livro.tenho.is_(False)).count()
+    total_lidos_tenho = Livro.query.filter(
+        Livro.lido.is_(True), Livro.tenho.is_(True)
+    ).count()
+    total_lidos_nao_tenho = Livro.query.filter(
+        Livro.lido.is_(True), Livro.tenho.is_(False)
+    ).count()
 
     return render_template(
         "lidos.html",
@@ -974,7 +993,6 @@ def lidos():
         total_lidos=total_lidos,
         total_lidos_tenho=total_lidos_tenho,
         total_lidos_nao_tenho=total_lidos_nao_tenho,
-        total_nao_lidos_nao_tenho=total_nao_lidos_nao_tenho,
     )
 
 @app.route("/backup")
@@ -1058,20 +1076,31 @@ def projetos():
     projetos_com_contagem = []
     for p in PROJETOS_DISPONIVEIS:
         campo = p["campo"]
+
         if p["slug"] == "mundo":
             dados_mapa, _ = montar_dados_do_mapa()
             resumo = resumo_do_mapa(dados_mapa)
             total = resumo["total_paises"]
             lidos = resumo["paises_lidos"]
             tipo_mundo = True
+            tipo_tbr = False
+            pct = round(lidos / total * 100) if total > 0 else 0
+        elif p["slug"] == "tbr":
+            livros = _query_do_projeto(campo).all()
+            total = len(livros)
+            lidos = 0
+            tipo_mundo = False
+            tipo_tbr = True
+            pct = 0
         else:
             livros = _query_do_projeto(campo).all()
             contagens = _contar_por_status(livros)
-            total = len(livros)
+            total = contagens["total"]
             lidos = contagens["lidos"]
             tipo_mundo = False
+            tipo_tbr = False
+            pct = round(lidos / total * 100) if total > 0 else 0
 
-        pct = round(lidos / total * 100) if total > 0 else 0
         projetos_com_contagem.append({
             "slug": p["slug"],
             "nome": p["nome"],
@@ -1080,6 +1109,7 @@ def projetos():
             "lidos": lidos,
             "pct": pct,
             "tipo_mundo": tipo_mundo,
+            "tipo_tbr": tipo_tbr,
         })
 
     return render_template("projetos.html", projetos=projetos_com_contagem)
@@ -1099,23 +1129,48 @@ def projeto_detalhe(slug):
     # Obs.: posse e leitura são dimensões diferentes; os números
     # NÃO são mutuamente exclusivos (um livro "tenho+lido" entra em
     # "tenho" e em "lidos"). Isso é intencional.
-    total = len(livros)
-    tenho = sum(1 for lv in livros if lv.tenho)
-    lidos = sum(1 for lv in livros if lv.lido)
-    nao_tenho = sum(1 for lv in livros if not lv.tenho)
-    nao_lidos = sum(1 for lv in livros if not lv.lido)
-    tenho_nao_li = sum(1 for lv in livros if lv.tenho and not lv.lido)
+    contagens = _contar_por_status(livros)
+    total = contagens["total"]
+    tenho = contagens["tenho"]
+    nao_tenho = contagens["nao_tenho"]
+    lidos = contagens["lidos"]
+    nao_lidos = contagens["nao_lidos"]
     pct = round(lidos / total * 100) if total > 0 else 0
 
-    # Filtros em cápsula (só pra projetos que não são mundo)
-
-    # Filtros em cápsula (só pra projetos que não são mundo)
+    # Filtros em cápsula
     filtro = request.args.get("filtro", "lido").strip()
-    if filtro not in ("lido", "nao_lido", "tenho", "recomendacoes", "todos"):
-        filtro = "lido"
+    if slug == "tbr":
+        # TBR: filtros são Todos / Tenho / Não Tenho
+        if filtro not in ("todos", "tenho", "nao_tenho"):
+            filtro = "todos"
+    elif slug == "mundo":
+        # Mundo: filtros são Todos / Lido / Não Lido / Tenho / Não Tenho / Recomendações
+        if filtro not in ("todos", "lido", "nao_lido", "tenho", "nao_tenho", "recomendacoes"):
+            filtro = "todos"
+    else:
+        if filtro not in ("lido", "nao_lido", "tenho", "recomendacoes", "todos"):
+            filtro = "lido"
 
     livros_filtrados = livros
-    if slug != "mundo":
+    if slug == "tbr":
+        if filtro == "tenho":
+            livros_filtrados = [lv for lv in livros if lv.tenho]
+        elif filtro == "nao_tenho":
+            livros_filtrados = [lv for lv in livros if not lv.tenho]
+        # "todos" = sem filtro adicional
+    elif slug == "mundo":
+        if filtro == "lido":
+            livros_filtrados = [lv for lv in livros if lv.lido]
+        elif filtro == "nao_lido":
+            livros_filtrados = [lv for lv in livros if not lv.lido]
+        elif filtro == "tenho":
+            livros_filtrados = [lv for lv in livros if lv.tenho]
+        elif filtro == "nao_tenho":
+            livros_filtrados = [lv for lv in livros if not lv.tenho]
+        elif filtro == "recomendacoes":
+            livros_filtrados = [lv for lv in livros if not lv.tenho and not lv.lido]
+        # "todos" = sem filtro adicional
+    else:
         if filtro == "lido":
             livros_filtrados = [lv for lv in livros if lv.lido]
         elif filtro == "nao_lido":
@@ -1124,6 +1179,7 @@ def projeto_detalhe(slug):
             livros_filtrados = [lv for lv in livros if lv.tenho and not lv.lido]
         elif filtro == "recomendacoes":
             livros_filtrados = [lv for lv in livros if not lv.tenho and not lv.lido]
+        # "todos" = sem filtro adicional
 
     # Dados do mapa (só pra mundo)
     dados_mapa = None
@@ -1152,10 +1208,9 @@ def projeto_detalhe(slug):
         livros_filtrados=livros_filtrados,
         total=total,
         tenho=tenho,
-        lidos=lidos,
         nao_tenho=nao_tenho,
+        lidos=lidos,
         nao_lidos=nao_lidos,
-        tenho_nao_li=tenho_nao_li,
         pct=pct,
         filtro=filtro,
         subprojetos=SUBPROJETOS_POSTGRAD,
@@ -1177,13 +1232,9 @@ def projeto_paises(slug):
         filtro = "lidos"
 
     paises = listar_paises_do_projeto(filtro)
-    busca_pais = request.args.get("q", "").strip().lower()
 
-    if busca_pais:
-        paises = [
-            p for p in paises
-            if busca_pais in p["nome"].lower() or busca_pais in p["codigo"].lower()
-        ]
+    total_paises_lidos = sum(1 for p in paises if p["lido"]) if filtro == "todos" else len(_conjunto_paises_lidos())
+    total_paises_canonicos = len(PAISES_CANONICOS)
 
     return render_template(
         "paises.html",
@@ -1191,7 +1242,8 @@ def projeto_paises(slug):
         slug=slug,
         paises=paises,
         filtro=filtro,
-        busca_pais=busca_pais,
+        total_paises_lidos=total_paises_lidos,
+        total_paises_canonicos=total_paises_canonicos,
     )
 
 @app.route("/projetos/<slug>/paises/<codigo>")

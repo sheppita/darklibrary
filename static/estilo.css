@@ -200,7 +200,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   6. Navegação rápida (botões ↑↓) — A11
+   6. Navegação rápida (botões ↑↓)
    ───────────────────────────────────────────── */
 
 .navegacao-rapida {
@@ -282,31 +282,23 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .lista-livros {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .lista-livros { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 900px) {
-    .lista-livros {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .lista-livros { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (min-width: 1200px) {
-    .lista-livros {
-        grid-template-columns: repeat(5, 1fr);
-    }
+    .lista-livros { grid-template-columns: repeat(5, 1fr); }
 }
 
 @media (min-width: 1600px) {
-    .lista-livros {
-        grid-template-columns: repeat(6, 1fr);
-    }
+    .lista-livros { grid-template-columns: repeat(6, 1fr); }
 }
 
 /* ─────────────────────────────────────────────
-   9. Card de livro (com ou sem capa)
+   9. Card de livro (home)
    ───────────────────────────────────────────── */
 
 .card-livro {
@@ -455,9 +447,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .campo-linha {
-        grid-template-columns: 1fr 1fr;
-    }
+    .campo-linha { grid-template-columns: 1fr 1fr; }
 }
 
 .obrigatorio {
@@ -528,9 +518,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .form-filtros .campo-linha {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .form-filtros .campo-linha { grid-template-columns: repeat(3, 1fr); }
 }
 
 .form-filtros label {
@@ -578,46 +566,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   13. Página de Estatísticas
+   13. Estatísticas — blocos internos e barrinha dos cards
    ───────────────────────────────────────────── */
-
-.stats-resumo {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--esp-4);
-    margin-bottom: var(--esp-5);
-}
-
-@media (min-width: 640px) {
-    .stats-resumo {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.stat-card {
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-5);
-    text-align: center;
-    box-shadow: var(--sombra-suave);
-}
-
-.stat-numero {
-    font-family: var(--fonte-titulo);
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--cor-texto);
-    margin-bottom: var(--esp-2);
-}
-
-.stat-rotulo {
-    font-size: 0.85rem;
-    color: var(--cor-texto-suave);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
 
 .stats-barra-wrap {
     margin-bottom: var(--esp-6);
@@ -651,9 +601,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 
 .stats-bloco {
@@ -715,7 +663,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   14. Botões de ação no card (editar / excluir)
+   14. Botões de ação no card da home (editar / excluir)
    ───────────────────────────────────────────── */
 
 .card-acoes {
@@ -891,9 +839,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .lista-projetos {
-        grid-template-columns: 1fr 1fr;
-    }
+    .lista-projetos { grid-template-columns: 1fr 1fr; }
 }
 
 .card-projeto {
@@ -929,14 +875,6 @@ input:focus, select:focus, textarea:focus {
     margin: 0;
 }
 
-.card-projeto-tipo {
-    font-size: 0.75rem;
-    color: var(--cor-texto-suave);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-}
-
 .card-projeto-descricao {
     font-size: 0.9rem;
     color: var(--cor-texto-suave);
@@ -956,44 +894,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   21. Meus Projetos — página de um projeto
+   21. Cabeçalhos e seções de projeto
    ───────────────────────────────────────────── */
 
 .projeto-descricao {
     color: var(--cor-texto-suave);
     margin-bottom: var(--esp-5);
-}
-
-.projeto-resumo {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--esp-3);
-    margin-bottom: var(--esp-6);
-}
-
-.projeto-resumo-item {
-    background-color: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: var(--esp-4);
-    text-align: center;
-    box-shadow: var(--sombra-suave);
-}
-
-.projeto-resumo-numero {
-    display: block;
-    font-family: var(--fonte-titulo);
-    font-size: 1.6rem;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: var(--esp-1);
-}
-
-.projeto-resumo-rotulo {
-    font-size: 0.75rem;
-    color: var(--cor-texto-suave);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .projeto-secao-titulo {
@@ -1044,7 +950,6 @@ input:focus, select:focus, textarea:focus {
     background-color: #b8b0a0;
 }
 
-/* Miniatura de capa nos cards de item (B5) */
 .card-item-capa {
     flex: 0 0 auto;
     width: 40px;
@@ -1105,33 +1010,6 @@ input:focus, select:focus, textarea:focus {
     display: inline-flex;
     align-items: center;
     gap: var(--esp-1);
-}
-
-.card-item-status {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding: 2px var(--esp-2);
-    border-radius: 999px;
-    white-space: nowrap;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-suave);
-}
-
-.card-item-status-li {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.card-item-status-tenho_nao_li {
-    background-color: #e3f0fa;
-    color: #2a5b8a;
-}
-
-.card-item-status-nao_tenho {
-    background-color: #efece4;
-    color: #7a7568;
 }
 
 .card-item-acao {
@@ -1238,12 +1116,6 @@ input:focus, select:focus, textarea:focus {
 
 .mapa-wrapper {
     margin-bottom: var(--esp-6);
-}
-
-.mapa-legenda {
-    font-size: 0.9rem;
-    color: var(--cor-texto-suave);
-    margin-bottom: var(--esp-4);
 }
 
 .mapa-container {
@@ -1460,15 +1332,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .lista-paises {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .lista-paises { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (min-width: 900px) {
-    .lista-paises {
-        grid-template-columns: repeat(4, 1fr);
-    }
+    .lista-paises { grid-template-columns: repeat(4, 1fr); }
 }
 
 .card-pais {
@@ -1578,11 +1446,10 @@ input:focus, select:focus, textarea:focus {
 
 /* ═══════════════════════════════════════════════════════════
    ETAPA 20 — REFORMA DOS PROJETOS
-   Estilos novos para formulários, selos e badges
    ═══════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────
-   33. Formulário — blocos (fieldsets → agora divs)
+   33. Formulário — blocos
    ───────────────────────────────────────────── */
 
 .bloco-form {
@@ -1594,7 +1461,6 @@ input:focus, select:focus, textarea:focus {
     box-shadow: var(--sombra-suave);
 }
 
-/* Título do bloco */
 .bloco-titulo {
     font-family: var(--fonte-titulo);
     font-size: 1.1rem;
@@ -1617,15 +1483,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 640px) {
-    .campo-linha-3 {
-        grid-template-columns: 1fr 1fr;
-    }
+    .campo-linha-3 { grid-template-columns: 1fr 1fr; }
 }
 
 @media (min-width: 900px) {
-    .campo-linha-3 {
-        grid-template-columns: 1fr 1fr 2fr;
-    }
+    .campo-linha-3 { grid-template-columns: 1fr 1fr 2fr; }
 }
 
 /* ─────────────────────────────────────────────
@@ -1809,68 +1671,8 @@ input:focus, select:focus, textarea:focus {
     box-shadow: none;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ETAPA 20 — REFORMA DOS PROJETOS (continuação)
-   Resumos de projeto e ajustes finais
-   ═══════════════════════════════════════════════════════════ */
-
 /* ─────────────────────────────────────────────
-   43. Resumo com 4 caixinhas (Nobel / PostGrad)
-   ───────────────────────────────────────────── */
-
-.projeto-resumo-4 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--esp-3);
-    margin-bottom: var(--esp-6);
-}
-
-@media (min-width: 640px) {
-    .projeto-resumo-4 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-/* ─────────────────────────────────────────────
-   44. Resumo com 2 caixinhas (TBR)
-   ───────────────────────────────────────────── */
-
-.projeto-resumo-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--esp-3);
-    margin-bottom: var(--esp-6);
-    max-width: 500px;
-}
-
-/* ─────────────────────────────────────────────
-   45. Ajuste geral dos resumos (usam as mesmas classes)
-   ───────────────────────────────────────────── */
-
-.projeto-resumo-4 .projeto-resumo-item,
-.projeto-resumo-2 .projeto-resumo-item {
-    padding: var(--esp-3);
-}
-
-.projeto-resumo-4 .projeto-resumo-numero,
-.projeto-resumo-2 .projeto-resumo-numero {
-    font-size: 1.4rem;
-}
-
-.projeto-resumo-4 .projeto-resumo-rotulo,
-.projeto-resumo-2 .projeto-resumo-rotulo {
-    font-size: 0.7rem;
-}
-
-/* ─────────────────────────────────────────────
-   46. Ajuste do card-item sem "acoes" (Lidos Deste Projeto)
-   ───────────────────────────────────────────── */
-
-.card-item-li .card-item-meta:last-child {
-    margin-left: auto;
-}
-/* ─────────────────────────────────────────────
-   47. Aviso de duplicado (no /novo e /editar)
+   43. Aviso de duplicado (no /novo e /editar)
    ───────────────────────────────────────────── */
 
 .aviso-duplicado {
@@ -1924,22 +1726,22 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   48. Barra de progresso com borda (projetos)
+   44. Barra de progresso com borda (projetos)
    ───────────────────────────────────────────── */
 
 .barra-progresso {
     background-color: var(--cor-fundo);
-    border: 1px solid #b8b0a0;   /* ← cor de borda mais escura, visível */
+    border: 1px solid #b8b0a0;
     border-radius: 999px;
-    height: 14px;                 /* ← um pouco mais alta */
+    height: 14px;
     overflow: hidden;
-    padding: 0;                   /* ← tira o padding, deixa o filho preencher */
+    padding: 0;
 }
 
 .barra-progresso-preenchida {
     background-color: var(--cor-texto);
     height: 100%;
-    border-radius: 999px;        /* ← arredonda o filho também */
+    border-radius: 999px;
     transition: width 0.3s ease;
 }
 
@@ -1955,19 +1757,19 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ─────────────────────────────────────────────
-   49. Fallback de capa (retângulo bege)
+   45. Fallback de capa (retângulo bege)
    ───────────────────────────────────────────── */
 
 .card-capa-vazia {
     background-color: #ece8de;
-    /* mesma cor do .card-capa original */
 }
 
 .card-capa-vazia img {
     display: none;
 }
+
 /* ─────────────────────────────────────────────
-   50. Badges de status no card de item
+   46. Badges de status no card de item
    Pílulas separadas: posse + leitura
    ───────────────────────────────────────────── */
 
@@ -1984,8 +1786,6 @@ input:focus, select:focus, textarea:focus {
     line-height: 1.4;
 }
 
-/* ─── Posse ─── */
-
 .badge-posse {
     background-color: #efece4;
     color: #7a7568;
@@ -2001,8 +1801,6 @@ input:focus, select:focus, textarea:focus {
     color: #7a7568;
 }
 
-/* ─── Leitura ─── */
-
 .badge-leitura {
     background-color: #efece4;
     color: #7a7568;
@@ -2017,37 +1815,53 @@ input:focus, select:focus, textarea:focus {
     background-color: #efece4;
     color: #7a7568;
 }
+
 /* ─────────────────────────────────────────────
-   51. Resumo de projeto com 5 caixinhas
+   47. Resumo de projeto (caixinhas) — genérico
+   Funciona pra 2, 3, 4 ou 5 caixinhas.
+   Centralizado, com largura máxima.
    ───────────────────────────────────────────── */
 
 .projeto-resumo {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    justify-content: center;
     gap: var(--esp-3);
     margin-bottom: var(--esp-6);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-@media (min-width: 640px) {
-    .projeto-resumo {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 900px) {
-    .projeto-resumo {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-
-.projeto-resumo .projeto-resumo-item {
+.projeto-resumo-item {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
     padding: var(--esp-3);
+    text-align: center;
+    box-shadow: var(--sombra-suave);
 }
 
-.projeto-resumo .projeto-resumo-numero {
+.projeto-resumo-numero {
+    display: block;
+    font-family: var(--fonte-titulo);
     font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: var(--esp-1);
 }
 
-.projeto-resumo .projeto-resumo-rotulo {
+.projeto-resumo-rotulo {
     font-size: 0.7rem;
+    color: var(--cor-texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────────
+   48. Ajuste do card-item sem "acoes" (Lidos Deste Projeto)
+   ───────────────────────────────────────────── */
+
+.card-item-li .card-item-meta:last-child {
+    margin-left: auto;
 }

@@ -8,23 +8,35 @@
         <h1>Lidos</h1>
     </div>
 
+    {# ─────────── Resumo (3 caixinhas) ─────────── #}
+    <div class="projeto-resumo">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lidos</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_lidos_tenho }}</span>
+            <span class="projeto-resumo-rotulo">Tenho</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_lidos_nao_tenho }}</span>
+            <span class="projeto-resumo-rotulo">Não Tenho</span>
+        </div>
+    </div>
+
     {# ─────────── Filtros em cápsula ─────────── #}
     <div class="filtros-paises">
-        <a href="{{ url_for('lidos', filtro='lidos') }}"
-           class="filtro-pais {% if filtro == 'lidos' %}filtro-pais-ativo{% endif %}">
-            Todos os Lidos ({{ total_lidos }})
+        <a href="{{ url_for('lidos', filtro='todos') }}"
+           class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">
+            Todos
         </a>
-        <a href="{{ url_for('lidos', filtro='lidos_tenho') }}"
-           class="filtro-pais {% if filtro == 'lidos_tenho' %}filtro-pais-ativo{% endif %}">
-            Lidos + Tenho ({{ total_lidos_tenho }})
+        <a href="{{ url_for('lidos', filtro='tenho') }}"
+           class="filtro-pais {% if filtro == 'tenho' %}filtro-pais-ativo{% endif %}">
+            Tenho
         </a>
-        <a href="{{ url_for('lidos', filtro='lidos_nao_tenho') }}"
-           class="filtro-pais {% if filtro == 'lidos_nao_tenho' %}filtro-pais-ativo{% endif %}">
-            Lidos + Não Tenho ({{ total_lidos_nao_tenho }})
-        </a>
-        <a href="{{ url_for('lidos', filtro='nao_lidos_nao_tenho') }}"
-           class="filtro-pais {% if filtro == 'nao_lidos_nao_tenho' %}filtro-pais-ativo{% endif %}">
-            Não Lidos + Não Tenho ({{ total_nao_lidos_nao_tenho }})
+        <a href="{{ url_for('lidos', filtro='nao_tenho') }}"
+           class="filtro-pais {% if filtro == 'nao_tenho' %}filtro-pais-ativo{% endif %}">
+            Não Tenho
         </a>
     </div>
 
@@ -36,7 +48,7 @@
 
         <div class="lista-itens">
             {% for livro in livros %}
-                <div class="card-item card-item-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                <div class="card-item card-item-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
                     <div class="card-item-capa">

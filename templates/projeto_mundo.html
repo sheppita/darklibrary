@@ -61,6 +61,13 @@
                 </details>
             {% endif %}
 
+            <div class="mapa-acoes">
+                <a href="{{ url_for('projeto_paises', slug=slug) }}"
+                   class="botao-secundario">
+                    Ver Todos os Países →
+                </a>
+            </div>
+
         </div>
     {% endif %}
 
@@ -95,14 +102,31 @@
 
     {% endif %}
 
-    {# ─────────── Lidos Deste Projeto ─────────── #}
-    {% if livros_lidos_projeto %}
+    {# ─────────── Filtros em cápsula ─────────── #}
+    <div class="filtros-paises">
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='todos') }}"
+           class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">Todos</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='lido') }}"
+           class="filtro-pais {% if filtro == 'lido' %}filtro-pais-ativo{% endif %}">Lido</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='nao_lido') }}"
+           class="filtro-pais {% if filtro == 'nao_lido' %}filtro-pais-ativo{% endif %}">Não Lido</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='tenho') }}"
+           class="filtro-pais {% if filtro == 'tenho' %}filtro-pais-ativo{% endif %}">Tenho</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='nao_tenho') }}"
+           class="filtro-pais {% if filtro == 'nao_tenho' %}filtro-pais-ativo{% endif %}">Não Tenho</a>
+        <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='recomendacoes') }}"
+           class="filtro-pais {% if filtro == 'recomendacoes' %}filtro-pais-ativo{% endif %}">Recomendações</a>
+    </div>
 
-        <h2 class="projeto-secao-titulo">Lidos Deste Projeto</h2>
+    {# ─────────── Lista de livros do projeto ─────────── #}
+    {% if livros_filtrados %}
+
+        <h2 class="projeto-secao-titulo">Livros do Projeto</h2>
 
         <div class="lista-itens">
-            {% for livro in livros_lidos_projeto %}
-                <div class="card-item card-item-li">
+            {% for livro in livros_filtrados %}
+                <div class="card-item card-item-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
+
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
                     <div class="card-item-capa">
@@ -114,6 +138,9 @@
 
                     <div class="card-item-principal">
                         <div class="card-item-titulo">{{ livro.titulo }}</div>
+                        {% if livro.subtitulo %}
+                            <div class="card-item-subtitulo">{{ livro.subtitulo }}</div>
+                        {% endif %}
                         <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
 
@@ -125,25 +152,35 @@
                         <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
                             {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
                         </span>
-                        <span class="badge-leitura badge-leitura-lido">Lido</span>
+                        <span class="badge-leitura badge-leitura-{{ 'lido' if livro.lido else 'nao-lido' }}">
+                            {% if livro.lido %}Lido{% else %}Não Lido{% endif %}
+                        </span>
+                        <a class="card-item-acao"
+                           href="{{ url_for('editar', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Editar">✎</a>
+                        <a class="card-item-acao card-item-acao-perigo"
+                           href="{{ url_for('excluir', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
+                           title="Excluir">✕</a>
                     </div>
+
                 </div>
             {% endfor %}
         </div>
 
     {% else %}
 
-        <p class="vazio">Nenhum Livro Lido Ainda Neste Projeto.</p>
+        {% if filtro == 'todos' and total == 0 %}
+            <p class="vazio">Este Projeto Não Tem Livros.</p>
+        {% else %}
+            <p class="vazio">Nenhum Livro Neste Filtro.</p>
+            <p class="vazio" style="margin-top: 0;">
+                <a href="{{ url_for('projeto_detalhe', slug=slug, filtro='todos') }}" class="link-voltar">
+                    Ver Todos os Livros →
+                </a>
+            </p>
+        {% endif %}
 
     {% endif %}
-
-    {# ─────────── Botão Ver Todos os Países ─────────── #}
-    <div class="mapa-acoes">
-        <a href="{{ url_for('projeto_paises', slug=slug) }}"
-           class="botao-secundario">
-            Ver Todos os Países →
-        </a>
-    </div>
 
     <script src="{{ url_for('static', filename='mapa.js') }}"></script>
 

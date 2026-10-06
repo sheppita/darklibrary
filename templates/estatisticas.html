@@ -8,35 +8,43 @@
         <h1>Estatísticas</h1>
     </div>
 
-    {# ─────────────────── Cards de resumo ─────────────────── #}
-    <div class="stats-resumo">
-        <div class="stat-card">
-            <div class="stat-numero">{{ total }}</div>
-            <div class="stat-rotulo">Livro(s) no Total</div>
+    {# ─────────── Resumo (5 caixinhas) ─────────── #}
+    <div class="projeto-resumo">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total }}</span>
+            <span class="projeto-resumo-rotulo">Total</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-numero">{{ total_lidos }}</div>
-            <div class="stat-rotulo">Lido(s)</div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ tenho }}</span>
+            <span class="projeto-resumo-rotulo">Tenho</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-numero">{{ total_nao_lidos }}</div>
-            <div class="stat-rotulo">Não Lido(s)</div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
+            <span class="projeto-resumo-rotulo">Não Tenho</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Lidos</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total_nao_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Não Lidos</span>
         </div>
     </div>
 
-    {# ─────────────────── Barra de progresso ─────────────────── #}
+    {# ─────────── Barra de progresso ─────────── #}
     {% if total > 0 %}
-        <div class="stats-barra-wrap">
-            <div class="stats-barra">
-                <div class="stats-barra-preenchida" style="width: {{ pct_lidos }}%;"></div>
+        <div class="barra-progresso-wrap">
+            <div class="barra-progresso">
+                <div class="barra-progresso-preenchida" style="width: {{ pct_lidos }}%;"></div>
             </div>
-            <div class="stats-barra-legenda">
+            <div class="barra-progresso-legenda">
                 {{ pct_lidos }}% Lido · {{ 100 - pct_lidos }}% Por Ler
             </div>
         </div>
     {% endif %}
 
-    {# ─────────────────── Grid de informações ─────────────────── #}
+    {# ─────────── Grid de informações ─────────── #}
     <div class="stats-grid">
 
         {# Por estante #}
