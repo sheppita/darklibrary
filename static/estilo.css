@@ -1966,3 +1966,88 @@ input:focus, select:focus, textarea:focus {
 .card-capa-vazia img {
     display: none;
 }
+/* ─────────────────────────────────────────────
+   50. Badges de status no card de item
+   Pílulas separadas: posse + leitura
+   ───────────────────────────────────────────── */
+
+.badge-posse,
+.badge-leitura {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px var(--esp-2);
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+/* ─── Posse ─── */
+
+.badge-posse {
+    background-color: #efece4;
+    color: #7a7568;
+}
+
+.badge-posse-tenho {
+    background-color: #e3f0fa;
+    color: #2a5b8a;
+}
+
+.badge-posse-nao-tenho {
+    background-color: #efece4;
+    color: #7a7568;
+}
+
+/* ─── Leitura ─── */
+
+.badge-leitura {
+    background-color: #efece4;
+    color: #7a7568;
+}
+
+.badge-leitura-lido {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge-leitura-nao-lido {
+    background-color: #efece4;
+    color: #7a7568;
+}
+/* ─────────────────────────────────────────────
+   51. Resumo de projeto com 5 caixinhas
+   ───────────────────────────────────────────── */
+
+.projeto-resumo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--esp-3);
+    margin-bottom: var(--esp-6);
+}
+
+@media (min-width: 640px) {
+    .projeto-resumo {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .projeto-resumo {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.projeto-resumo .projeto-resumo-item {
+    padding: var(--esp-3);
+}
+
+.projeto-resumo .projeto-resumo-numero {
+    font-size: 1.4rem;
+}
+
+.projeto-resumo .projeto-resumo-rotulo {
+    font-size: 0.7rem;
+}

@@ -18,22 +18,10 @@
             <span class="projeto-resumo-rotulo">Para Ler</span>
         </div>
         <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ lidos }}</span>
-            <span class="projeto-resumo-rotulo">Já Lido(s)</span>
+            <span class="projeto-resumo-numero">{{ tenho }}</span>
+            <span class="projeto-resumo-rotulo">Tenho</span>
         </div>
     </div>
-
-    {# ─────────── Barra de progresso ─────────── #}
-    {% if total > 0 %}
-        <div class="barra-progresso-wrap">
-            <div class="barra-progresso">
-                <div class="barra-progresso-preenchida" style="width: {{ pct }}%;"></div>
-            </div>
-            <div class="barra-progresso-legenda">
-                {{ lidos }} de {{ total }} Lidos · {{ pct }}%
-            </div>
-        </div>
-    {% endif %}
 
     {# ─────────── Lista de livros ─────────── #}
     {% if livros_filtrados %}
@@ -42,7 +30,7 @@
 
         <div class="lista-itens">
             {% for livro in livros_filtrados %}
-                <div class="card-item card-item-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                <div class="card-item card-item-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
 
                     <div class="card-item-tarja" aria-hidden="true"></div>
 
@@ -63,13 +51,15 @@
 
                     <div class="card-item-meta">
                         {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
-                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
                     </div>
 
                     <div class="card-item-acoes">
-                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-{{ 'lido' if livro.lido else 'nao-lido' }}">
                             {% if livro.lido %}Lido{% else %}Não Lido{% endif %}
-                        </div>
+                        </span>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
                            title="Editar">✎</a>

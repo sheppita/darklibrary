@@ -1095,14 +1095,19 @@ def projeto_detalhe(slug):
     livros = _query_do_projeto(campo).all()
     livros.sort(key=chave_ordenacao_livro)
 
-    # Contagens do resumo (4 caixinhas)
+    # Contagens do resumo (5 caixinhas)
+    # Obs.: posse e leitura são dimensões diferentes; os números
+    # NÃO são mutuamente exclusivos (um livro "tenho+lido" entra em
+    # "tenho" e em "lidos"). Isso é intencional.
     total = len(livros)
+    tenho = sum(1 for lv in livros if lv.tenho)
     lidos = sum(1 for lv in livros if lv.lido)
+    nao_tenho = sum(1 for lv in livros if not lv.tenho)
     nao_lidos = sum(1 for lv in livros if not lv.lido)
     tenho_nao_li = sum(1 for lv in livros if lv.tenho and not lv.lido)
-    nao_tenho = sum(1 for lv in livros if not lv.tenho)
-
     pct = round(lidos / total * 100) if total > 0 else 0
+
+    # Filtros em cápsula (só pra projetos que não são mundo)
 
     # Filtros em cápsula (só pra projetos que não são mundo)
     filtro = request.args.get("filtro", "lido").strip()
@@ -1146,10 +1151,11 @@ def projeto_detalhe(slug):
         livros=livros,
         livros_filtrados=livros_filtrados,
         total=total,
+        tenho=tenho,
         lidos=lidos,
+        nao_tenho=nao_tenho,
         nao_lidos=nao_lidos,
         tenho_nao_li=tenho_nao_li,
-        nao_tenho=nao_tenho,
         pct=pct,
         filtro=filtro,
         subprojetos=SUBPROJETOS_POSTGRAD,

@@ -13,7 +13,6 @@
 
     <p class="projeto-descricao">
         Projeto: <strong>{{ projeto.nome }}</strong>
-        · Código: <code>{{ codigo }}</code>
     </p>
 
     {# ─────────── Seção 1: Lidos Neste Projeto ─────────── #}
@@ -41,11 +40,11 @@
                         <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
 
-                    <div class="card-item-meta">
-                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
-                    </div>
-
                     <div class="card-item-acoes">
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-lido">Lido</span>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
                            title="Editar">✎</a>
@@ -92,14 +91,11 @@
                         <div class="card-item-autor">{{ livro.autor }}</div>
                     </div>
 
-                    <div class="card-item-meta">
-                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
-                    </div>
-
                     <div class="card-item-acoes">
-                        <div class="card-item-status card-item-status-{{ 'tenho_nao_li' if livro.tenho else 'nao_tenho' }}">
-                            {% if livro.tenho %}Tenho, Não Li{% else %}Não Tenho{% endif %}
-                        </div>
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-nao-lido">Não Lido</span>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path) }}"
                            title="Editar">✎</a>

@@ -120,6 +120,13 @@
                     <div class="card-item-meta">
                         {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
                     </div>
+
+                    <div class="card-item-acoes">
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-lido">Lido</span>
+                    </div>
                 </div>
             {% endfor %}
         </div>

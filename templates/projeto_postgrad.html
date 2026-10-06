@@ -11,23 +11,27 @@
         </div>
     </div>
 
-    {# ─────────── Resumo (4 caixinhas) ─────────── #}
-    <div class="projeto-resumo projeto-resumo-4">
+    {# ─────────── Resumo (5 caixinhas) ─────────── #}
+    <div class="projeto-resumo">
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ total }}</span>
+            <span class="projeto-resumo-rotulo">Total</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ tenho }}</span>
+            <span class="projeto-resumo-rotulo">Tenho</span>
+        </div>
         <div class="projeto-resumo-item">
             <span class="projeto-resumo-numero">{{ lidos }}</span>
-            <span class="projeto-resumo-rotulo">Lido(s)</span>
-        </div>
-        <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ tenho_nao_li }}</span>
-            <span class="projeto-resumo-rotulo">Tenho, Não Li</span>
-        </div>
-        <div class="projeto-resumo-item">
-            <span class="projeto-resumo-numero">{{ nao_lidos }}</span>
-            <span class="projeto-resumo-rotulo">Não Lido(s)</span>
+            <span class="projeto-resumo-rotulo">Já Li</span>
         </div>
         <div class="projeto-resumo-item">
             <span class="projeto-resumo-numero">{{ nao_tenho }}</span>
             <span class="projeto-resumo-rotulo">Não Tenho</span>
+        </div>
+        <div class="projeto-resumo-item">
+            <span class="projeto-resumo-numero">{{ nao_lidos }}</span>
+            <span class="projeto-resumo-rotulo">Não Li</span>
         </div>
     </div>
 
@@ -57,7 +61,7 @@
            class="filtro-pais {% if filtro == 'todos' %}filtro-pais-ativo{% endif %}">Todos</a>
     </div>
 
-    {# ─────────── Filtros por subprojeto (esboço) ─────────── #}
+    {# ─────────── Filtros por subprojeto ─────────── #}
     <div class="filtros-paises">
         <a href="{{ url_for('projeto_detalhe', slug=slug, filtro=filtro, sub='todos') }}"
            class="filtro-pais {% if request.args.get('sub', 'todos') == 'todos' %}filtro-pais-ativo{% endif %}">Todos os Subprojetos</a>
@@ -106,16 +110,15 @@
 
                     <div class="card-item-meta">
                         {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
-                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
                     </div>
 
                     <div class="card-item-acoes">
-                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else ('tenho_nao_li' if livro.tenho else 'nao_tenho') }}">
-                            {% if livro.lido %}Lido
-                            {% elif livro.tenho %}Tenho, Não Li
-                            {% else %}Não Tenho
-                            {% endif %}
-                        </div>
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-{{ 'lido' if livro.lido else 'nao-lido' }}">
+                            {% if livro.lido %}Lido{% else %}Não Lido{% endif %}
+                        </span>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
                            title="Editar">✎</a>

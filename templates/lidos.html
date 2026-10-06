@@ -61,13 +61,15 @@
 
                     <div class="card-item-meta">
                         {% if livro.pais %}<span>{{ livro.pais }}</span>{% endif %}
-                        {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
                     </div>
 
                     <div class="card-item-acoes">
-                        <div class="card-item-status card-item-status-{{ 'li' if livro.lido else 'nao_tenho' }}">
+                        <span class="badge-posse badge-posse-{{ 'tenho' if livro.tenho else 'nao-tenho' }}">
+                            {% if livro.tenho %}Tenho{% else %}Não Tenho{% endif %}
+                        </span>
+                        <span class="badge-leitura badge-leitura-{{ 'lido' if livro.lido else 'nao-lido' }}">
                             {% if livro.lido %}Lido{% else %}Não Lido{% endif %}
-                        </div>
+                        </span>
                         <a class="card-item-acao"
                            href="{{ url_for('editar', livro_id=livro.id, next=request.path + '?filtro=' + filtro) }}"
                            title="Editar">✎</a>
